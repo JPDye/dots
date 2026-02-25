@@ -1,0 +1,69 @@
+* { all: unset }
+
+// Semantic color variables for easy theme changes
+$primary: #af5f5f;      // Red - main UI elements, borders, active states
+$secondary: #af875f;    // Orange - highlights, headers, accents
+$accent: #87875f;       // Green - additional highlights
+
+// Background and surface colors
+$surface-darkgrey: #1c1c1c;
+$surface-lightgrey: #665c54;
+$surface-grey: #464040;
+
+// Legacy color names (mapped to semantic colors)
+$surface-fg: $secondary;
+$surface-red: $primary;
+$surface-green: #87875f;
+
+.powermenu {
+  background: none;
+  font-family: "Berkeley Mono";
+  color: rgba($surface-fg, 0.8);
+  opacity: 1.0;
+}
+
+.inner {
+  /* padding-left: 35.7em; */
+  /* padding-right: 35.7em; */
+  padding-left: 20.5em;
+  padding-right: 20.5em;
+}
+
+.btns-box {
+  font-size: 1.2em;
+  font-weight: bold;
+
+  button {
+    padding: 0.1em 0.5em;
+    border-radius: 0.2em;
+    background-color: rgba($surface-darkgrey, 0.6);
+
+    &:hover {
+      transition: 200ms linear background-color, border-radius;
+      background-color: rgba($surface-darkgrey, 0.9);
+    }
+
+    &:last-child {
+      color: rgba($surface-green, 0.8);
+    }
+  }
+}
+
+.clock-box {
+  font-size: 1.2em;
+  font-weight: bold;
+
+  .thing {
+    padding: 0.1em 0.5em;
+    border-radius: 0.2em;
+    background-color: rgba($surface-darkgrey, 0.6);
+  }
+
+  .time {
+    font-size: 0.65em;
+  }
+
+  .icon {
+    color: rgba($surface-green, 0.8);
+  }
+}
