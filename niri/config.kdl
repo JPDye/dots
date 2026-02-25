@@ -1,0 +1,282 @@
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "mako"
+spawn-at-startup "swww img ~/.config/home-manager/wallpapers/halls.png"
+spawn-at-startup "swaybg -m fill -i ~/.config/home-manager/wallpapers/halls-blur.png"
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+environment {
+  DISPLAY ":0"
+}
+
+overview {
+    backdrop-color "#1c1c1c"
+    zoom 0.6
+
+    workspace-shadow {
+        softness 0
+        spread 2
+        offset x=0 y=0
+        color "#af5f5f"
+    }
+}
+
+gestures {
+    hot-corners {
+        off
+    }
+}
+
+input {
+    keyboard {
+        xkb {
+            layout "gb"
+        }
+    }
+
+    mouse {
+        // off
+        // natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "no-scroll"
+    }
+
+    focus-follows-mouse max-scroll-amount="0%"
+}
+output "eDP-1" {
+    scale 1.0
+    focus-at-startup
+}
+
+output "HDMI-A-1" {
+    scale 1.0
+    focus-at-startup
+}
+
+layout {    
+    background-color "#1c1c1c"
+
+    gaps 24
+    
+    center-focused-column "never"
+    // always-center-single-column
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+
+    default-column-width { proportion 0.5; }
+    
+    focus-ring {
+        off
+    }
+    
+    border {
+        width 2
+        
+        active-color "#af5f5f"
+        inactive-color "#523636"
+    }
+
+    shadow {
+        on
+        spread 4
+        softness 0
+        offset x=0 y=0
+
+        color "#101010"
+        inactive-color "#1c1c1c"
+    }
+
+        
+    struts {
+        top 0
+        bottom 0
+        left 0
+        right 0
+    }
+}
+
+prefer-no-csd
+
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+window-rule {
+    geometry-corner-radius 1
+    clip-to-geometry true
+    draw-border-with-background true
+}
+
+window-rule {
+    match title="Firefox"
+    opacity 1.0
+    default-column-width { proportion 1.0; }
+}
+
+window-rule {
+    match app-id="Spotify"
+    opacity 1.0
+    default-column-width { proportion 1.0; }
+}
+
+
+window-rule {
+    match app-id="Slack"
+    opacity 1.0
+    default-column-width { proportion 1.0; }
+}
+
+layer-rule {
+    match namespace="^wallpaper$"
+    place-within-backdrop true
+}
+
+layer-rule {
+    match namespace="^eww$"
+    place-within-backdrop true
+}
+
+binds {
+    Mod+Space { spawn "firefox"; }
+    Mod+Return { spawn "alacritty" "-e" "zellij"; }
+    // Mod+Return { spawn "nixGL" "ghostty"; }
+    // Mod+R { spawn "tofi-drun" "--drun-launch=true"; }
+    Mod+R { spawn "fuzzel"; }
+
+    Mod+Q { close-window; }
+    Ctrl+Q { spawn "true"; }
+
+    Mod+Shift+O { toggle-window-rule-opacity; }
+    Mod+O { toggle-overview; }
+
+    Mod+Shift+C { spawn "killall" "-SIGUSR1" "waybar"; }
+
+    // Move focus
+    Mod+H     { focus-column-left; }
+    Mod+J     { focus-window-or-workspace-down; }
+    Mod+K     { focus-window-or-workspace-up; }
+    Mod+L     { focus-column-right; }
+
+    // Move window
+    Mod+Shift+H     { move-column-left; }
+    Mod+Shift+J     { move-window-down-or-to-workspace-down; }
+    Mod+Shift+K     { move-window-up-or-to-workspace-up; }
+    Mod+Shift+L     { move-column-right; }
+
+    // Focus monitor
+    Mod+Ctrl+H     { focus-monitor-left; }
+    Mod+Ctrl+J     { focus-monitor-down; }
+    Mod+Ctrl+K     { focus-monitor-up; }
+    Mod+Ctrl+L     { focus-monitor-right; }
+
+    // Move window to monitor
+    Mod+Shift+Ctrl+H     { move-window-to-monitor-left; }
+    Mod+Shift+Ctrl+J     { move-window-to-monitor-down; }
+    Mod+Shift+Ctrl+K     { move-window-to-monitor-up; }
+    Mod+Shift+Ctrl+L     { move-window-to-monitor-right; }
+
+    Mod+Shift+WheelScrollDown      { focus-column-right; }
+    Mod+Shift+WheelScrollUp        { focus-column-left; }
+    Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
+    Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+Ctrl+1 { move-window-to-workspace 1; }
+    Mod+Ctrl+2 { move-window-to-workspace 2; }
+    Mod+Ctrl+3 { move-window-to-workspace 3; }
+    Mod+Ctrl+4 { move-window-to-workspace 4; }
+
+    // Switches focus between the current and the previous workspace.
+    // Mod+Tab { focus-workspace-previous; }
+
+    // Stack windows into columns
+    Mod+Comma  { consume-window-into-column; }
+    Mod+Period { expel-window-from-column; }
+
+    // Width + Height adjustments
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+Ctrl+F { reset-window-height; }
+
+    Mod+G { switch-preset-column-width; }
+    Mod+Shift+G { switch-preset-window-height; }
+
+    Mod+C { center-column; }
+
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    Mod+P { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
+
+    // The quit action will show a confirmation dialog to avoid accidental exits.
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
+
+    // Powers off the monitors. To turn them back on, do any input 
+    Mod+Shift+P { power-off-monitors; }
+}
+
+animations {
+    slowdown 1.0
+}
+
+
+  window-rule {
+    match title="^(file_progress)$"
+    match title="^(confirm)$"
+    match title="^(dialog)$"
+    match title="^(download)$"
+    match title="^(notification )$"
+    match title="^(error)$"
+    match title="^(splash)$"
+    match title="^(nwg-look)$"
+    match title="^(confirmreset)$"
+    match title="^(Delete profile)$"
+    match title="^File Operation Progress$"
+    match title="^Confirm to replace files$"
+    match title="^KDE Connect URL handler$"
+    match title="^(Open File)(.*)$"
+    match title="^(Select a File)(.*)$"
+    match title="^(Choose wallpaper)(.*)$"
+    match title="^(Open Folder)(.*)$"
+    match title="^(Save As)(.*)$"
+    match title="^(Library)(.*)$"
+    match title="^(File Upload)(.*)$"
+    match title="^(hyprland-share-picker)$"
+    match title="^(.*)-Google$"
+    match title="^(.*)System Update$"
+    match title="(.*) - Google (.*) - (.*)"
+  
+    match app-id="^xdm-app$"
+    match app-id="^org.qbittorrent.qBittorrent$"
+    match app-id="^net.davidotek.pupgui2$"
+
+    open-floating true
+
+    max-width 800
+}
+
+window-rule {
+    match app-id=".*blueman.*"
+    match app-id="^org.pulseaudio.pavucontrol$"
+    open-floating true
+
+    min-width 800
+    max-width 800
+
+    min-height 500
+    max-height 500
+
+}
