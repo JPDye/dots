@@ -1,0 +1,62 @@
+format = """
+[┌](#504945)\
+[▷ ](#504945)\
+$os\
+$username \
+[󰅂 ](#af5f5f)\
+$directory\
+[󰅂](#dfaf87)\
+$git_branch\
+$git_status\
+[󰅂](#af875f)\
+$time\
+[󰅂](#87875f)\
+$line_break\
+[└](#504945)\
+[▷ ](#504945)\
+"""
+
+
+
+# Disable the blank line at the start of the prompt
+add_newline = true
+command_timeout = 3600
+
+[username]
+show_always = true
+style_user = "#af5f5f"
+style_root = "#af5f5f"
+# format = '[$user ]($style)'
+format = '[$user]($style)'
+disabled = false
+
+[os]
+style = "#af5f5f"
+disabled = true # Disabled by default
+
+[directory]
+style = "#dfaf87"
+format = "[$path ]($style)"
+truncation_length = 3
+truncation_symbol = "󰇘/"
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+
+[git_branch]
+symbol = ""
+style = "#af875f"
+format = '[ $symbol $branch]($style)'
+
+[git_status]
+style = "#af875f"
+format = '[$all_status$ahead_behind ]($style)'
+
+[time]
+disabled = false
+time_format = "%R"
+style = "#87875f"
+format = '[  $time ]($style)'

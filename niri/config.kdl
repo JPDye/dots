@@ -1,7 +1,7 @@
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "mako"
-spawn-at-startup "swww img ~/.config/home-manager/wallpapers/halls.png"
-spawn-at-startup "swaybg -m fill -i ~/.config/home-manager/wallpapers/halls-blur.png"
+spawn-at-startup "swww img ~/.config/nix/wallpapers/halls.png"
+spawn-at-startup "swaybg -m fill -i ~/.config/nix/wallpapers/halls-blur.png"
 
 hotkey-overlay {
     skip-at-startup
