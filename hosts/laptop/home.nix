@@ -586,6 +586,15 @@ in
           soft-wrap.wrap-at-text-width = true;
           soft-wrap.wrap-indicator = " ";
         }
+
+        {
+          name = "ocaml";
+          auto-format = true;
+          formatter = {
+            command = "ocamlformat";
+            args = [ "-" "--impl" "--enable-outside-detected-project" ];
+          };
+        }
       ];
     };
   };

@@ -57,6 +57,10 @@ in
     ];
   };
 
+  services.tailscale = {
+    enable = true;
+    useRoutingFeatures = "client";
+  };
 
   # swww
   systemd.user.services.swww = {
@@ -112,6 +116,7 @@ in
       dbus
       blueman
       xdg-desktop-portal
+      xdg-desktop-portal-wlr
       xdg-desktop-portal-gtk
       xdg-desktop-portal-gnome 
     ];
@@ -151,6 +156,8 @@ in
       xdg-desktop-portal-gnome
     ];
 
+    configPackages = [ pkgs.niri ];
+
     config.common.default = "gtk";
   };
 
@@ -158,9 +165,9 @@ in
   networking.hostName = "jd-nix";
   networking.nameservers = [ "1.1.1.1" "8.8.8.8" ];
   networking.networkmanager.enable = true;
-  networking.firewall.checkReversePath = false;
+  # networking.firewall.checkReversePath = false;
   networking.firewall = {
-    allowedUDPPorts = [ 53 51820 ];
+    allowedUDPPorts = [ 53 51820 41641];
   };
   
   # Users
@@ -221,12 +228,12 @@ in
   };
 
   # Bluetooth
-  # hardware.bluetooth = {
-  #   enable = true;
-  #   powerOnBoot = true;
-  # };
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
 
-  # services.blueman.enable = true;
+  services.blueman.enable = true;
 
   # System-wide packages
   nixpkgs.config.allowUnfree = true;
@@ -243,6 +250,8 @@ in
 
     xwayland-satellite
     spotify
+
+    tailscale
 
     ## OpenGL
     libGL

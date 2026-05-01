@@ -35,8 +35,8 @@ $surface-green: #87875f;
 
   button {
     padding: 0.1em 0.5em;
-    border-radius: 0.2em;
-    background-color: rgba($surface-darkgrey, 0.6);
+    border-radius: 0.1em;
+    background-color: rgba($surface-darkgrey, 0.8);
 
     &:hover {
       transition: 200ms linear background-color, border-radius;
@@ -54,9 +54,9 @@ $surface-green: #87875f;
   font-weight: bold;
 
   .thing {
-    padding: 0.1em 0.5em;
-    border-radius: 0.2em;
-    background-color: rgba($surface-darkgrey, 0.6);
+    padding: 0.1em 0.3em;
+    border-radius: 0.1em;
+    background-color: rgba($surface-darkgrey, 0.8);
   }
 
   .time {
