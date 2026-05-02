@@ -15,6 +15,9 @@
     sessionVariables = {
       RUSTC_WRAPPER = "sccache";
       CARGO_INCREMENTAL = "0";
+      SCCACHE_DIR = "${config.home.homeDirectory}/.cache/sccache";
+      SCCACHE_CACHE_SIZE = "20G";
+      SCCACHE_IDLE_TIMEOUT = "0";
     };
 
     packages = with pkgs; [

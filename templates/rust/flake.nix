@@ -17,15 +17,10 @@
         overlays = [ (import rust-overlay) ];
       };
 
-      rust = pkgs.rust-bin.stable."1.90.0".default.override {
-        extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
-      };
-
-      # Uncomment for latest nightly:
-      # rust = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
-      #   toolchain.default.override {
-      #     extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
-      #   });
+      rust = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
+        toolchain.default.override {
+          extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
+        });
     in
     {
       formatter.${system} = pkgs.nixpkgs-fmt;
@@ -63,7 +58,7 @@
         CARGO_INCREMENTAL = "0";
 
         shellHook = ''
-          unset RUSTFLAGS
+          export RUSTFLAGS="-Z threads=$(nproc)"
           command -v mold  >/dev/null || echo "WARNING: mold not found in PATH; mold linker will not be used"
           command -v clang >/dev/null || echo "WARNING: clang not found in PATH; mold linker will not be used"
         '';
