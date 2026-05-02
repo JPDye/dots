@@ -1,4 +1,12 @@
-{ colors, config, hostname, inputs, lib, pkgs, ... }:
+{
+  colors,
+  config,
+  hostname,
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 {
   programs.helix = {
     enable = true;
@@ -7,7 +15,7 @@
 
     extraPackages = with pkgs; [
       nixd
-      nixpkgs-fmt
+      nixfmt
       taplo
       marksman
       tinymist
@@ -16,7 +24,7 @@
 
       bash-language-server
       yaml-language-server
-      dockerfile-language-server-nodejs
+      dockerfile-language-server
       basedpyright
       ruff
     ];
@@ -42,12 +50,6 @@
         bg = "#${colors.pink}";
       };
 
-      rainbow = [
-        "#${colors.white}"
-        "#${colors.grey}"
-        "#${colors.blue}"
-        "#${colors.yellow}"
-      ];
     };
 
     settings = {
@@ -65,10 +67,14 @@
         line-number = "relative";
         cursorline = true;
         continue-comments = false;
-        gutters = [ "diagnostics" "spacer" "line-numbers" "spacer" "diff" ];
+        gutters = [
+          "diagnostics"
+          "spacer"
+          "line-numbers"
+          "spacer"
+          "diff"
+        ];
         bufferline = "always";
-
-        rainbow-brackets = true;
 
         jump-label-alphabet = "asdfghjklweruio";
 
@@ -82,9 +88,22 @@
         color-modes = true;
 
         statusline = {
-          left = [ "mode" "spinner" "file-name" "file-modification-indicator" ];
+          left = [
+            "mode"
+            "spinner"
+            "file-name"
+            "file-modification-indicator"
+          ];
           center = [ "diagnostics" ];
-          right = [ "version-control" "selections" "register" "position" "file-encoding" "file-line-ending" "file-type" ];
+          right = [
+            "version-control"
+            "selections"
+            "register"
+            "position"
+            "file-encoding"
+            "file-line-ending"
+            "file-type"
+          ];
           separator = "│";
           mode = {
             normal = "NORMAL";
@@ -119,7 +138,7 @@
         };
 
         end-of-line-diagnostics = "hint";
-        inline-diagnostics.cursor-line = "error";
+        inline-diagnostics.cursor-line = "disable";
 
         auto-save = {
           focus-lost = true;
@@ -141,7 +160,11 @@
           procMacro.enable = true;
           check = {
             command = "clippy";
-            extraArgs = [ "--" "-W" "clippy::pedantic" ];
+            extraArgs = [
+              "--"
+              "-W"
+              "clippy::pedantic"
+            ];
             allTargets = true;
           };
           cachePriming.enable = true;
@@ -169,16 +192,18 @@
         nixd = {
           command = "nixd";
           config.nixd = {
-            formatting.command = [ "nixpkgs-fmt" ];
+            formatting.command = [ "nixfmt" ];
             nixpkgs.expr = "import <nixpkgs> { }";
-            options.home-manager.expr =
-              ''(builtins.getFlake "${config.home.homeDirectory}/.config/nix").homeConfigurations.${hostname}.options'';
+            options.home-manager.expr = ''(builtins.getFlake "${config.home.homeDirectory}/.config/nix").homeConfigurations.${hostname}.options'';
           };
         };
 
         taplo = {
           command = "taplo";
-          args = [ "lsp" "stdio" ];
+          args = [
+            "lsp"
+            "stdio"
+          ];
         };
 
         marksman = {
@@ -203,18 +228,33 @@
       language = [
         {
           name = "rust";
-          roots = [ "Cargo.toml" "Cargo.lock" "rust-toolchain.toml" ];
-          language-servers = [ "rust-analyzer" "typos" ];
+          roots = [
+            "Cargo.toml"
+            "Cargo.lock"
+            "rust-toolchain.toml"
+          ];
+          language-servers = [
+            "rust-analyzer"
+            "typos"
+          ];
         }
         {
           name = "nix";
           auto-format = true;
-          formatter = { command = "nixpkgs-fmt"; };
-          language-servers = [ "nixd" "typos" ];
+          formatter = {
+            command = "nixfmt";
+          };
+          language-servers = [
+            "nixd"
+            "typos"
+          ];
         }
         {
           name = "toml";
-          language-servers = [ "taplo" "typos" ];
+          language-servers = [
+            "taplo"
+            "typos"
+          ];
         }
         {
           name = "typst";
@@ -225,7 +265,10 @@
             wrap-at-text-width = true;
             wrap-indicator = " ";
           };
-          language-servers = [ "tinymist" "harper-ls" ];
+          language-servers = [
+            "tinymist"
+            "harper-ls"
+          ];
         }
         {
           name = "markdown";
@@ -236,28 +279,48 @@
             wrap-at-text-width = true;
             wrap-indicator = " ";
           };
-          language-servers = [ "marksman" "harper-ls" "typos" ];
+          language-servers = [
+            "marksman"
+            "harper-ls"
+            "typos"
+          ];
         }
         {
           name = "bash";
-          language-servers = [ "bash-language-server" "typos" ];
+          language-servers = [
+            "bash-language-server"
+            "typos"
+          ];
         }
         {
           name = "yaml";
-          language-servers = [ "yaml-language-server" "typos" ];
+          language-servers = [
+            "yaml-language-server"
+            "typos"
+          ];
         }
         {
           name = "dockerfile";
-          language-servers = [ "docker-langserver" "typos" ];
+          language-servers = [
+            "docker-langserver"
+            "typos"
+          ];
         }
         {
           name = "python";
           auto-format = true;
           formatter = {
             command = "ruff";
-            args = [ "format" "-" ];
+            args = [
+              "format"
+              "-"
+            ];
           };
-          language-servers = [ "basedpyright" "ruff" "typos" ];
+          language-servers = [
+            "basedpyright"
+            "ruff"
+            "typos"
+          ];
         }
       ];
     };

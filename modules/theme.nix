@@ -1,5 +1,4 @@
-_:
-{
+_: {
   _module.args = {
     monoFont = "IoskeleyMono Nerd Font";
 
@@ -23,13 +22,13 @@ _:
       fg0 = "fbf1c7";
 
       white = "D0D0BA";
-      grey = "878787";
+      grey = "c8c2b8";
       red = "af5f5f";
       green = "87875f";
-      yellow = "AFA45F";
+      yellow = "a8a05f";
       orange = "af875f";
-      blue = "87afaf";
-      pink = "af8787";
+      blue = "5f8787";
+      pink = "b78f8f";
     };
   };
 }

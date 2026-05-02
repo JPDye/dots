@@ -1,6 +1,6 @@
 # dots
 
-Personal NixOS + home-manager flake. Single source of truth for system config, dotfiles, dev shells, and theming. Currently configured for one host (`laptop`), with planned multi-host support (see `docs/multi-host-refactor.md`).
+Personal NixOS + home-manager flake. Single source of truth for system config, dotfiles, dev shells, and theming. Currently configured for one host (`jd-laptop`), with planned multi-host support (see `docs/multi-host-refactor.md`).
 
 ![screenshot](https://github.com/JPDye/dots/blob/main/sc2.png)
 ![screenshot](https://github.com/JPDye/dots/blob/main/sc1.png)
@@ -10,17 +10,23 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
 ## Quick start
 
 ```nu
-# system rebuild (NixOS only) — applies hosts/laptop/configuration.nix
-sudo nixos-rebuild switch --flake ~/.config/nix#laptop
+# system rebuild (NixOS only) — applies hosts/jd-laptop/configuration.nix
+nh os switch . -H jd-laptop
 
 # user environment (home-manager) — applies home.nix + all modules
-nh home switch ~/.config/nix
+nh home switch .#homeConfigurations.jd-laptop.activationPackage
+# (or, if your nh build supports -c / --configuration:)
+nh home switch . -c jd-laptop
 
-# or, without nh:
-nix run home-manager/master -- switch -b backup --flake ~/.config/nix#laptop
+# without nh:
+sudo nixos-rebuild switch --flake .#jd-laptop
+nix run home-manager/master -- switch -b backup --flake .#jd-laptop
 ```
 
-`-b backup` tells home-manager to back up any pre-existing files it would otherwise refuse to overwrite (e.g. an existing `~/.config/niri/config.kdl`).
+Notes:
+- `nh os` selects the host with `-H <name>`; `nh home` selects with `-c <name>` or via the full attribute path. Plain `.#jd-laptop` doesn't work for `nh home` because it resolves under `packages.<system>` before `homeConfigurations`.
+- `-b backup` tells home-manager to back up any pre-existing files it would otherwise refuse to overwrite (e.g. an existing `~/.config/niri/config.kdl`).
+- Run from the flake directory (`~/.config/nix`) so `.` resolves correctly; otherwise replace `.` with `~/.config/nix`.
 
 ---
 
@@ -31,7 +37,7 @@ nix run home-manager/master -- switch -b backup --flake ~/.config/nix#laptop
 ├── flake.nix                 # inputs, overlays, hosts, homes, templates, devShell
 ├── home.nix                  # shared home-manager config (packages + module imports)
 ├── hosts/
-│   └── laptop/               # NixOS host: configuration.nix, hardware-configuration.nix
+│   └── jd-laptop/            # NixOS host: configuration.nix, hardware-configuration.nix
 ├── modules/                  # home-manager modules, one per program/concern
 │   ├── shell/                # aliases, cli-tools, integrations, nushell + scaffolds
 │   ├── starship/             # prompt (nix module + standalone toml)
@@ -53,23 +59,23 @@ nix run home-manager/master -- switch -b backup --flake ~/.config/nix#laptop
 **Overlays:** niri, nixGL, firefox-addons.
 
 **Outputs:**
-- `nixosConfigurations.laptop` — the only NixOS host.
-- `homeConfigurations.{arch,laptop}` — built via a `mkHome` helper that imports `home.nix` plus stylix/nixcord/niri home modules. The `arch` entry exists for using this flake standalone on a non-NixOS machine; only `laptop` has a matching system config.
+- `nixosConfigurations.jd-laptop` — the only NixOS host.
+- `homeConfigurations.{arch,jd-laptop}` — built via a `mkHome` helper that imports `home.nix` plus stylix/nixcord/niri home modules. The `arch` entry exists for using this flake standalone on a non-NixOS machine; only `jd-laptop` has a matching system config.
 - `templates.{rust,python,go}` — for `nix flake init -t .#<lang>`.
-- `devShells.x86_64-linux.default` — pre-commit env (nixpkgs-fmt, deadnix, statix).
+- `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix).
 - `checks.x86_64-linux.pre-commit` — runs the same hooks via `git-hooks.nix`.
 
-**Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. These are only honored if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `hosts/laptop/configuration.nix`.
+**Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. These are only honored if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `hosts/jd-laptop/configuration.nix`.
 
 ---
 
-## hosts/laptop/configuration.nix
+## hosts/jd-laptop/configuration.nix
 
 NixOS-side config. Highlights:
 
 - **User:** `jd`, shell `nushell`, in `wheel`, `networkmanager`, `wireshark`.
 - **Boot:** systemd-boot + EFI.
-- **Networking:** NetworkManager, hostname `jd-nix`, DNS `1.1.1.1`/`8.8.8.8`, firewall opens UDP 53/41641/51820 (DNS, Tailscale, WireGuard).
+- **Networking:** NetworkManager (DNS forced to `none` so static `nameservers` win), hostname `jd-laptop`, DNS `1.1.1.1`/`1.0.0.1` (Cloudflare), firewall opens UDP 41641/51820 (Tailscale, WireGuard).
 - **Locale:** `en_GB.UTF-8`, `Europe/London`, UK keymap.
 - **Services:** `tailscale` (client routing), `tlp` (AC perf / battery powersave 0–20%, charge thresholds 40–80%), `upower` (hibernate at 5%), `pipewire` (with PulseAudio compat + 32-bit ALSA), `blueman`, `niri`, `dbus` with portals (wlr/gtk/gnome), `wireshark` (CLI), `docker` (rootless) and `podman`.
 - **Hardware:** AMD CPU (`kvm-amd`, microcode), OpenGL + 32-bit, Bluetooth on at boot.
@@ -254,7 +260,7 @@ nh clean all                                             # gc, respecting nh.nix
 
 **`Command 'welcome' not found` in nushell startup.** The home-manager-symlinked `welcome.nu` resolves to a hashed nix-store name, so `use ~/.config/nushell/welcome.nu` registers a module under that hash. Fixed by `source`ing the file instead of `use`ing it (see `modules/shell/nushell.nix`).
 
-**`ignoring untrusted substituter 'https://niri.cachix.org'`.** Substituters declared in `flake.nix#nixConfig` only apply if the user is trusted. Either run `sudo nixos-rebuild switch` to pick up the system-wide caches in `hosts/laptop/configuration.nix`, or add your user to `nix.settings.trusted-users`.
+**`ignoring untrusted substituter 'https://niri.cachix.org'`.** Substituters declared in `flake.nix#nixConfig` only apply if the user is trusted. Either run `sudo nixos-rebuild switch` to pick up the system-wide caches in `hosts/jd-laptop/configuration.nix`, or add your user to `nix.settings.trusted-users`.
 
 **`Existing file '...' would be clobbered`.** Pass `-b backup` to home-manager (or set `home-manager.backupFileExtension` if invoking via the NixOS module). The conflicting file becomes `<file>.backup`.
 

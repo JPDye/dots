@@ -3,13 +3,14 @@
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-  outputs = { nixpkgs, ... }:
+  outputs =
+    { nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
     in
     {
-      formatter.${system} = pkgs.nixpkgs-fmt;
+      formatter.${system} = pkgs.nixfmt;
 
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [

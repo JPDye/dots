@@ -76,7 +76,8 @@
     ];
   };
 
-  outputs = inputs@{ nixpkgs, home-manager, ... }:
+  outputs =
+    inputs@{ nixpkgs, home-manager, ... }:
     let
       system = "x86_64-linux";
 
@@ -92,36 +93,42 @@
         overlays = sharedOverlays;
       };
 
-      mkHome = hostname: home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [
-          inputs.stylix.homeModules.stylix
-          inputs.nixcord.homeModules.nixcord
-          inputs.niri.homeModules.niri
-          ./home.nix
-        ];
-        extraSpecialArgs = { inherit inputs hostname system; };
-      };
+      mkHome =
+        hostname:
+        home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            inputs.stylix.homeModules.stylix
+            inputs.nixcord.homeModules.nixcord
+            inputs.niri.homeModules.niri
+            ./home.nix
+          ];
+          extraSpecialArgs = { inherit inputs hostname system; };
+        };
 
       pre-commit-check = inputs.git-hooks.lib.${system}.run {
         src = ./.;
         hooks = {
-          nixpkgs-fmt.enable = true;
+          nixfmt-rfc-style.enable = true;
           deadnix = {
             enable = true;
             # auto-generated; the unused `pkgs` lambda arg is upstream's choice
             excludes = [ "hosts/.*/hardware-configuration\\.nix$" ];
           };
           statix.enable = true;
+          typos.enable = true;
         };
       };
     in
     {
-      nixosConfigurations.laptop = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.jd-laptop = nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit inputs system; hostname = "laptop"; };
+        specialArgs = {
+          inherit inputs system;
+          hostname = "jd-laptop";
+        };
         modules = [
-          ./hosts/laptop/configuration.nix
+          ./hosts/jd-laptop/configuration.nix
           {
             nixpkgs.config.allowUnfree = true;
             nixpkgs.overlays = sharedOverlays;
@@ -131,10 +138,10 @@
 
       homeConfigurations = {
         arch = mkHome "arch";
-        laptop = mkHome "laptop";
+        jd-laptop = mkHome "jd-laptop";
       };
 
-      formatter.${system} = pkgs.nixpkgs-fmt;
+      formatter.${system} = pkgs.nixfmt;
 
       checks.${system}.pre-commit = pre-commit-check;
 
@@ -155,6 +162,10 @@
         go = {
           path = ./templates/go;
           description = "Go dev shell (gopls, delve, golangci-lint)";
+        };
+        typst = {
+          path = ./templates/typst;
+          description = "Typst dev shell (typst, tinymist, typstyle)";
         };
       };
     };

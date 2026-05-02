@@ -1,4 +1,9 @@
-{ pkgs, inputs, system, ... }:
+{
+  pkgs,
+  inputs,
+  system,
+  ...
+}:
 
 {
   imports = [
@@ -7,8 +12,14 @@
 
   nix = {
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
-      trusted-users = [ "root" "jd" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+      trusted-users = [
+        "root"
+        "jd"
+      ];
       auto-optimise-store = true;
 
       # Trust the niri/helix binary caches system-wide so non-root users
@@ -34,10 +45,22 @@
     };
   };
 
+  # Bootloader + hibernate from /swapfile on the root partition.
+  # If /swapfile gets fragmented, defrag and re-derive resume_offset:
+  #   sudo filefrag -v /swapfile | awk 'NR==4 {gsub(/\.\./, " "); print $4}'
+  boot = {
+    loader.systemd-boot.enable = true;
+    loader.efi.canTouchEfiVariables = true;
+    resumeDevice = "/dev/disk/by-uuid/38ce82b2-1685-4681-b9ac-35f9d1e2e995";
+    kernelParams = [ "resume_offset=117575680" ];
+  };
 
-  # Bootloader
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  swapDevices = [
+    {
+      device = "/swapfile";
+      size = 18 * 1024; # MiB; ≥ RAM (14Gi) + headroom
+    }
+  ];
 
   # Clock
   time.timeZone = "Europe/London";
@@ -90,6 +113,8 @@
 
     blueman.enable = true;
 
+    gnome.gnome-keyring.enable = true;
+
     pipewire = {
       enable = true;
       pulse.enable = true;
@@ -115,17 +140,30 @@
 
   # Networking
   networking = {
-    hostName = "jd-nix";
-    nameservers = [ "1.1.1.1" "8.8.8.8" ];
-    networkmanager.enable = true;
-    firewall.allowedUDPPorts = [ 53 51820 41641 ];
+    hostName = "jd-laptop";
+    nameservers = [
+      "1.1.1.1"
+      "1.0.0.1"
+    ];
+    networkmanager = {
+      enable = true;
+      dns = "none";
+    };
+    firewall.allowedUDPPorts = [
+      51820
+      41641
+    ];
   };
 
   # Users
   users.users.jd = {
     shell = pkgs.nushell;
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" "wireshark" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "wireshark"
+    ];
   };
 
   programs = {
@@ -135,6 +173,22 @@
     command-not-found.enable = false;
 
     niri.enable = true;
+
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        stdenv.cc.cc.lib
+        zlib
+        openssl
+        fuse3
+        icu
+        nss
+        nspr
+        libGL
+      ];
+    };
+
+    gpu-screen-recorder.enable = true;
 
     wireshark = {
       enable = true;
@@ -168,6 +222,8 @@
   environment.systemPackages = with pkgs; [
     tailscale
 
+    git
+
     ## OpenGL
     libGL
     libGLU
@@ -190,7 +246,7 @@
 
   # System Font
   fonts = {
-    packages = with pkgs; [
+    packages = [
       inputs.myFonts.packages.${system}.ioskeley
       inputs.myFonts.packages.${system}.berkeley
       pkgs.nerd-fonts.fira-code
@@ -201,13 +257,21 @@
       pkgs.font-awesome
     ];
 
-
     fontconfig = {
       enable = true;
       defaultFonts = {
-        monospace = [ "IoskeleyMono Nerd Font" "Fira Code Nerd Font Mono" ];
-        serif = [ "IoskeleyMono Nerd Font" "Fira Code Nerd Font Mono" ];
-        sansSerif = [ "IoskeleyMono Nerd Font" "Fira Code Nerd Font Mono" ];
+        monospace = [
+          "IoskeleyMono Nerd Font"
+          "Fira Code Nerd Font Mono"
+        ];
+        serif = [
+          "IoskeleyMono Nerd Font"
+          "Fira Code Nerd Font Mono"
+        ];
+        sansSerif = [
+          "IoskeleyMono Nerd Font"
+          "Fira Code Nerd Font Mono"
+        ];
       };
     };
   };

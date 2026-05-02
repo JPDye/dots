@@ -1,0 +1,9 @@
+[default.extend-words]
+# stylix theme palette uses hex strings that look like words
+BA = "BA"
+
+[files]
+extend-exclude = [
+  "shaders/*",
+  "flake.lock",
+]

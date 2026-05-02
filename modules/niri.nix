@@ -1,11 +1,24 @@
-_:
-{
+_: {
   programs.niri.settings = {
     spawn-at-startup = [
       { command = [ "xwayland-satellite" ]; }
       { command = [ "mako" ]; }
-      { command = [ "swww" "img" "/home/jd/.config/nix/wallpapers/halls.png" ]; }
-      { command = [ "swaybg" "-m" "fill" "-i" "/home/jd/.config/nix/wallpapers/halls-blur.png" ]; }
+      {
+        command = [
+          "awww"
+          "img"
+          "/home/jd/.config/nix/wallpapers/socrates.jpg.png"
+        ];
+      }
+      {
+        command = [
+          "swaybg"
+          "-m"
+          "fill"
+          "-i"
+          "/home/jd/.config/nix/wallpapers/socrates-blur.png.png"
+        ];
+      }
     ];
 
     hotkey-overlay.skip-at-startup = true;
@@ -18,7 +31,10 @@ _:
       workspace-shadow = {
         softness = 0;
         spread = 2;
-        offset = { x = 0; y = 0; };
+        offset = {
+          x = 0;
+          y = 0;
+        };
         color = "#af5f5f";
       };
     };
@@ -55,7 +71,9 @@ _:
         { proportion = 0.66667; }
       ];
 
-      default-column-width = { proportion = 0.5; };
+      default-column-width = {
+        proportion = 0.5;
+      };
 
       focus-ring.enable = false;
 
@@ -70,7 +88,10 @@ _:
         enable = true;
         spread = 4;
         softness = 0;
-        offset = { x = 0; y = 0; };
+        offset = {
+          x = 0;
+          y = 0;
+        };
         color = "#101010";
         inactive-color = "#1c1c1c";
       };
@@ -99,19 +120,25 @@ _:
         draw-border-with-background = true;
       }
       {
-        matches = [{ title = "Firefox"; }];
+        matches = [ { title = "Firefox"; } ];
         opacity = 1.0;
-        default-column-width = { proportion = 1.0; };
+        default-column-width = {
+          proportion = 1.0;
+        };
       }
       {
-        matches = [{ app-id = "Spotify"; }];
+        matches = [ { app-id = "Spotify"; } ];
         opacity = 1.0;
-        default-column-width = { proportion = 1.0; };
+        default-column-width = {
+          proportion = 1.0;
+        };
       }
       {
-        matches = [{ app-id = "Slack"; }];
+        matches = [ { app-id = "Slack"; } ];
         opacity = 1.0;
-        default-column-width = { proportion = 1.0; };
+        default-column-width = {
+          proportion = 1.0;
+        };
       }
       {
         matches = [
@@ -161,19 +188,61 @@ _:
 
     layer-rules = [
       {
-        matches = [{ namespace = "^wallpaper$"; }];
+        matches = [ { namespace = "^wallpaper$"; } ];
         place-within-backdrop = true;
       }
       {
-        matches = [{ namespace = "^eww$"; }];
+        matches = [ { namespace = "^eww$"; } ];
         place-within-backdrop = true;
       }
     ];
 
     binds = {
       "Mod+Space".action.spawn = "firefox";
-      "Mod+Return".action.spawn = [ "alacritty" "-e" "zellij" ];
+      "Mod+Return".action.spawn = "ghostty";
       "Mod+R".action.spawn = "fuzzel";
+      "Mod+V".action.spawn = [
+        "sh"
+        "-c"
+        "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"
+      ];
+
+      "Mod+I".action.spawn = [
+        "sh"
+        "-c"
+        ''hex=$(hyprpicker -a -f hex) && notify-send "Color picked" "$hex copied to clipboard"''
+      ];
+
+      "XF86AudioRaiseVolume".action.spawn = [
+        "swayosd-client"
+        "--output-volume"
+        "raise"
+      ];
+      "XF86AudioLowerVolume".action.spawn = [
+        "swayosd-client"
+        "--output-volume"
+        "lower"
+      ];
+      "XF86AudioMute".action.spawn = [
+        "swayosd-client"
+        "--output-volume"
+        "mute-toggle"
+      ];
+      "XF86AudioMicMute".action.spawn = [
+        "swayosd-client"
+        "--input-volume"
+        "mute-toggle"
+      ];
+      "XF86MonBrightnessUp".action.spawn = [
+        "swayosd-client"
+        "--brightness"
+        "raise"
+      ];
+      "XF86MonBrightnessDown".action.spawn = [
+        "swayosd-client"
+        "--brightness"
+        "lower"
+      ];
 
       "Mod+Q".action.close-window = [ ];
       "Ctrl+Q".action.spawn = "true";
@@ -181,7 +250,11 @@ _:
       "Mod+Shift+O".action.toggle-window-rule-opacity = [ ];
       "Mod+O".action.toggle-overview = [ ];
 
-      "Mod+Shift+C".action.spawn = [ "killall" "-SIGUSR1" "waybar" ];
+      "Mod+Shift+C".action.spawn = [
+        "killall"
+        "-SIGUSR1"
+        "waybar"
+      ];
 
       "Mod+H".action.focus-column-left = [ ];
       "Mod+J".action.focus-window-or-workspace-down = [ ];

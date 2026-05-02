@@ -1,4 +1,11 @@
-{ config, lib, pkgs, colors, monoFont, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  colors,
+  monoFont,
+  ...
+}:
 
 {
   gtk.gtk4.theme = config.gtk.theme;
@@ -35,7 +42,7 @@
       base02 = "${colors.bg2}";
       base03 = "${colors.bg3}";
       base04 = "${colors.fg3}";
-      base05 = "${colors.white}"; # ::<>, ()
+      base05 = "${colors.fg1}"; # ::<>, ()
       base06 = "${colors.fg1}";
       base07 = "${colors.fg0}";
 
@@ -46,14 +53,17 @@
       base0C = "${colors.orange}"; # "\n"
       base0D = "${colors.green}"; # println!, methods
       base0E = "${colors.red}"; # pub, impl, &, &mut
-      base0F = "ffffff";
+      base0F = "${colors.fg2}";
     };
   };
 
-  stylix.targets = lib.recursiveUpdate
-    (lib.genAttrs [ "firefox" "spicetify" "zellij" "mako" ] (_: { enable = false; }))
-    {
-      firefox.profileNames = [ "jd" ];
-      ghostty.enable = true;
-    };
+  stylix.targets =
+    lib.recursiveUpdate
+      (lib.genAttrs [ "firefox" "spicetify" "zellij" "mako" ] (_: {
+        enable = false;
+      }))
+      {
+        firefox.profileNames = [ "jd" ];
+        ghostty.enable = true;
+      };
 }

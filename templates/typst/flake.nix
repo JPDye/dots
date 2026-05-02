@@ -1,5 +1,5 @@
 {
-  description = "Go dev shell";
+  description = "Typst dev shell";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -14,11 +14,9 @@
 
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          go
-          gopls
-          delve
-          golangci-lint
-          gotools
+          typst # compiler (`typst compile main.typ`, `typst watch main.typ`)
+          tinymist # LSP — used by helix
+          typstyle # formatter (`typstyle format main.typ`)
         ];
       };
     };

@@ -1,4 +1,10 @@
-{ config, pkgs, inputs, system, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  system,
+  ...
+}:
 
 {
   home = {
@@ -8,17 +14,8 @@
 
     sessionPath = [
       "${config.home.homeDirectory}/.apps"
-      "/home/linuxbrew/.linuxbrew/bin"
       "${config.home.homeDirectory}/eww/target/release"
     ];
-
-    sessionVariables = {
-      RUSTC_WRAPPER = "sccache";
-      CARGO_INCREMENTAL = "0";
-      SCCACHE_DIR = "${config.home.homeDirectory}/.cache/sccache";
-      SCCACHE_CACHE_SIZE = "20G";
-      SCCACHE_IDLE_TIMEOUT = "0";
-    };
 
     packages = with pkgs; [
       # niri plumbing
@@ -29,7 +26,9 @@
       chromium
       ffmpeg
       foliate
-      wireshark-qt
+      wireshark
+      obsidian
+      gpu-screen-recorder-gtk
 
       # games / 3d
       steam
@@ -37,14 +36,15 @@
 
       # vpn / net
       wireguard-tools
-      protonvpn-gui
+      proton-vpn
 
       # audio / display
       pavucontrol
       brightnessctl
 
-      # rust build cache
-      sccache
+      # color picker (binds Mod+I in niri)
+      hyprpicker
+      libnotify
 
       # general cli not covered by other modules
       bottom
@@ -54,6 +54,12 @@
 
       inputs.claude-code.packages.${system}.default
     ];
+  };
+
+  xdg.userDirs = {
+    enable = true;
+    createDirectories = true;
+    setSessionVariables = false;
   };
 
   imports = [
@@ -94,6 +100,15 @@
 
     # notifications
     ./modules/mako.nix
+
+    # polkit auth-prompt agent
+    ./modules/polkit.nix
+
+    # clipboard history (cliphist + wl-clipboard)
+    ./modules/cliphist.nix
+
+    # on-screen-display for volume / brightness / caps-lock
+    ./modules/swayosd.nix
 
     # spotify
     inputs.spicetify-nix.homeManagerModules.default

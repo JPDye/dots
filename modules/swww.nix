@@ -1,16 +1,16 @@
 { pkgs, ... }:
 {
-  home.packages = [ pkgs.swww ];
+  home.packages = [ pkgs.awww ];
 
-  systemd.user.services.swww = {
+  systemd.user.services.awww = {
     Unit = {
-      Description = "swww daemon";
+      Description = "awww daemon";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
     };
     Service = {
       Type = "exec";
-      ExecStart = "${pkgs.swww}/bin/swww-daemon";
+      ExecStart = "${pkgs.awww}/bin/awww-daemon";
       Restart = "always";
     };
     Install.WantedBy = [ "graphical-session.target" ];

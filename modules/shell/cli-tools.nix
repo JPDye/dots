@@ -9,6 +9,7 @@
     jq
     tokei
     glow
+    wl-clipboard
   ];
 
   programs.tealdeer = {
