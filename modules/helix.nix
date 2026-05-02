@@ -66,14 +66,14 @@
         cursorline = true;
         continue-comments = false;
         gutters = [ "diagnostics" "spacer" "line-numbers" "spacer" "diff" ];
-        bufferline = "multiple";
+        bufferline = "always";
 
         rainbow-brackets = true;
 
         jump-label-alphabet = "asdfghjklweruio";
 
         completion-replace = true;
-        completion-trigger-len = 1;
+        completion-trigger-len = 2;
         idle-timeout = 50;
 
         trim-trailing-whitespace = true;

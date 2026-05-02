@@ -5,22 +5,35 @@
     ./hardware-configuration.nix
   ];
 
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
+  nix = {
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      trusted-users = [ "root" "jd" ];
+      auto-optimise-store = true;
 
-    # Trust the niri/helix binary caches system-wide so non-root users
-    # don't need to be in trusted-users to use them.
-    substituters = [
-      "https://cache.nixos.org"
-      "https://helix.cachix.org"
-      "https://niri.cachix.org"
-    ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs="
-      "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
-    ];
+      # Trust the niri/helix binary caches system-wide so non-root users
+      # don't need to be in trusted-users to use them.
+      substituters = [
+        "https://cache.nixos.org"
+        "https://helix.cachix.org"
+        "https://niri.cachix.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs="
+        "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
+      ];
+    };
+
+    optimise.automatic = true;
+
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 14d";
+    };
   };
+
 
   # Bootloader
   boot.loader.systemd-boot.enable = true;
@@ -68,6 +81,7 @@
 
     upower = {
       enable = true;
+      usePercentageForPolicy = true;
       percentageLow = 20;
       percentageCritical = 10;
       percentageAction = 5;
@@ -114,25 +128,32 @@
     extraGroups = [ "wheel" "networkmanager" "wireshark" ];
   };
 
+  programs = {
+    # The command-not-found handler hooks bash/zsh only — disabled because
+    # the login shell above is nushell. Keeps the ~80MB sqlite index out of
+    # every system closure.
+    command-not-found.enable = false;
+
+    niri.enable = true;
+
+    wireshark = {
+      enable = true;
+      package = pkgs.wireshark-cli;
+    };
+  };
+
   # Keymap
   console.keyMap = "uk";
   i18n.defaultLocale = "en_GB.UTF-8";
 
-  # Windowing
-  programs.niri.enable = true;
-
-  programs.wireshark = {
-    enable = true;
-    package = pkgs.wireshark-cli;
-  };
-
   # Sound
   security.rtkit.enable = true;
 
-  # Bluetooth
+  # Bluetooth — Experimental enables battery reporting for headphones.
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
+    settings.General.Experimental = true;
   };
 
   # System-wide packages

@@ -5,6 +5,7 @@
 
   stylix = {
     enable = true;
+    polarity = "dark";
 
     image = ../wallpapers/book.jpg;
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
@@ -50,7 +51,7 @@
   };
 
   stylix.targets = lib.recursiveUpdate
-    (lib.genAttrs [ "firefox" "spicetify" "zellij" "tofi" "mako" ] (_: { enable = false; }))
+    (lib.genAttrs [ "firefox" "spicetify" "zellij" "mako" ] (_: { enable = false; }))
     {
       firefox.profileNames = [ "jd" ];
       ghostty.enable = true;

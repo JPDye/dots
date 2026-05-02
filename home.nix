@@ -68,7 +68,7 @@
     ./modules/fastfetch.nix
 
     # prompt
-    ./modules/starship/starship.nix
+    ./modules/starship.nix
 
     # shell (nushell + cli tools + integrations + aliases)
     ./modules/shell
