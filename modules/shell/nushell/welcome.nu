@@ -17,6 +17,6 @@ def welcome [] {
     } else {
       0
     }
-    ^fastfetch --logo nixos --logo-padding-top 1 --logo-padding-left $pad
+    ^fastfetch --logo nixos --logo-padding-top 0 --logo-padding-left $pad
   }
 }

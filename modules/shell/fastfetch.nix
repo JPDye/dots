@@ -34,17 +34,17 @@ in
           };
 
           color = {
-            "1" = "#${colors.green}";
-            "2" = "#${colors.orange}";
-            "3" = "#${colors.red}";
+            "1" = "#${colors.red}";
+            "2" = "#${colors.red}";
+            "3" = "#${colors.orange}";
             "4" = "#${colors.orange}";
             "5" = "#${colors.green}";
-            "6" = "#${colors.red}";
+            "6" = "#${colors.green}";
           };
         };
 
         display = {
-          separator = " | ";
+          separator = " · ";
 
           color = {
             keys = "#${colors.orange}";
@@ -58,13 +58,18 @@ in
         modules = [
           "break"
           "break"
-
           "break"
+
+          {
+            type = "custom";
+            format = "{#38;2;175;95;95}●  {#38;2;175;135;95}●  {#38;2;168;160;95}●  {#38;2;135;135;95}●  {#38;2;95;135;135}●  {#38;2;183;143;143}●";
+          }
+
           "break"
 
           {
             type = "Datetime";
-            key = "";
+            key = "";
             format = "{12} {5} {1}";
           }
 
@@ -76,29 +81,29 @@ in
 
           "break"
 
-          {
-            type = "wm";
-            key = "";
-            format = "{2}";
-          }
+          # {
+          #   type = "wm";
+          #   key = "";
+          #   format = "{2}";
+          # }
 
-          {
-            type = "terminal";
-            key = "";
-            format = "{5}";
-          }
+          # {
+          #   type = "terminal";
+          #   key = "";
+          #   format = "{5}";
+          # }
 
-          {
-            type = "editor";
-            key = "";
-            format = "{2}";
-          }
+          # {
+          #   type = "editor";
+          #   key = "󰏬";
+          #   format = "{2}";
+          # }
 
-          "break"
+          # "break"
 
           {
             type = "media";
-            key = "";
+            key = "";
             format = "{3}";
 
           }
@@ -110,7 +115,7 @@ in
           }
           {
             type = "media";
-            key = "";
+            key = "";
             format = "{1}";
           }
 
@@ -118,13 +123,13 @@ in
 
           {
             type = "cpuusage";
-            key = "";
+            key = "";
             inherit percent;
           }
 
           {
             type = "memory";
-            key = "";
+            key = "";
             inherit percent;
           }
 
@@ -132,6 +137,13 @@ in
             type = "disk";
             inherit percent;
             key = "󰋊";
+          }
+
+          "break"
+
+          {
+            type = "custom";
+            format = "{#38;2;175;95;95}●  {#38;2;175;135;95}●  {#38;2;168;160;95}●  {#38;2;135;135;95}●  {#38;2;95;135;135}●  {#38;2;183;143;143}●";
           }
 
           "break"

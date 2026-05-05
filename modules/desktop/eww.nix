@@ -18,7 +18,7 @@ in
 
     programs.eww = {
       enable = true;
-      configDir = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/home-manager/eww";
+      configDir = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix/eww";
     };
 
     systemd.user.services.eww = {
@@ -47,7 +47,7 @@ in
       };
       Service = {
         Type = "exec";
-        ExecStart = "${pkgs.nushell}/bin/nu ${config.home.homeDirectory}/.config/home-manager/eww/powermenu.nu";
+        ExecStart = "${pkgs.nushell}/bin/nu ${config.home.homeDirectory}/.config/nix/eww/powermenu.nu";
         Restart = "always";
         Environment = [
           "PATH=${pkgs.eww}/bin:${pkgs.niri}/bin:/run/current-system/sw/bin"

@@ -9,7 +9,10 @@ _:
 
     "HDMI-A-1" = {
       scale = 1.0;
-      focus-at-startup = true;
+    };
+
+    "DP-7" = {
+      scale = 1.0;
     };
   };
 }

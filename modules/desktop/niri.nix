@@ -1,4 +1,5 @@
 {
+  colors,
   config,
   inputs,
   lib,
@@ -20,9 +21,9 @@ in
         { command = [ "mako" ]; }
         {
           command = [
-            "swww"
+            "awww"
             "img"
-            "${inputs.self}/wallpapers/abbey.jpg"
+            "${inputs.self}/wallpapers/socrates.jpg"
           ];
         }
         {
@@ -31,7 +32,7 @@ in
             "-m"
             "fill"
             "-i"
-            "${inputs.self}/wallpapers/abbey-blur.jpg"
+            "${inputs.self}/wallpapers/socrates-blur.png"
           ];
         }
       ];
@@ -41,7 +42,7 @@ in
       environment.DISPLAY = ":0";
 
       overview = {
-        backdrop-color = "#1c1c1c";
+        backdrop-color = "#${colors.bg0}";
         zoom = 0.6;
         workspace-shadow = {
           softness = 0;
@@ -50,7 +51,7 @@ in
             x = 0;
             y = 0;
           };
-          color = "#af875f";
+          color = "#${colors.orange}";
         };
       };
 
@@ -84,8 +85,8 @@ in
         border = {
           enable = true;
           width = 1;
-          active.color = "#af5f5f";
-          inactive.color = "#523636";
+          active.color = "#${colors.red}";
+          inactive.color = "#${colors.mid}";
         };
 
         shadow = {
@@ -97,7 +98,7 @@ in
             y = 0;
           };
           color = "#101010";
-          inactive-color = "#1c1c1c";
+          inactive-color = "#${colors.bg0}";
         };
 
         struts = {
@@ -122,7 +123,7 @@ in
           };
           clip-to-geometry = true;
           draw-border-with-background = false;
-          opacity = 0.98;
+          opacity = 1.0;
         }
         {
           matches = [ { title = "Firefox"; } ];
@@ -207,7 +208,12 @@ in
         "Mod+V".action.spawn = [
           "sh"
           "-c"
-          "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"
+          ''
+            sel=$(cliphist list | fuzzel --dmenu) || exit 0
+            [ -z "$sel" ] && exit 0
+            printf '%s' "$sel" | cliphist decode | wl-copy
+            notify-send "Copied to clipboard"
+          ''
         ];
 
         "Mod+I".action.spawn = [
@@ -305,10 +311,21 @@ in
 
         "Mod+C".action.center-column = [ ];
 
-        "Mod+Minus".action.set-column-width = "-10%";
-        "Mod+Equal".action.set-column-width = "+10%";
         "Mod+Shift+Minus".action.set-window-height = "-10%";
         "Mod+Shift+Equal".action.set-window-height = "+10%";
+
+        "Mod+Equal".action.spawn = [
+          "sh"
+          "-c"
+          ''
+            query=$(fuzzel --dmenu --prompt="= " < /dev/null) || exit 0
+            [ -z "$query" ] && exit 0
+            result=$(qalc -t "$query")
+            printf '%s' "$result" | wl-copy
+            notify-send "$query" "$result"
+            printf '%s\n' "$result" | fuzzel --dmenu --prompt="$query = "
+          ''
+        ];
 
         "Mod+P".action.screenshot = [ ];
         "Ctrl+Print".action.screenshot-screen = [ ];

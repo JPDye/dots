@@ -24,6 +24,7 @@ in
       tokei
       glow
       wl-clipboard
+      libqalculate
     ];
 
     programs.tealdeer = {

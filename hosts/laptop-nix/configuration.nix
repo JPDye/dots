@@ -124,6 +124,17 @@
     xserver.xkb.layout = "gb";
   };
 
+  systemd.user.services.poweralertd = {
+    description = "Power alert daemon (UPower → desktop notifications)";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.poweralertd}/bin/poweralertd";
+      Restart = "on-failure";
+    };
+  };
+
   xdg.portal = {
     enable = true;
     extraPortals = with pkgs; [

@@ -22,19 +22,13 @@ $surface-green: #87875f;
   opacity: 1.0;
 }
 
-.inner {
-  /* padding-left: 35.7em; */
-  /* padding-right: 35.7em; */
-  padding-left: 20.5em;
-  padding-right: 20.5em;
-}
-
 .btns-box {
   font-size: 1.2em;
   font-weight: bold;
 
   button {
-    padding: 0.1em 0.5em;
+    padding: 0.2em;
+    min-width: 1.2em;
     border-radius: 0.1em;
     background-color: rgba($surface-darkgrey, 0.8);
 
@@ -54,7 +48,7 @@ $surface-green: #87875f;
   font-weight: bold;
 
   .thing {
-    padding: 0.1em 0.5em;
+    padding: 0.1em 0.5em 0.1em 0.1em;
     border-radius: 0.1em;
     background-color: rgba($surface-darkgrey, 0.8);
   }
@@ -64,6 +58,7 @@ $surface-green: #87875f;
   }
 
   .icon {
+    min-width: 1.1em;
     color: rgba($surface-green, 0.8);
   }
 }

@@ -18,12 +18,17 @@ in
   config = lib.mkIf cfg.enable {
     gtk.gtk4.theme = config.gtk.theme;
 
+    qt = {
+      enable = true;
+      platformTheme.name = "gtk";
+    };
+
     stylix = {
       enable = true;
-      polarity = "dark";
+      polarity = config.dotfiles.theme.variant;
 
       image = ../../wallpapers/socrates.jpg;
-      base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
+      base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-${config.dotfiles.theme.variant}-hard.yaml";
 
       fonts = {
         monospace.name = monoFont;

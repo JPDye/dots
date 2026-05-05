@@ -22,7 +22,7 @@ in
       settings = {
         main = {
           icons-enabled = false;
-          terminal = "alacritty";
+          terminal = "ghostty";
           lines = 5;
 
           dpi-aware = "yes";
