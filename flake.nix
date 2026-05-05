@@ -109,7 +109,7 @@
       pre-commit-check = inputs.git-hooks.lib.${system}.run {
         src = ./.;
         hooks = {
-          nixfmt-rfc-style.enable = true;
+          nixfmt.enable = true;
           deadnix = {
             enable = true;
             # auto-generated; the unused `pkgs` lambda arg is upstream's choice
@@ -121,14 +121,14 @@
       };
     in
     {
-      nixosConfigurations.jd-laptop = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.laptop-nix = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
           inherit inputs system;
-          hostname = "jd-laptop";
+          hostname = "laptop-nix";
         };
         modules = [
-          ./hosts/jd-laptop/configuration.nix
+          ./hosts/laptop-nix/configuration.nix
           {
             nixpkgs.config.allowUnfree = true;
             nixpkgs.overlays = sharedOverlays;
@@ -137,8 +137,8 @@
       };
 
       homeConfigurations = {
-        arch = mkHome "arch";
-        jd-laptop = mkHome "jd-laptop";
+        desktop-arch = mkHome "desktop-arch";
+        laptop-nix = mkHome "laptop-nix";
       };
 
       formatter.${system} = pkgs.nixfmt;

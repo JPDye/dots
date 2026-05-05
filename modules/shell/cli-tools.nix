@@ -1,21 +1,36 @@
-{ pkgs, ... }:
 {
-  home.packages = with pkgs; [
-    ripgrep
-    fd
-    dust
-    procs
-    sd
-    jq
-    tokei
-    glow
-    wl-clipboard
-  ];
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
-  programs.tealdeer = {
-    enable = true;
-    settings = {
-      updates.auto_update = true;
+let
+  cfg = config.dotfiles.shell.cliTools;
+in
+{
+  options.dotfiles.shell.cliTools.enable = lib.mkEnableOption "general-purpose CLI tools" // {
+    default = true;
+  };
+
+  config = lib.mkIf cfg.enable {
+    home.packages = with pkgs; [
+      ripgrep
+      fd
+      dust
+      procs
+      sd
+      jq
+      tokei
+      glow
+      wl-clipboard
+    ];
+
+    programs.tealdeer = {
+      enable = true;
+      settings = {
+        updates.auto_update = true;
+      };
     };
   };
 }
