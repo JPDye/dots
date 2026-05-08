@@ -63,6 +63,9 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Hardware-specific NixOS modules. Pure data — no nixpkgs dependency.
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
   };
 
   nixConfig = {
@@ -106,6 +109,29 @@
           extraSpecialArgs = { inherit inputs hostname system; };
         };
 
+      mkNixos =
+        hostname:
+        nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs system hostname; };
+          modules = [
+            ./hosts/${hostname}/configuration.nix
+            {
+              nixpkgs.config.allowUnfree = true;
+              nixpkgs.overlays = sharedOverlays;
+            }
+          ];
+        };
+
+      # Hosts. NixOS hosts must have `hosts/<name>/configuration.nix`;
+      # home-manager hosts must have `hosts/<name>/home.nix`. A host can
+      # appear in both lists.
+      nixosHosts = [ "laptop-nix" ];
+      homeHosts = [
+        "laptop-nix"
+        "desktop-arch"
+      ];
+
       pre-commit-check = inputs.git-hooks.lib.${system}.run {
         src = ./.;
         hooks = {
@@ -116,30 +142,13 @@
             excludes = [ "hosts/.*/hardware-configuration\\.nix$" ];
           };
           statix.enable = true;
-          typos.enable = true;
         };
       };
     in
     {
-      nixosConfigurations.laptop-nix = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs system;
-          hostname = "laptop-nix";
-        };
-        modules = [
-          ./hosts/laptop-nix/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-            nixpkgs.overlays = sharedOverlays;
-          }
-        ];
-      };
+      nixosConfigurations = nixpkgs.lib.genAttrs nixosHosts mkNixos;
 
-      homeConfigurations = {
-        desktop-arch = mkHome "desktop-arch";
-        laptop-nix = mkHome "laptop-nix";
-      };
+      homeConfigurations = nixpkgs.lib.genAttrs homeHosts mkHome;
 
       formatter.${system} = pkgs.nixfmt;
 

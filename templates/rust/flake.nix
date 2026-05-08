@@ -34,12 +34,20 @@
       formatter.${system} = pkgs.nixfmt;
 
       devShells.${system}.default = pkgs.mkShell {
+        # sccache transparently skips incremental rustc invocations (it cannot
+        # cache them safely), so dev builds keep using cargo's per-function
+        # incremental as normal. Wins land on release builds, fresh clones,
+        # post-`cargo clean` recovery, and shared deps across projects.
+        RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
+        SCCACHE_CACHE_SIZE = "50G";
+
         buildInputs = with pkgs; [
           pkg-config
 
           rust
           mold
           clang
+          sccache
 
           bacon
 

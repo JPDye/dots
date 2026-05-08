@@ -6,7 +6,15 @@
 }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [
+    ./hardware-configuration.nix
+
+    # No exact T14s Gen 3 AMD profile in nixos-hardware. Combine the closest
+    # chassis match (t14s-amd-gen1 — same form factor, deep sleep tweak) with
+    # the AMD pstate driver (big battery win on Ryzen 6000-series).
+    inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t14s-amd-gen1
+    inputs.nixos-hardware.nixosModules.common-cpu-amd-pstate
+  ];
 
   nix = {
     settings = {
@@ -60,6 +68,11 @@
     }
   ];
 
+  # Compressed RAM swap. Sits in front of the on-disk swapfile (higher
+  # priority by default), so memory pressure compresses to RAM before
+  # touching the SSD. Hibernate still resumes from /swapfile.
+  zramSwap.enable = true;
+
   # Clock
   time.timeZone = "Europe/London";
 
@@ -84,7 +97,9 @@
     tlp = {
       enable = true;
       settings = {
-        CPU_SCALING_GOVERNOR_ON_AC = "performance";
+        # `powersave` is the EPP-aware governor under amd_pstate=active —
+        # actual behaviour is driven by CPU_ENERGY_PERF_POLICY below.
+        CPU_SCALING_GOVERNOR_ON_AC = "powersave";
         CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
 
         CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
@@ -93,7 +108,10 @@
         CPU_MIN_PERF_ON_AC = 0;
         CPU_MAX_PERF_ON_AC = 100;
         CPU_MIN_PERF_ON_BAT = 0;
-        CPU_MAX_PERF_ON_BAT = 20;
+        CPU_MAX_PERF_ON_BAT = 60;
+
+        # Turbo off on battery — pairs with the relaxed MAX_PERF cap above.
+        CPU_BOOST_ON_BAT = 0;
 
         START_CHARGE_THRESH_BAT0 = 40;
         STOP_CHARGE_THRESH_BAT0 = 80;
@@ -112,6 +130,10 @@
     blueman.enable = true;
 
     gnome.gnome-keyring.enable = true;
+
+    # NVMe TRIM. The t14s nixos-hardware profile doesn't pull in common/pc/ssd
+    # (the t14 one does), so enable explicitly.
+    fstrim.enable = true;
 
     pipewire = {
       enable = true;
@@ -157,6 +179,7 @@
     networkmanager = {
       enable = true;
       dns = "none";
+      wifi.powersave = true;
     };
     firewall.allowedUDPPorts = [
       51820

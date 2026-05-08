@@ -517,10 +517,17 @@ in
           harper-ls = {
             command = "harper-ls";
             args = [ "--stdio" ];
+            config."harper-ls".dialect = "British";
           };
 
           typos = {
             command = "typos-lsp";
+            config.config = toString (
+              pkgs.writeText "typos.toml" ''
+                [default]
+                locale = "en-gb"
+              ''
+            );
           };
         };
 
@@ -580,6 +587,35 @@ in
             };
             language-servers = [
               "marksman"
+              "harper-ls"
+              "typos"
+            ];
+          }
+          {
+            name = "text";
+            scope = "text.plain";
+            file-types = [ "txt" ];
+            roots = [ ];
+            text-width = 100;
+            soft-wrap = {
+              enable = true;
+              wrap-at-text-width = true;
+              wrap-indicator = " ";
+            };
+            language-servers = [
+              "harper-ls"
+              "typos"
+            ];
+          }
+          {
+            name = "git-commit";
+            text-width = 72;
+            soft-wrap = {
+              enable = true;
+              wrap-at-text-width = true;
+              wrap-indicator = " ";
+            };
+            language-servers = [
               "harper-ls"
               "typos"
             ];
