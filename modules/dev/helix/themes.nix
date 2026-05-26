@@ -213,76 +213,12 @@ let
       base0F = "#${palette.fg2}";
     };
   };
-
-  # Wraps mkTheme with a layer that swaps syntax-foreground colors and the
-  # base16 accent slots (base08–base0E) for an alternate set of accents.
-  # Bg/fg ramps and statusline backgrounds keep the original palette.
-  # Pass `accents = { red = ...; green = ...; yellow = ...; orange = ...;
-  # blue = ...; pink = ...; }` to override.
-  mkAccentTheme =
-    {
-      palette,
-      accents,
-    }:
-    lib.recursiveUpdate (mkTheme palette) {
-      "constant.character.escape" = "#${accents.yellow}";
-      "constant.numeric" = "#${accents.pink}";
-      error = "#${accents.red}";
-      info = "#${accents.blue}";
-      string = "#${accents.pink}";
-      type = "#${accents.blue}";
-      warning = "#${accents.orange}";
-
-      "ui.virtual.jump-label".fg = "#${accents.yellow}";
-
-      "diagnostic.warning".underline.color = "#${accents.orange}";
-      "diagnostic.error".underline.color = "#${accents.red}";
-      "diagnostic.info".underline.color = "#${accents.blue}";
-
-      palette = {
-        base08 = "#${accents.orange}";
-        base09 = "#${accents.yellow}";
-        base0A = "#${accents.pink}";
-        base0B = "#${accents.green}";
-        base0C = "#${accents.orange}";
-        base0D = "#${accents.green}";
-        base0E = "#${accents.red}";
-      };
-    };
 in
 {
   config = lib.mkIf config.dotfiles.dev.helix.enable {
     programs.helix.themes = {
       stylix-jumps-dark = mkTheme colorsDark;
-
-      # Light bg, all syntax accents pulled down to *Dark shades.
-      # High-contrast on cream — gruvbox-light-hard feel.
-      stylix-jumps-light = mkAccentTheme {
-        palette = colorsLight;
-        accents = {
-          red = colorsLight.redDark;
-          green = colorsLight.greenDark;
-          yellow = colorsLight.yellowDark;
-          orange = colorsLight.orangeDark;
-          blue = colorsLight.blueDark;
-          pink = colorsLight.pinkDark;
-        };
-      };
-
-      # Light bg, accents saturated via the `*Vivid` ramp. Brighter and
-      # punchier than `-light`; some accents (yellow, green) trade AA
-      # contrast on cream for vibrancy.
-      stylix-jumps-vivid = mkAccentTheme {
-        palette = colorsLight;
-        accents = {
-          red = colorsLight.redVivid;
-          green = colorsLight.greenVivid;
-          yellow = colorsLight.yellowVivid;
-          orange = colorsLight.orangeVivid;
-          blue = colorsLight.blueVivid;
-          pink = colorsLight.pinkVivid;
-        };
-      };
+      stylix-jumps-light = mkTheme colorsLight;
     };
   };
 }

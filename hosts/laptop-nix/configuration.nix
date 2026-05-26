@@ -39,6 +39,10 @@
     enable32Bit = true;
   };
 
+  # Firmware updates via `fwupdmgr refresh && fwupdmgr update`. ThinkPads
+  # publish BIOS/EC updates through LVFS; without this they sit unapplied.
+  services.fwupd.enable = true;
+
   environment.systemPackages = with pkgs; [
     libGL
     libGLU
