@@ -96,16 +96,18 @@
         overlays = sharedOverlays;
       };
 
+      sharedHmModules = [
+        inputs.stylix.homeModules.stylix
+        inputs.nixcord.homeModules.nixcord
+        inputs.niri.homeModules.niri
+        ./home.nix
+      ];
+
       mkHome =
         hostname:
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
-          modules = [
-            inputs.stylix.homeModules.stylix
-            inputs.nixcord.homeModules.nixcord
-            inputs.niri.homeModules.niri
-            ./home.nix
-          ];
+          modules = sharedHmModules;
           extraSpecialArgs = { inherit inputs hostname system; };
         };
 
@@ -131,11 +133,7 @@
               home-manager = {
                 useUserPackages = true;
                 extraSpecialArgs = { inherit inputs hostname system; };
-                users.jd.imports = [
-                  inputs.stylix.homeModules.stylix
-                  inputs.nixcord.homeModules.nixcord
-                  inputs.niri.homeModules.niri
-                  ./home.nix
+                users.jd.imports = sharedHmModules ++ [
                   {
                     nixpkgs.config.allowUnfree = true;
                     nixpkgs.overlays = sharedOverlays;
