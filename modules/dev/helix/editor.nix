@@ -51,6 +51,17 @@
           normal = {
             C-v = ":toggle lsp.display-inlay-hints";
             ret = "goto_word";
+
+            # Silence / restore typos-lsp spelling diagnostics on demand,
+            # without touching rust-analyzer/nixd/etc. typos attaches as
+            # `typos` on code and `typos-prose` (en-gb) on markdown/text —
+            # listing both makes the binds work in any buffer (unmatched names
+            # are ignored). Helix has no per-server toggle, so silence and
+            # restore are separate keys. Ctrl+q is freed for this in niri
+            # (binds.nix) and zellij (zellij.nix); still gated at commit by the
+            # typos pre-commit hook.
+            C-q = ":lsp-stop typos typos-prose"; # silence typos
+            C-S-q = ":lsp-restart typos typos-prose"; # restore typos
           };
         };
 

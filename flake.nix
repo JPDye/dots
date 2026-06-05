@@ -1,3 +1,7 @@
+let
+  # Shared with modules/system/nix.nix so the two cache lists can't drift.
+  caches = import ./caches.nix;
+in
 {
   description = "Unified config flake (NixOS + standalone home-manager)";
 
@@ -69,14 +73,8 @@
   };
 
   nixConfig = {
-    extra-substituters = [
-      "https://helix.cachix.org"
-      "https://niri.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs="
-      "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
-    ];
+    extra-substituters = caches.extraSubstituters;
+    extra-trusted-public-keys = caches.extraTrustedPublicKeys;
   };
 
   outputs =
@@ -163,6 +161,10 @@
             excludes = [ "hosts/.*/hardware-configuration\\.nix$" ];
           };
           statix.enable = true;
+          # Reads ./typos.toml (en-gb locale, palette-word allowlist, shader
+          # + flake.lock excludes). Also surfaced live in Helix via typos-lsp
+          # (toggle per-buffer with Space-q / Space-Q — see modules/dev/helix).
+          typos.enable = true;
         };
       };
     in

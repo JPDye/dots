@@ -82,24 +82,26 @@
           config."harper-ls".dialect = "British";
         };
 
+        # Code: locale "en" accepts both en-US/en-GB so American identifiers
+        # (the `colors` variable, `mold`, `rust-analyzer`, ...) aren't flagged.
         typos = {
           command = "typos-lsp";
           config.config = toString (
             pkgs.writeText "typos.toml" ''
               [default]
-              locale = "en-gb"
+              locale = "en"
             ''
           );
         };
 
-        # Rust-only variant — accepts both en-gb and en-us spellings, since
-        # crate APIs and upstream code mix the two.
-        typos-rust = {
+        # Prose (markdown, plain text): enforce British spelling. Mirrors the
+        # md/txt locale overrides in the repo-root typos.toml.
+        typos-prose = {
           command = "typos-lsp";
           config.config = toString (
-            pkgs.writeText "typos-rust.toml" ''
+            pkgs.writeText "typos-prose.toml" ''
               [default]
-              locale = "en"
+              locale = "en-gb"
             ''
           );
         };
@@ -115,7 +117,7 @@
           ];
           language-servers = [
             "rust-analyzer"
-            "typos-rust"
+            "typos"
           ];
         }
         {
@@ -162,7 +164,7 @@
           language-servers = [
             "marksman"
             "harper-ls"
-            "typos"
+            "typos-prose"
           ];
         }
         {
@@ -178,7 +180,7 @@
           };
           language-servers = [
             "harper-ls"
-            "typos"
+            "typos-prose"
           ];
         }
         {

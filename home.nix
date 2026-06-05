@@ -3,7 +3,6 @@
   hostname,
   inputs,
   pkgs,
-  system,
   ...
 }:
 
@@ -69,8 +68,7 @@
             # color picker bound to Mod+I in niri
             hyprpicker
           ]
-        )
-        ++ [ inputs.claude-code.packages.${system}.default ];
+        );
     };
 
     xdg.userDirs = {

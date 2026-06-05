@@ -23,7 +23,7 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
    # /etc/nix/nix.conf or ~/.config/nix/nix.conf
    experimental-features = nix-command flakes
    ```
-3. **Trust your user** so per-flake substituters (helix.cachix, niri.cachix) and `trusted-public-keys` are honored. Otherwise `direnv reload` and every `nix` command spam warnings about ignoring the flake's `nixConfig`:
+3. **Trust your user** so per-flake substituters (helix.cachix, niri.cachix) and `trusted-public-keys` are honoured. Otherwise `direnv reload` and every `nix` command spam warnings about ignoring the flake's `nixConfig`:
    ```bash
    echo 'trusted-users = root @wheel' | sudo tee -a /etc/nix/nix.conf
    sudo systemctl restart nix-daemon
@@ -152,7 +152,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 - `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix, typos).
 - `checks.x86_64-linux.pre-commit` — runs the same hooks via `git-hooks.nix`.
 
-**Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. Only honored if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `hosts/laptop-nix/configuration.nix`.
+**Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. Only honoured if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `hosts/laptop-nix/configuration.nix`.
 
 ---
 
@@ -227,8 +227,8 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 
 | Module | What it does |
 |--------|--------------|
-| `theme.nix` | Shared color palette + font name + border tokens. Exposed via `_module.args` so siblings can `inherit (specialArgs) colors monoFont border-style`. Gruvbox-dark-ish: `bg0=1c1c1c`, `fg0=fbf1c7`, accents `red af5f5f`, `green 87875f`, `yellow afa45f`, `orange af875f`, `blue 87afaf`, `pink af8787`. |
-| `stylix.nix` | Base16 theming via [stylix]. Scheme: gruvbox-dark-hard, overridden with `theme.nix` colors. Wallpaper: `wallpapers/book.jpg`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
+| `theme.nix` | Shared colour palette + font name + border tokens. Exposed via `_module.args` so siblings can `inherit (specialArgs) colors monoFont border-style`. Gruvbox-dark-ish: `bg0=1c1c1c`, `fg0=fbf1c7`, accents `red af5f5f`, `green 87875f`, `yellow afa45f`, `orange af875f`, `blue 87afaf`, `pink af8787`. |
+| `stylix.nix` | Base16 theming via [stylix]. Scheme: gruvbox-dark-hard, overridden with `theme.nix` colours. Wallpaper: `wallpapers/book.jpg`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
 | `fonts.nix` | Installs Nerd Fonts (fira-code, droid-sans-mono, symbols-only), Cascadia Code, Helvetica Neue LT Std, Siji, plus IoskeleyMono from the local `fonts/` flake. Sets fontconfig fallback chain. |
 
 ### Desktop / Wayland (`modules/desktop/`)
@@ -249,8 +249,8 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | Module | Notes |
 |--------|-------|
 | `alacritty.nix` | Shell `nushell`, beam cursor, auto-copy selection, 5px padding. |
-| `ghostty.nix` | Default command `zellij`. Bar cursor, blinking, custom shader `shaders/cursor_warp.glsl`. 16-color palette mapped to `theme.nix`. Close confirmation off. On Arch the binary itself isn't wrapped with nixGL — niri spawns it via `nixGL ghostty` instead. |
-| `zellij.nix` | Default shell `nushell`, compact layout, no frames, no startup tips. Unbinds `Ctrl+h` (so it falls through to nushell's BackspaceWord). Custom theme using palette colors. |
+| `ghostty.nix` | Default command `zellij`. Bar cursor, blinking, custom shader `shaders/cursor_warp.glsl`. 16-colour palette mapped to `theme.nix`. Close confirmation off. On Arch the binary itself isn't wrapped with nixGL — niri spawns it via `nixGL ghostty` instead. |
+| `zellij.nix` | Default shell `nushell`, compact layout, no frames, no startup tips. Unbinds `Ctrl+h` (so it falls through to nushell's BackspaceWord). Custom theme using palette colours. |
 
 ### Shell (`modules/shell/`)
 
@@ -263,7 +263,7 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | `integrations.nix` | Configures `zoxide` (`cd`/`cdi`), `carapace` completions, `atuin` history (`Ctrl+r`), `direnv` + `nix-direnv` (silent), `bat` (with `less -FR` pager), `eza` (icons + git status). |
 | `nushell.nix` | Enables `programs.nushell`. `EDITOR=hx`, no banner, fuzzy completions, `Ctrl+h`=BackspaceWord. Sources `~/.config/nushell/welcome.nu` and `scaffolds.nu`. |
 | `starship.nix` | Two-line prompt with box-drawing connectors. Sections: user (red), dir truncated to last 3 (orange), git branch + status (yellow, custom symbols for modified/untracked/ahead/behind/diverged/stashed), 24h time (green). |
-| `fastfetch.nix` | Colored NixOS logo + date/time, WM, terminal, editor, media player, CPU/mem/disk with percent bars. |
+| `fastfetch.nix` | Coloured NixOS logo + date/time, WM, terminal, editor, media player, CPU/mem/disk with percent bars. |
 | `nushell/welcome.nu` | Width-aware fastfetch banner shown at shell start. |
 | `nushell/scaffolds.nu` | `init-rust` / `init-python` / `init-go` — copy a template into cwd, `git init`, stage files, `direnv allow`. |
 
@@ -279,9 +279,9 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 
 | Module | Notes |
 |--------|-------|
-| `firefox.nix` | Profile `jd`. Theme: TextFox (minimal text-style chrome) using palette colors and `monoFont` from `theme.nix`. Adds bang-style search shortcuts: `@rs` (Rust stdlib), `@crs` (lib.rs), `@np` (nix packages), `@hm` (home-manager options). Installs ~30 extensions: Bitwarden, uBlock Origin, Privacy Badger, ClearURLs, I-Still-Don't-Care-About-Cookies, SponsorBlock, Return YouTube Dislike, YouTube Shorts Block, LanguageTool, Dark Reader, Tabliss, FoxyProxy, Sidebery, etc. |
-| `spicetify.nix` | Spotify with the `text` theme and a custom color scheme matching the rest of the system. |
-| `nixcord.nix` | Discord with the `system24` Vencord theme (gruvbox-material flavor). |
+| `firefox.nix` | Profile `jd`. Theme: TextFox (minimal text-style chrome) using palette colours and `monoFont` from `theme.nix`. Adds bang-style search shortcuts: `@rs` (Rust stdlib), `@crs` (lib.rs), `@np` (nix packages), `@hm` (home-manager options). Installs ~30 extensions: Bitwarden, uBlock Origin, Privacy Badger, ClearURLs, I-Still-Don't-Care-About-Cookies, SponsorBlock, Return YouTube Dislike, YouTube Shorts Block, LanguageTool, Dark Reader, Tabliss, FoxyProxy, Sidebery, etc. |
+| `spicetify.nix` | Spotify with the `text` theme and a custom colour scheme matching the rest of the system. |
+| `nixcord.nix` | Discord with the `system24` Vencord theme (gruvbox-material flavour). |
 
 ---
 
@@ -297,9 +297,9 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | | `Mod+Return` | ghostty (under nixGL on Arch) |
 | | `Mod+R` | fuzzel app launcher |
 | | `Mod+V` | cliphist → fuzzel → wl-copy (paste from history) |
-| | `Mod+I` | hyprpicker → notify-send (pick a color, copies hex) |
+| | `Mod+I` | hyprpicker → notify-send (pick a colour, copies hex) |
 | Window | `Mod+Q` | close window |
-| | `Ctrl+Q` | swallowed (binds to `true`, so muscle memory `Ctrl+Q` doesn't quit a terminal app) |
+| | `Ctrl+Q` | left unbound — passes through to the focused app (Helix binds it for typos; see below) |
 | | `Mod+Shift+O` | toggle window-rule opacity |
 | | `Mod+O` | toggle overview (zoomed-out workspace view) |
 | Focus | `Mod+H/J/K/L` | focus column left / window down / window up / column right |
@@ -312,10 +312,10 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | | `Mod+Ctrl+1..4` | move window to workspace 1–4 |
 | Column shape | `Mod+,` / `Mod+.` | consume window into column / expel out |
 | | `Mod+G` / `Mod+Shift+G` | cycle preset column-width / window-height |
-| | `Mod+C` | center current column |
+| | `Mod+C` | centre current column |
 | | `Mod±=/-` | grow/shrink column by 10% |
 | | `Mod+Shift±=/-` | grow/shrink window height by 10% |
-| Fullscreen | `Mod+F` / `Mod+Shift+F` / `Mod+Ctrl+F` | maximize column / fullscreen window / reset height |
+| Fullscreen | `Mod+F` / `Mod+Shift+F` / `Mod+Ctrl+F` | maximise column / fullscreen window / reset height |
 | Screenshot | `Mod+P` / `Ctrl+Print` / `Alt+Print` | region / whole screen / focused window |
 | Media | `XF86AudioRaiseVolume`/`Lower`/`Mute` | volume via swayosd (visual indicator) |
 | | `XF86AudioMicMute` | mic mute toggle |
@@ -337,15 +337,15 @@ Default zellij modal bindings — press the prefix to enter a mode, then a singl
 | Resize | `Ctrl+n` | `h/j/k/l` shrink/grow |
 | Scroll | `Ctrl+s` | `j/k` line / `Ctrl+u/d` half-page / `e` edit scrollback |
 | Session | `Ctrl+o` | `d` detach / `w` switch session |
-| Quit | `Ctrl+q` | quit session |
 
-Plus, from this config: **mouse mode** is on (drag pane borders to resize) and **copy on select** is on (selecting in scroll mode auto-copies to the clipboard). `Ctrl+h` is unbound at the zellij level so it falls through to nushell's BackspaceWord.
+Plus, from this config: **mouse mode** is on (drag pane borders to resize) and **copy on select** is on (selecting in scroll mode auto-copies to the clipboard). `Ctrl+h` and `Ctrl+q` are unbound at the zellij level — `Ctrl+h` falls through to nushell's BackspaceWord, and `Ctrl+q` to the focused app (Helix's typos silence/restore). Quit zellij by exiting the shell or detaching with `Ctrl+o` then `d`.
 
 ### Helix (editor)
 
-Upstream defaults apply — see `hx --tutor` for the full keymap. Customizations from `modules/dev/helix.nix`:
+Upstream defaults apply — see `hx --tutor` for the full keymap. Customisations from `modules/dev/helix.nix`:
 
 - `Ctrl+v` (normal mode) — toggle LSP inlay hints.
+- `Ctrl+q` / `Ctrl+Shift+q` (normal mode) — silence / restore the typos-lsp spell checker in the current buffer (other language servers unaffected).
 - `Enter` (normal mode) — `goto_word` (Easymotion-style: shows jump labels using the `asdfghjklweruio` alphabet, type a label to jump).
 - `Space` mode — file picker (`f`), buffer picker (`b`), workspace symbol search (`s`), formatter (`=`), code action (`a`).
 - Auto-format on save for every language with a configured formatter.
@@ -382,13 +382,13 @@ Nushell is the login shell. Pipelines carry structured data (tables, records, li
 
 Zoxide replaces `cd` with a frecency-ranked database of directories you've visited. After visiting a directory once, you can jump back to it from anywhere by typing a fragment of its path. "Frecency" = frequency × recency: a dir you `cd`'d into yesterday and ten times last week beats one you visited once a month ago.
 
-| Command | Behavior |
+| Command | Behaviour |
 |---------|----------|
 | `cd home-manager` | Jump to the highest-ranked directory whose path contains `home-manager`. From `/tmp` this lands you in `~/.config/home-manager`. |
 | `cd config nix` | Multi-fragment match — every fragment must appear in the path, in order. Picks the highest-ranked match. |
 | `cdi config` | Interactive picker (fzf-style) listing all matches by score; arrow-keys + Enter to confirm. |
 | `cd ~/Pictures` | Plain absolute/relative paths still work — they bypass the database. |
-| `cd -` | Go back to the previous directory (built-in nushell behavior, unchanged). |
+| `cd -` | Go back to the previous directory (built-in nushell behaviour, unchanged). |
 | `cd` (no args) | Home directory. |
 
 The database lives at `~/.local/share/zoxide/db.zo`. It's populated automatically as you navigate — you don't have to bookmark anything. Type `zoxide query --list` to see your current ranking.
@@ -410,7 +410,7 @@ Atuin replaces shell history with a SQLite database that records each command's 
 | `cat` | `bat` | Syntax highlighting, line numbers, automatic paging via `less -FR` for files taller than the terminal. Plain `cat`-like for piped output. |
 | `grep` | `rg` (ripgrep) | ~10× faster, recursive by default, respects `.gitignore` automatically, smart-case matching (lowercase pattern → case-insensitive; mixed → case-sensitive). |
 | `du` | `dust` | Shows directory sizes as a nested bar chart sorted largest-first. Run in `~/.config/home-manager` to see what's using space. |
-| `ps` | `procs` | Process listing in colored columns, with `--tree` for parent/child view, `--watch` for live updates, and process search by name as the last argument. |
+| `ps` | `procs` | Process listing in coloured columns, with `--tree` for parent/child view, `--watch` for live updates, and process search by name as the last argument. |
 | `sed` | `sd` | Replaces `sed`'s arcane syntax for the common case of find-and-replace. `sd 'foo' 'bar' file.txt` instead of `sed -i 's/foo/bar/g' file.txt`. |
 | `ls` | `eza -1` | Single-column output by default. The bare `eza` invocation also shows git status icons next to each tracked file/dir. |
 | `tree` | `eza --tree --git-ignore` | Tree view that skips `.gitignore`d junk (so `target/` and `node_modules/` don't drown the output). |
@@ -420,7 +420,7 @@ The aliases live in `modules/shell/aliases.nix` and are exported via `_module.ar
 #### Other always-on integrations
 
 - **direnv** + **nix-direnv** — `cd` into a project with an `.envrc` and the dev shell auto-activates (after one-time `direnv allow`). Project-pinned tools (e.g. the rust template's `bacon` + nightly toolchain) appear in `PATH` automatically and disappear when you leave.
-- **bat** — used as a pager (`less -FR`) so colored output works downstream.
+- **bat** — used as a pager (`less -FR`) so coloured output works downstream.
 - **eza** — git-aware listing with icons; `eza --git --git-ignore --long` is a common power invocation.
 - **glow** — render markdown in the terminal: `glow README.md`.
 - **tealdeer** — `tldr <cmd>` for community-curated cheat sheets, auto-updates daily.
@@ -447,7 +447,7 @@ Inside any directory:
 
 | Template | Provides |
 |----------|----------|
-| `rust` | Rust 1.90.0 (rust-src, rust-analyzer, clippy, rustfmt) + mold + clang. Dev tools: `bacon`, `cargo-nextest`, `cargo-llvm-cov`, `cargo-udeps`, `cargo-machete`, `cargo-flamegraph`. |
+| `rust` | Rust 1.90.0 (`rust-src`, `rust-analyzer`, `clippy`, `rustfmt`) + `mold` + `clang`. Dev tools: `bacon`, `cargo-nextest`, `cargo-llvm-cov`, `cargo-udeps`, `cargo-machete`, `cargo-flamegraph`. |
 | `python` | Python 3.13, `uv`, `ruff`, `basedpyright`. |
 | `go` | `go`, `gopls`, `delve`, `golangci-lint`, `gotools`. |
 | `typst` | `typst`, `tinymist`, `typstyle`. |
@@ -476,7 +476,7 @@ blur-wallpaper <input> [output] [sigma]
 #   sigma:  blur strength (default 20; higher = blurrier)
 ```
 
-Sigma rule of thumb: `10` barely-blurred, `20` is the niri-backdrop default (still recognizable as the original), `60+` heavy frosted glass, `120+` almost a solid color blob. Any format ImageMagick supports (`.png`, `.jpg`, `.webp`, `.heic`, …) works as both input and output.
+Sigma rule of thumb: `10` barely-blurred, `20` is the niri-backdrop default (still recognisable as the original), `60+` heavy frosted glass, `120+` almost a solid colour blob. Any format ImageMagick supports (`.png`, `.jpg`, `.webp`, `.heic`, …) works as both input and output.
 
 ### Swapping the active wallpaper
 
@@ -504,7 +504,7 @@ swww img wallpapers/sunset.jpg
 killall swaybg; swaybg -m fill -i wallpapers/sunset-blur.jpg &
 ```
 
-If the active wallpaper for stylix's color-extraction (`modules/theming/stylix.nix:image`) should also change, edit that path too — stylix uses it to derive accent colors and apply them across the rest of the system.
+If the active wallpaper for stylix's colour-extraction (`modules/theming/stylix.nix:image`) should also change, edit that path too — stylix uses it to derive accent colours and apply them across the rest of the system.
 
 ---
 

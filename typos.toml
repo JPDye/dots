@@ -1,9 +1,24 @@
+# Default locale "en" accepts both en-US and en-GB spellings, so American
+# identifiers baked into the code (the `colors` variable, `mold`,
+# `rust-analyzer`, ...) aren't flagged — en-gb produced 226 such false
+# positives. Prose files (md/txt) override to "en-gb" to enforce British
+# spelling there. Helix's typos-lsp servers mirror this split.
 [default]
-locale = "en-gb"
+locale = "en"
 
 [default.extend-words]
 # stylix theme palette uses hex strings that look like words
 BA = "BA"
+
+# Prose gets British spelling enforced; code above stays lenient.
+[type.md]
+locale = "en-gb"
+# Skip backtick-quoted inline code so American-spelled identifiers referenced
+# in docs (`colors`, `rust-analyzer`, `mold`, ...) aren't flagged as prose.
+extend-ignore-re = ['`[^`\n]+`']
+
+[type.txt]
+locale = "en-gb"
 
 [files]
 extend-exclude = [

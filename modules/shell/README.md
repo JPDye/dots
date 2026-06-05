@@ -31,7 +31,7 @@ Most are wired to old names via aliases — see [Aliases](#aliases).
 | `rg`       | `grep`        | Recursive search; respects `.gitignore` by default.   |
 | `fd`       | `find`        | File search with sane defaults and regex.             |
 | `dust`     | `du`          | Disk usage, sorted, with bar chart.                   |
-| `procs`    | `ps`          | Process list with colors and tree view (`procs --tree`). |
+| `procs`    | `ps`          | Process list with colours and tree view (`procs --tree`). |
 | `sd`       | `sed`         | Find-and-replace with regex (`sd 'foo' 'bar' file`).  |
 | `jq`       | —             | JSON query tool. `... \| jq '.field'`.                |
 | `tokei`    | —             | Count lines of code by language. `tokei .`.          |
@@ -82,7 +82,7 @@ With `nix-direnv` enabled, `use flake` in `.envrc` lazy-loads a flake's
 
 ```
 cd my-rust-project    # .envrc with `use flake` -> dev shell loads
-direnv allow          # required once per .envrc to authorize it
+direnv allow          # required once per .envrc to authorise it
 direnv reload         # force re-eval
 ```
 
@@ -91,7 +91,7 @@ See `init-rust` below for the bootstrap.
 ### `bat` — `cat` with syntax highlighting
 
 Aliased to `cat`. Pager set to `less -FR` (no pager for short output, raw
-ANSI for color).
+ANSI for colour).
 
 ### `eza` — `ls` replacement
 
@@ -134,7 +134,7 @@ To bypass an alias, prefix with `^`: `^cat file` runs the real `cat`.
 
 ### `welcome.nu`
 
-Runs at shell startup. Prints a centered `fastfetch` system-info banner —
+Runs at shell startup. Prints a centred `fastfetch` system-info banner —
 chooses `nixos_small` logo for narrow terminals (<80 cols), full `nixos`
 logo otherwise.
 
@@ -153,7 +153,7 @@ files, and `direnv allow`s. The dev shell auto-activates on the next prompt.
 
 | Command       | Template            | Toolchain                                                    |
 | ------------- | ------------------- | ------------------------------------------------------------ |
-| `init-rust`   | `templates/rust/`   | rust 1.90 stable, mold, sccache, bacon, cargo-nextest, etc.  |
+| `init-rust`   | `templates/rust/`   | rust 1.90 stable, `mold`, sccache, bacon, cargo-nextest, etc.  |
 | `init-python` | `templates/python/` | python 3.13, uv, ruff, basedpyright                          |
 | `init-go`     | `templates/go/`     | go, gopls, delve, golangci-lint, gotools                     |
 

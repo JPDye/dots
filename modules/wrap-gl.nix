@@ -1,13 +1,69 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 
+let
+  # Wrap a package so its executables run under nixGL — needed on non-NixOS
+  # hosts where the OpenGL driver libs aren't where nixpkgs expects. Takes the
+  # nixGL wrapper binary to use (e.g. "${pkgs.nixgl.nixGLIntel}/bin/nixGLIntel"
+  # — nixGLIntel is the Mesa variant, which also covers AMD GPUs) and returns a
+  # `pkg -> pkg` transform. Exposed via _module.args so any non-NixOS host can
+  # do `dotfiles.wrapGL = mkNixGLWrap "…";` without copying this logic.
+  mkNixGLWrap =
+    nixGLBin: pkg:
+    let
+      wrappedBins =
+        pkgs.runCommand "${pkg.name}-bin-nixgl"
+          {
+            nativeBuildInputs = [ pkgs.makeWrapper ];
+          }
+          ''
+            mkdir -p $out/bin
+            for bin in ${pkg}/bin/*; do
+              if [ -f "$bin" ] && [ -x "$bin" ]; then
+                name=$(basename "$bin")
+                makeWrapper ${nixGLBin} "$out/bin/$name" \
+                  --add-flags "$bin"
+              fi
+            done
+          '';
+      wrapped = pkgs.symlinkJoin {
+        name = "${pkg.name}-nixgl";
+        paths = [
+          wrappedBins
+          pkg
+        ];
+      };
+    in
+    # Re-expose the original package's attributes (meta, passthru, and
+    # top-level fields such as buildRustPackage's `cargoBuildFeatures`) on
+    # the wrapped result, while keeping the symlinkJoin's own store paths
+    # and outputs. Without this, consumers that introspect the package
+    # break — e.g. niri-flake reads `cfg.package.cargoBuildNoDefaultFeatures`.
+    wrapped
+    // builtins.removeAttrs pkg (
+      [
+        "name"
+        "type"
+        "out"
+        "outPath"
+        "drvPath"
+        "outputName"
+        "outputs"
+        "all"
+      ]
+      ++ (pkg.outputs or [ ])
+    );
+in
 {
+  _module.args.mkNixGLWrap = mkNixGLWrap;
+
   options.dotfiles.wrapGL = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
     default = pkg: pkg;
     description = ''
       Transform applied to GPU/OpenGL-using packages. Identity on hosts where
       the OS supplies driver libs in the right places (NixOS); on Arch and
-      similar this is overridden to wrap each binary with nixGL.
+      similar a host sets this to `mkNixGLWrap "<nixGL binary>"` to wrap each
+      binary with nixGL.
     '';
   };
 }

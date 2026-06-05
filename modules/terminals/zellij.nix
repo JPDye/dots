@@ -35,6 +35,9 @@ in
         keybinds = {
           shared = {
             "unbind \"Ctrl h\"" = { };
+            # Drop zellij's Ctrl+q quit binding so the key falls through to
+            # the running app — Helix binds it to silence/restore typos-lsp.
+            "unbind \"Ctrl q\"" = { };
           };
         };
 

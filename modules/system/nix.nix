@@ -1,5 +1,8 @@
-_:
-
+let
+  # Shared with the flake's eval-time `nixConfig` (flake.nix) so the two
+  # cache lists can't drift.
+  caches = import ../../caches.nix;
+in
 {
   nix = {
     settings = {
@@ -19,16 +22,8 @@ _:
 
       # Trust the niri/helix binary caches system-wide so non-root users
       # don't need to be in trusted-users to use them.
-      substituters = [
-        "https://cache.nixos.org"
-        "https://helix.cachix.org"
-        "https://niri.cachix.org"
-      ];
-      trusted-public-keys = [
-        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-        "helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs="
-        "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
-      ];
+      inherit (caches) substituters;
+      trusted-public-keys = caches.trustedPublicKeys;
     };
 
     optimise.automatic = true;

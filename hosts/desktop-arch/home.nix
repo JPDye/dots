@@ -1,39 +1,14 @@
 {
   lib,
   pkgs,
+  mkNixGLWrap,
   ...
 }:
 
 let
-  # Wrap a package so its executables run under nixGL — needed on non-NixOS
-  # hosts where the OpenGL driver libs aren't where nixpkgs expects.
-  # nixGLIntel is the Mesa variant — also covers AMD GPUs.
-  wrapGL =
-    pkg:
-    let
-      wrappedBins =
-        pkgs.runCommand "${pkg.name}-bin-nixgl"
-          {
-            nativeBuildInputs = [ pkgs.makeWrapper ];
-          }
-          ''
-            mkdir -p $out/bin
-            for bin in ${pkg}/bin/*; do
-              if [ -f "$bin" ] && [ -x "$bin" ]; then
-                name=$(basename "$bin")
-                makeWrapper ${pkgs.nixgl.nixGLIntel}/bin/nixGLIntel "$out/bin/$name" \
-                  --add-flags "$bin"
-              fi
-            done
-          '';
-    in
-    pkgs.symlinkJoin {
-      name = "${pkg.name}-nixgl";
-      paths = [
-        wrappedBins
-        pkg
-      ];
-    };
+  # nixGLIntel is the Mesa variant — also covers AMD GPUs. mkNixGLWrap lives in
+  # modules/wrap-gl.nix so the wrapping logic is shared across non-NixOS hosts.
+  wrapGL = mkNixGLWrap "${pkgs.nixgl.nixGLIntel}/bin/nixGLIntel";
 in
 {
   dotfiles.wrapGL = wrapGL;

@@ -93,7 +93,8 @@ in
       ];
 
       "Mod+Q".action.close-window = [ ];
-      "Ctrl+Q".action.spawn = "true";
+      # Ctrl+Q is intentionally left unbound here (and unbound in zellij) so it
+      # reaches the focused app — Helix uses it to silence/restore typos-lsp.
 
       "Mod+Shift+O".action.toggle-window-rule-opacity = [ ];
       "Mod+O".action.toggle-overview = [ ];
