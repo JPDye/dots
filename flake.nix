@@ -1,7 +1,3 @@
-let
-  # Shared with modules/system/nix.nix so the two cache lists can't drift.
-  caches = import ./caches.nix;
-in
 {
   description = "Unified config flake (NixOS + standalone home-manager)";
 
@@ -72,9 +68,23 @@ in
     nixos-hardware.url = "github:NixOS/nixos-hardware";
   };
 
+  # Nix guards `nixConfig` with `forceTrivialValue`: every value must be a
+  # *literal* (string/bool/int/list-of-strings) written right here — not a
+  # `let` binding, not `(import ./caches.nix).substituters`, not any
+  # computed expression, or loading the flake errors with "flake configuration
+  # setting … is a thunk" (which breaks `nix eval` / `nix flake check`). So the
+  # two extra caches are inlined literally below. Keep them in sync with the
+  # `extra` list in caches.nix — the source of truth for the system-level
+  # substituters in modules/system/nix.nix (those aren't literal-constrained).
   nixConfig = {
-    extra-substituters = caches.extraSubstituters;
-    extra-trusted-public-keys = caches.extraTrustedPublicKeys;
+    extra-substituters = [
+      "https://helix.cachix.org"
+      "https://niri.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs="
+      "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
+    ];
   };
 
   outputs =
@@ -84,7 +94,20 @@ in
 
       sharedOverlays = [
         inputs.niri.overlays.niri
-        inputs.nixgl.overlay
+        # nixGL's own overlay derives an `isIntelX86Platform` flag from the
+        # deprecated `final.system` alias (nixGL flake.nix:36), which prints a
+        # "'system' has been renamed to 'stdenv.hostPlatform.system'" warning
+        # the moment the desktop forces `pkgs.nixgl.nixGLIntel`. We pin
+        # x86_64-linux above, so that flag is unconditionally true here —
+        # import nixGL's default.nix directly with the flags inlined to get the
+        # byte-identical package set without tripping the deprecation.
+        (final: _: {
+          nixgl = import "${inputs.nixgl}/default.nix" {
+            pkgs = final;
+            enable32bits = true;
+            enableIntelX86Extensions = true;
+          };
+        })
         inputs.firefox-addons.overlays.default
       ];
 
@@ -167,15 +190,45 @@ in
           typos.enable = true;
         };
       };
+
+      nixosConfigs = nixpkgs.lib.genAttrs nixosHosts mkNixos;
+      homeConfigs = nixpkgs.lib.genAttrs homeHosts mkHome;
+
+      # Home-manager option trees per host, for nixd's option completion
+      # (consumed by modules/dev/helix/languages.nix as `.hmOptions.${hostname}`).
+      # The path differs by host type: standalone-HM hosts expose `.options`
+      # directly, but on NixOS the user's HM options are nested under the system
+      # option set and need `getSubOptions` to peel the `home-manager.users.<name>`
+      # submodule. Keying by hostname lets nixd look the tree up without knowing
+      # which kind of host it's running on.
+      hmOptions =
+        nixpkgs.lib.genAttrs homeHosts (h: homeConfigs.${h}.options)
+        // nixpkgs.lib.genAttrs nixosHosts (
+          h: nixosConfigs.${h}.options.home-manager.users.type.getSubOptions [ ]
+        );
     in
     {
-      nixosConfigurations = nixpkgs.lib.genAttrs nixosHosts mkNixos;
+      nixosConfigurations = nixosConfigs;
 
-      homeConfigurations = nixpkgs.lib.genAttrs homeHosts mkHome;
+      homeConfigurations = homeConfigs;
+
+      inherit hmOptions;
 
       formatter.${system} = pkgs.nixfmt;
 
-      checks.${system}.pre-commit = pre-commit-check;
+      # `pre-commit` is the formatting/lint gate; the per-host entries build the
+      # real thing (NixOS toplevel / HM activation package) so `nix flake check`
+      # catches eval/build breakage before a `switch` does. Derived from the host
+      # lists so a new host gets a check for free.
+      checks.${system} = {
+        pre-commit = pre-commit-check;
+      }
+      // nixpkgs.lib.mapAttrs' (
+        h: cfg: nixpkgs.lib.nameValuePair "nixos-${h}" cfg.config.system.build.toplevel
+      ) nixosConfigs
+      // nixpkgs.lib.mapAttrs' (
+        h: cfg: nixpkgs.lib.nameValuePair "home-${h}" cfg.activationPackage
+      ) homeConfigs;
 
       devShells.${system}.default = pkgs.mkShell {
         inherit (pre-commit-check) shellHook;

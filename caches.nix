@@ -1,7 +1,10 @@
-# Single source of truth for the extra binary caches used in two places that
-# can't share a `let`: the flake's eval-time `nixConfig` (flake.nix) and the
-# persistent system config (modules/system/nix.nix). Keeping the list here
-# stops the two from silently drifting.
+# Source of truth for the extra binary caches used by the persistent system
+# config (modules/system/nix.nix).
+#
+# NOTE: the flake's eval-time `nixConfig.extra-*` (flake.nix) CANNOT import
+# this file — Nix requires nixConfig values to be literals (see the comment
+# there). The `extra` list below is duplicated there as inline literals; if you
+# add/remove/rekey a cache, update both. Everything else reads from here.
 let
   # cache.nixos.org is already a default substituter, so it's only needed for
   # the persistent `substituters`/`trustedPublicKeys` lists — not the flake's
@@ -11,6 +14,8 @@ let
     key = "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=";
   };
 
+  # KEEP IN SYNC with flake.nix's `nixConfig.extra-*` literals (it can't import
+  # this file — see the NOTE above).
   extra = [
     {
       url = "https://helix.cachix.org";
@@ -25,11 +30,8 @@ let
   all = [ cacheNixOrg ] ++ extra;
 in
 {
-  # For flake `nixConfig.extra-*` — the defaults already include cache.nixos.org.
-  extraSubstituters = map (c: c.url) extra;
-  extraTrustedPublicKeys = map (c: c.key) extra;
-
-  # For persistent `nix.settings` — full lists including cache.nixos.org.
+  # For persistent `nix.settings` (modules/system/nix.nix) — full lists
+  # including cache.nixos.org.
   substituters = map (c: c.url) all;
   trustedPublicKeys = map (c: c.key) all;
 }

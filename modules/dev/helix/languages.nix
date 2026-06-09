@@ -55,7 +55,10 @@
           config.nixd = {
             formatting.command = [ "nixfmt" ];
             nixpkgs.expr = "import <nixpkgs> { }";
-            options.home-manager.expr = ''(builtins.getFlake "${inputs.self}").homeConfigurations.${hostname}.options'';
+            # `hmOptions.${hostname}` resolves to the right HM option tree
+            # whether this host is standalone-HM or NixOS-embedded — see the
+            # `hmOptions` derivation in flake.nix.
+            options.home-manager.expr = ''(builtins.getFlake "${inputs.self}").hmOptions.${hostname}'';
           };
         };
 

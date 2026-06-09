@@ -54,8 +54,6 @@ let
     );
 in
 {
-  _module.args.mkNixGLWrap = mkNixGLWrap;
-
   options.dotfiles.wrapGL = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
     default = pkg: pkg;
@@ -66,4 +64,10 @@ in
       binary with nixGL.
     '';
   };
+
+  # Declaring `options` above puts this module in the module system's explicit
+  # options/config form, where everything else must sit under `config` — a
+  # top-level `_module` is rejected ("unsupported attribute `_module`"). So set
+  # the shared helper arg inside `config`.
+  config._module.args.mkNixGLWrap = mkNixGLWrap;
 }
