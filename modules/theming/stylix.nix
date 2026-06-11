@@ -87,6 +87,12 @@ in
           zellij.enable = false;
         })
         (lib.mkIf config.dotfiles.desktop.mako.enable { mako.enable = false; })
+        (lib.mkIf config.dotfiles.desktop.lock.enable {
+          # lock.nix owns hyprlock theming: this target would force the
+          # static wallpaper as the lock background instead of the live
+          # blurred screenshot.
+          hyprlock.enable = false;
+        })
         (lib.mkIf config.dotfiles.terminals.ghostty.enable {
           ghostty.enable = true;
         })

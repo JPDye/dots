@@ -22,10 +22,17 @@ let
     '';
   };
 
+  # hyprpicker fills the lens border with the hovered pixel's color, so it
+  # blends into the screen around it; the patch strokes a white+black outline
+  # around the lens to keep its edge visible on any background.
+  hyprpicker-outlined = pkgs.hyprpicker.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./hyprpicker-lens-border.patch ];
+  });
+
   color-picker = pkgs.writeShellApplication {
     name = "color-picker";
     runtimeInputs = [
-      (config.dotfiles.wrapGL pkgs.hyprpicker)
+      (config.dotfiles.wrapGL hyprpicker-outlined)
       pkgs.libnotify
     ];
     text = ''
@@ -44,6 +51,26 @@ let
   work-layout =
     let
       ghostty = lib.getExe (config.dotfiles.wrapGL pkgs.ghostty);
+      zellij = lib.getExe config.programs.zellij.package;
+      # Runs bacon inside zellij rather than as the terminal's direct child,
+      # so the pane survives as a normal zellij session (new tabs, scrollback,
+      # rerun on exit). Mirrors the `compact` default_layout from zellij.nix,
+      # which a --layout file would otherwise override.
+      bacon-layout = pkgs.writeText "bacon-layout.kdl" ''
+        layout {
+            default_tab_template {
+                pane size=1 borderless=true {
+                    plugin location="zellij:compact-bar"
+                }
+                children
+            }
+            tab {
+                pane command="direnv" {
+                    args "exec" "." "bacon"
+                }
+            }
+        }
+      '';
     in
     pkgs.writeShellApplication {
       name = "work-layout";
@@ -77,11 +104,11 @@ let
         }
 
         # bacon comes from each project's dev shell (templates/rust), not the
-        # user profile, so launch it through `direnv exec` to load the .envrc
-        # environment first.
+        # user profile, so the layout launches it through `direnv exec` to
+        # load the .envrc environment first.
         before=$(thin_count)
         niri msg action spawn -- ${ghostty} --class=com.mitchellh.ghostty.thin --working-directory="$dir" \
-          -e direnv exec . bacon
+          -e ${zellij} --layout ${bacon-layout}
 
         # Wait until the thin window has opened (it takes focus) so the wide
         # one spawns into the column to its right.

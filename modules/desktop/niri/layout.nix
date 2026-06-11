@@ -32,7 +32,7 @@
 
       layout = {
         background-color = "transparent";
-        gaps = 8;
+        gaps = 16;
         center-focused-column = "never";
 
         preset-column-widths = [
@@ -54,10 +54,13 @@
           inactive.color = "#${colors.mid}";
         };
 
+        # Spread exceeds half the gap (16/2 = 8), so neighbouring windows'
+        # shadows overlap and no backdrop shows through between them; the
+        # softness only feathers the outer edge past that solid core.
         shadow = {
           enable = true;
-          spread = 5;
-          softness = 0;
+          spread = 10;
+          softness = 8;
           offset = {
             x = 0;
             y = 0;
@@ -66,11 +69,13 @@
           inactive-color = "#${colors.bg0}";
         };
 
+        # Pull windows back toward the screen edges so the outer gap stays
+        # at 4px (gaps + strut) while the inner gaps widen.
         struts = {
-          top = -4;
-          bottom = -4;
-          left = -4;
-          right = -4;
+          top = -12;
+          bottom = -12;
+          left = -12;
+          right = -12;
         };
       };
     };

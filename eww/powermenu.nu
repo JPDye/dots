@@ -23,6 +23,11 @@ def compute-geometry [] {
 }
 
 def main [] {
+    # A previous instance may have died between open and close, leaving an
+    # invisible full-screen window absorbing every click and keypress. The
+    # service restarts us, so cleaning up here makes that self-healing.
+    try { ^eww close powermenu }
+
     niri msg event-stream
     | lines
     | where { |line| $line | str starts-with "Overview toggled: " }
@@ -31,13 +36,16 @@ def main [] {
 
         if $state == "true" {
             let cfg = compute-geometry
-            ^eww update $"pad-x=($cfg.pad_x)" $"pad-y=($cfg.pad_y)"
-            sleep 0.1sec
+            ^eww update $"pad-x=($cfg.pad_x)" $"pad-y=($cfg.pad_y)" "menu-open=false" "confirm="
             ^eww open powermenu --screen $cfg.focused
+            ^eww update menu-open=true
         } else if $state == "false" {
-            try {
-                ^eww close powermenu
-            }
+            # Close immediately: a fade-out would need the window to outlive
+            # the animation (eww can't animate a destroyed window), and niri's
+            # overview zoom-out hides the widgets anyway. An instant close also
+            # means no window lingers to eat input. If this fails, die loudly
+            # and let systemd restart us into the cleanup path above.
+            ^eww close powermenu
         }
     }
 }

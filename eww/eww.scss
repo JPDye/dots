@@ -4,6 +4,8 @@
 $primary: #af5f5f;      // Red - main UI elements, borders, active states
 $secondary: #af875f;    // Orange - highlights, headers, accents
 $accent: #87875f;       // Green - additional highlights
+$tertiary: #5f8787;     // Blue - matches theme.nix dark.blue
+$yellow: #a8a05f;       // Yellow - matches theme.nix dark.yellow
 
 // Background and surface colors
 $surface-darkgrey: #1c1c1c;
@@ -27,38 +29,82 @@ $surface-green: #87875f;
   font-weight: bold;
 
   button {
+    // The Mono symbols font centers each glyph in a uniform single cell;
+    // the default proportional fallback bakes whitespace into the advance,
+    // which made the icons sit off-centre.
+    font-family: "Symbols Nerd Font Mono";
     padding: 0.2em;
     min-width: 1.2em;
+    min-height: 1.2em;
     border-radius: 0.1em;
-    background-color: rgba($surface-darkgrey, 0.8);
+    border: 1px solid rgba($secondary, 0.8);
+    background-color: rgba($surface-darkgrey, 0.6);
+    color: rgba($secondary, 0.8); // icons match their outline
+    transition: 100ms ease-out;
 
-    &:hover {
-      transition: 200ms linear background-color, border-radius;
-      background-color: rgba($surface-darkgrey, 0.9);
+    // Symbols fonts have no bold; GTK would synthesize one by smearing.
+    // Sizing the inner label keeps the button's own em metrics unchanged.
+    label {
+      font-weight: normal;
+      font-size: 0.8em;
     }
 
-    &:last-child {
-      color: rgba($surface-green, 0.8);
+    &:hover {
+      background-color: rgba($surface-darkgrey, 1.0);
+      border-color: rgba($secondary, 1.0);
+      color: rgba($secondary, 1.0);
+    }
+
+    // First click on a destructive button arms it; second click executes.
+    // The icon takes the backdrop colour so it reads as negative space
+    // punched out of the red block.
+    &.armed {
+      transition: 200ms linear;
+      background-color: rgba($primary, 0.7);
+      border-color: rgba($primary, 0.9);
+      color: $surface-darkgrey;
     }
   }
 }
 
-.clock-box {
+.clock-box,
+.sys-box,
+.stats-box {
   font-size: 1.2em;
   font-weight: bold;
 
-  .thing {
-    padding: 0.1em 0.5em 0.1em 0.1em;
+  // Vertical padding and min-height match the buttons so every box in
+  // all four quadrants comes out the same height.
+  .pill {
+    padding: 0.2em 0.45em 0.2em 0.25em;
+    min-height: 1.2em;
     border-radius: 0.1em;
-    background-color: rgba($surface-darkgrey, 0.8);
+    background-color: rgba($surface-darkgrey, 0.6);
   }
 
-  .time {
+  .value {
     font-size: 0.65em;
   }
 
   .icon {
-    min-width: 1.1em;
-    color: rgba($surface-green, 0.8);
+    font-family: "Symbols Nerd Font Mono"; // same centering fix as the buttons
+    font-weight: normal; // no real bold in symbols fonts; avoid fake-bold smear
+    font-size: 0.8em;
+    min-width: 1.2em;
   }
+}
+
+// 1px outlines, one colour per quadrant (clockwise from top-left:
+// red, orange [buttons above], blue, green); icons match their outline.
+.sys-box .pill {
+  border: 1px solid rgba($primary, 0.8);
+  .icon { color: rgba($primary, 0.8); }
+}
+.stats-box .pill {
+  border: 1px solid rgba($tertiary, 0.8);
+  .icon { color: rgba($tertiary, 0.8); }
+}
+.clock-box .pill {
+  border: 1px solid rgba($accent, 0.8);
+  .icon { color: rgba($accent, 0.8); }
 }

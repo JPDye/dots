@@ -19,9 +19,9 @@
     xserver.xkb.layout = "gb";
   };
 
-  # swaylock is installed per-user (modules/desktop/lock.nix) but
+  # hyprlock is installed per-user (modules/desktop/lock.nix) but
   # authenticates through PAM, which only the system config can provide.
-  security.pam.services.swaylock = { };
+  security.pam.services.hyprlock = { };
 
   xdg.portal = {
     enable = true;

@@ -13,6 +13,9 @@ in
       enable = true;
       # `y` opens yazi and cd's the shell to wherever you quit.
       enableNushellIntegration = true;
+      # Adopt the new upstream default explicitly; with stateVersion < 26.05
+      # home-manager would otherwise keep the legacy `yy` and warn.
+      shellWrapperName = "y";
     };
   };
 }

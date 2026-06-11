@@ -1,0 +1,21 @@
+--- a/src/hyprpicker.cpp	2026-06-11 15:51:55.939737221 +0100
++++ b/src/hyprpicker.cpp	2026-06-11 15:53:21.173535363 +0100
+@@ -634,6 +634,18 @@
+                 cairo_surface_flush(PBUFFER->surface);
+             }
+             cairo_restore(PCAIRO);
++
++            // outline the lens with a white hairline inside a black one so its
++            // edge stays visible regardless of what the ring color blends into
++            cairo_set_line_width(PCAIRO, 2.0 / SCALEBUFS.x);
++            cairo_set_source_rgba(PCAIRO, 1, 1, 1, 1);
++            cairo_arc(PCAIRO, CLICKPOS.x, CLICKPOS.y, m_iCircleRadius + 6 / SCALEBUFS.x, 0, 2 * M_PI);
++            cairo_stroke(PCAIRO);
++            cairo_set_source_rgba(PCAIRO, 0, 0, 0, 1);
++            cairo_arc(PCAIRO, CLICKPOS.x, CLICKPOS.y, m_iCircleRadius + 8 / SCALEBUFS.x, 0, 2 * M_PI);
++            cairo_stroke(PCAIRO);
++            cairo_surface_flush(PBUFFER->surface);
++
+             cairo_pattern_destroy(PATTERN);
+         }
+     } else if (!m_bRenderInactive && m_bCoordsInitialized) {
