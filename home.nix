@@ -19,6 +19,7 @@
 
     inputs.spicetify-nix.homeManagerModules.default
     inputs.textfox.homeManagerModules.textfox
+    inputs.nix-index-database.homeModules.nix-index
 
     ./hosts/${hostname}/home.nix
   ];

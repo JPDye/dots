@@ -36,6 +36,29 @@
             proportion = 1.0;
           };
         }
+        # Generic sizing classes: any window whose app-id ends in .thin/.wide/
+        # .full opens at a preset column width, e.g.
+        # `ghostty --class=com.mitchellh.ghostty.wide`. The suffix form is
+        # because GTK application ids must contain a dot — a bare "thin" would
+        # be rejected by ghostty.
+        {
+          matches = [ { app-id = "\\.thin$"; } ];
+          default-column-width = {
+            proportion = 0.33333;
+          };
+        }
+        {
+          matches = [ { app-id = "\\.wide$"; } ];
+          default-column-width = {
+            proportion = 0.66667;
+          };
+        }
+        {
+          matches = [ { app-id = "\\.full$"; } ];
+          default-column-width = {
+            proportion = 1.0;
+          };
+        }
         {
           matches = [
             { title = "^(file_progress)$"; }

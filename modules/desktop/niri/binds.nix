@@ -34,6 +34,86 @@ let
     '';
   };
 
+  # Prompt for a project directory (zoxide suggestions, but any typed path
+  # works), then open a 33%/66% pair there: bacon on the left, a terminal on
+  # the right. Widths come from the .thin/.wide window rules in
+  # window-rules.nix. Spawning goes through
+  # `niri msg` so the windows are parented to the compositor, and ghostty is
+  # referenced by absolute wrapGL'd path because niri spawns with its own
+  # PATH, not the script's.
+  work-layout =
+    let
+      ghostty = lib.getExe (config.dotfiles.wrapGL pkgs.ghostty);
+    in
+    pkgs.writeShellApplication {
+      name = "work-layout";
+      runtimeInputs = with pkgs; [
+        fuzzel
+        zoxide
+        jq
+        libnotify
+      ];
+      text = ''
+        input=$(zoxide query --list | fuzzel --dmenu --prompt="dir: ") || exit 0
+        [ -z "$input" ] && exit 0
+
+        # Resolve like the zoxide-powered `cd`: an existing path is used
+        # as-is, anything else is a zoxide query ("ancelotti" -> the
+        # highest-ranked match). `zoxide add` bumps the rank like a real cd.
+        input="''${input/#\~/$HOME}"
+        if [ -d "$input" ]; then
+          dir=$input
+        else
+          read -ra words <<< "$input"
+          if ! dir=$(zoxide query -- "''${words[@]}"); then
+            notify-send "work-layout" "no zoxide match for: $input"
+            exit 1
+          fi
+        fi
+        zoxide add "$dir"
+
+        thin_count() {
+          niri msg --json windows | jq '[.[] | select(.app_id == "com.mitchellh.ghostty.thin")] | length'
+        }
+
+        # bacon comes from each project's dev shell (templates/rust), not the
+        # user profile, so launch it through `direnv exec` to load the .envrc
+        # environment first.
+        before=$(thin_count)
+        niri msg action spawn -- ${ghostty} --class=com.mitchellh.ghostty.thin --working-directory="$dir" \
+          -e direnv exec . bacon
+
+        # Wait until the thin window has opened (it takes focus) so the wide
+        # one spawns into the column to its right.
+        for _ in $(seq 1 40); do
+          [ "$(thin_count)" -gt "$before" ] && break
+          sleep 0.05
+        done
+
+        niri msg action spawn -- ${ghostty} --class=com.mitchellh.ghostty.wide --working-directory="$dir"
+      '';
+    };
+
+  # Region screenshot piped into satty for annotation (arrows/text/redaction);
+  # the result is copied to the clipboard and saved next to niri's own
+  # screenshots. satty is GTK4 (GPU-rendered), hence wrapGL.
+  annotate-screenshot = pkgs.writeShellApplication {
+    name = "annotate-screenshot";
+    runtimeInputs = with pkgs; [
+      grim
+      slurp
+      wl-clipboard
+      (config.dotfiles.wrapGL satty)
+    ];
+    text = ''
+      geometry=$(slurp) || exit 0
+      mkdir -p "$HOME/Pictures/Screenshots"
+      grim -g "$geometry" - | satty --filename - \
+        --output-filename "$HOME/Pictures/Screenshots/Screenshot from $(date '+%Y-%m-%d %H-%M-%S') (annotated).png" \
+        --copy-command wl-copy --early-exit
+    '';
+  };
+
   calc = pkgs.writeShellApplication {
     name = "calc";
     runtimeInputs = with pkgs; [
@@ -57,6 +137,7 @@ in
     programs.niri.settings.binds = {
       "Mod+Space".action.spawn = "firefox";
       "Mod+Return".action.spawn = "ghostty";
+      "Mod+Shift+Return".action.spawn = lib.getExe work-layout;
       "Mod+R".action.spawn = "fuzzel";
       "Mod+V".action.spawn = lib.getExe clipboard-picker;
       "Mod+I".action.spawn = lib.getExe color-picker;
@@ -98,12 +179,6 @@ in
 
       "Mod+Shift+O".action.toggle-window-rule-opacity = [ ];
       "Mod+O".action.toggle-overview = [ ];
-
-      "Mod+Shift+C".action.spawn = [
-        "killall"
-        "-SIGUSR1"
-        "waybar"
-      ];
 
       "Mod+H".action.focus-column-left = [ ];
       "Mod+J".action.focus-window-or-workspace-down = [ ];
@@ -159,6 +234,7 @@ in
       "Mod+P".action.screenshot = [ ];
       "Ctrl+Print".action.screenshot-screen = [ ];
       "Alt+Print".action.screenshot-window = [ ];
+      "Print".action.spawn = lib.getExe annotate-screenshot;
 
       "Mod+Shift+E".action.quit = [ ];
       "Ctrl+Alt+Delete".action.quit = [ ];

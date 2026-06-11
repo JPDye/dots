@@ -19,6 +19,10 @@
     xserver.xkb.layout = "gb";
   };
 
+  # swaylock is installed per-user (modules/desktop/lock.nix) but
+  # authenticates through PAM, which only the system config can provide.
+  security.pam.services.swaylock = { };
+
   xdg.portal = {
     enable = true;
     extraPortals = with pkgs; [

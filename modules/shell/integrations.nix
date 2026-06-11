@@ -5,7 +5,7 @@ let
 in
 {
   options.dotfiles.shell.integrations.enable =
-    lib.mkEnableOption "shell integrations (zoxide/atuin/direnv/bat/eza/carapace)"
+    lib.mkEnableOption "shell integrations (zoxide/atuin/direnv/bat/eza/carapace/nix-your-shell)"
     // {
       default = true;
     };
@@ -19,6 +19,14 @@ in
       };
 
       carapace = {
+        enable = true;
+        enableNushellIntegration = true;
+      };
+
+      # `nix develop`/`nix shell` build their environment in bash; this hands
+      # the finished environment to an interactive nushell instead of leaving
+      # you in bare bash without aliases/prompt/completions.
+      nix-your-shell = {
         enable = true;
         enableNushellIntegration = true;
       };

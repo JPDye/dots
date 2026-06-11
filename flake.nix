@@ -54,6 +54,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Prebuilt nix-index file database (weekly) — powers `, cmd` (comma)
+    # without ever running a local `nix-index` crawl.
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     helix = {
       url = "github:helix-editor/helix";
       inputs.nixpkgs.follows = "nixpkgs";
