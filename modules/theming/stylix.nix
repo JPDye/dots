@@ -4,6 +4,7 @@
   pkgs,
   colors,
   monoFont,
+  serifFont,
   ...
 }:
 
@@ -29,13 +30,13 @@ in
       enable = true;
       polarity = config.dotfiles.theme.variant;
 
-      image = ../../wallpapers/socrates.jpg;
+      image = config.dotfiles.theme.wallpaper;
       base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-${config.dotfiles.theme.variant}-hard.yaml";
 
       fonts = {
         monospace.name = monoFont;
-        serif.name = monoFont;
-        sansSerif.name = monoFont;
+        serif.name = serifFont;
+        sansSerif.name = serifFont;
 
         sizes = {
           applications = 14;

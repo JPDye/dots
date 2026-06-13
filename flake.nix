@@ -49,6 +49,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # `nscratch` — toggles a window in/out of the named "scratch" workspace
+    # (modules/desktop/niri/scratchpad.nix).
+    niri-scratchpad = {
+      url = "github:gvolpe/niri-scratchpad";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixgl = {
       url = "github:nix-community/nixGL";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -83,6 +90,8 @@
   # two extra caches are inlined literally below. Keep them in sync with the
   # `extra` list in caches.nix — the source of truth for the system-level
   # substituters in modules/system/nix.nix (those aren't literal-constrained).
+  # Drift is caught by `checks.<system>.caches-in-sync` (defined in outputs),
+  # which fails `nix flake check` if any caches.nix entry is missing here.
   nixConfig = {
     extra-substituters = [
       "https://helix.cachix.org"
@@ -198,6 +207,25 @@
         };
       };
 
+      # Turns the "KEEP IN SYNC" comment on caches.nix into an enforced
+      # invariant. nixConfig values must be literals (see the comment on
+      # `nixConfig` above), so the two extra caches are hand-inlined there and
+      # can silently drift from caches.nix. This check reads flake.nix's own
+      # source text and fails `nix flake check` if any cache listed in
+      # caches.nix's `extra` is missing its url or key from the literals.
+      caches-in-sync =
+        let
+          flakeText = builtins.readFile ./flake.nix;
+          missing = builtins.filter (
+            c: !(nixpkgs.lib.hasInfix c.url flakeText && nixpkgs.lib.hasInfix c.key flakeText)
+          ) (import ./caches.nix).extra;
+        in
+        assert nixpkgs.lib.assertMsg (missing == [ ]) ''
+          caches.nix `extra` is out of sync with flake.nix's nixConfig literals.
+          Missing from nixConfig.extra-substituters / extra-trusted-public-keys:
+          ${nixpkgs.lib.concatMapStringsSep "\n" (c: "  - ${c.url}  (${c.key})") missing}'';
+        pkgs.runCommand "caches-in-sync" { } "touch $out";
+
       nixosConfigs = nixpkgs.lib.genAttrs nixosHosts mkNixos;
       homeConfigs = nixpkgs.lib.genAttrs homeHosts mkHome;
 
@@ -229,6 +257,7 @@
       # lists so a new host gets a check for free.
       checks.${system} = {
         pre-commit = pre-commit-check;
+        inherit caches-in-sync;
       }
       // nixpkgs.lib.mapAttrs' (
         h: cfg: nixpkgs.lib.nameValuePair "nixos-${h}" cfg.config.system.build.toplevel

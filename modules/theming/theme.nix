@@ -20,6 +20,19 @@ let
     (builtins.elemAt hexChars (m / 16)) + (builtins.elemAt hexChars (m - (m / 16) * 16));
   fromPair = s: 16 * hexValues.${builtins.substring 0 1 s} + hexValues.${builtins.substring 1 1 s};
 
+  # "rrggbb" -> "R;G;B" (decimal), for truecolor escape sequences such as
+  # fastfetch's `{#38;2;R;G;B}`. Exposed to consumer modules via `themeLib`.
+  rgbDec =
+    hex:
+    let
+      h = lib.toLower hex;
+    in
+    lib.concatMapStringsSep ";" (i: toString (fromPair (builtins.substring (2 * i) 2 h))) [
+      0
+      1
+      2
+    ];
+
   # Push each channel away from the RGB mean by ±k, so muted hues saturate
   # without changing their identity (red stays red, blue stays blue).
   saturate =
@@ -42,6 +55,24 @@ let
         );
     in
     toPair (shift r) + toPair (shift g) + toPair (shift b);
+
+  # Per-channel linear blend of two "rrggbb" colors; t=0 -> a, t=1 -> b.
+  # For in-between shades the palette ramps don't have (e.g. the floating
+  # window shadow sits halfway between bg0 and bg1). Exposed via themeLib.
+  mix =
+    t: a: b:
+    let
+      la = lib.toLower a;
+      lb = lib.toLower b;
+      ch =
+        i:
+        let
+          ca = fromPair (builtins.substring (2 * i) 2 la);
+          cb = fromPair (builtins.substring (2 * i) 2 lb);
+        in
+        toPair (ca + builtins.floor (t * (cb - ca) + 0.5));
+    in
+    ch 0 + ch 1 + ch 2;
 
   dark = rec {
     bg0 = "1c1c1c";
@@ -137,6 +168,7 @@ in
 
   config._module.args = {
     monoFont = "IoskeleyMono Nerd Font";
+    serifFont = "Lora";
 
     border-style = {
       radius-float = 1.0;
@@ -147,5 +179,8 @@ in
     colors = if cfg.variant == "light" then light else dark;
     colorsDark = dark;
     colorsLight = light;
+
+    # Color-format helpers for consumer modules.
+    themeLib = { inherit rgbDec mix; };
   };
 }

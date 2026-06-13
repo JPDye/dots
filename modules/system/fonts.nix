@@ -26,11 +26,15 @@
           "IoskeleyMono Nerd Font"
           "Fira Code Nerd Font Mono"
         ];
+        # serif + sansSerif resolve to Lora, then fall back to the mono
+        # Nerd Fonts for glyphs Lora lacks (icons, odd unicode).
         serif = [
+          "Lora"
           "IoskeleyMono Nerd Font"
           "Fira Code Nerd Font Mono"
         ];
         sansSerif = [
+          "Lora"
           "IoskeleyMono Nerd Font"
           "Fira Code Nerd Font Mono"
         ];

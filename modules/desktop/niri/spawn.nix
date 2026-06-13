@@ -1,9 +1,4 @@
-{
-  config,
-  inputs,
-  lib,
-  ...
-}:
+{ config, lib, ... }:
 
 {
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
@@ -14,7 +9,7 @@
         command = [
           "awww"
           "img"
-          "${inputs.self}/wallpapers/socrates.jpg"
+          "${config.dotfiles.theme.wallpaper}"
         ];
       }
       {
@@ -23,7 +18,7 @@
           "-m"
           "fill"
           "-i"
-          "${inputs.self}/wallpapers/socrates-blur.png"
+          "${config.dotfiles.theme.wallpaperBlurred}"
         ];
       }
     ];

@@ -25,7 +25,10 @@ in
   # session or systemd unit is auto-enabled. Run `niri-session` from a TTY.
   programs.niri = {
     enable = true;
-    package = wrapGL pkgs.niri-stable;
+    # nixpkgs' niri (26.04), not niri-flake's niri-stable build (25.08) —
+    # the shared config uses post-25.08 features (recent-windows switcher),
+    # and laptop-nix runs the nixpkgs build too, so versions stay in step.
+    package = wrapGL pkgs.niri;
 
     # Host-specific niri bits: monitors and the ghostty launcher override
     # (ghostty needs nixGL on Arch since its OpenGL libs aren't where nixpkgs expects).

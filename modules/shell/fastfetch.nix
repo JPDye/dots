@@ -2,6 +2,7 @@
   config,
   lib,
   colors,
+  themeLib,
   ...
 }:
 
@@ -12,6 +13,23 @@ let
     green = 30;
     cyan = 60;
     red = 100;
+  };
+
+  # Row of palette dots bracketing the output, derived from the theme so a
+  # re-skin propagates here.
+  paletteDots = {
+    type = "custom";
+    format = lib.concatMapStringsSep "  " (c: "{#38;2;${themeLib.rgbDec c}}●") (
+      with colors;
+      [
+        red
+        orange
+        yellow
+        green
+        blue
+        pink
+      ]
+    );
   };
 in
 {
@@ -60,10 +78,7 @@ in
           "break"
           "break"
 
-          {
-            type = "custom";
-            format = "{#38;2;175;95;95}●  {#38;2;175;135;95}●  {#38;2;168;160;95}●  {#38;2;135;135;95}●  {#38;2;95;135;135}●  {#38;2;183;143;143}●";
-          }
+          paletteDots
 
           "break"
 
@@ -80,26 +95,6 @@ in
           }
 
           "break"
-
-          # {
-          #   type = "wm";
-          #   key = "";
-          #   format = "{2}";
-          # }
-
-          # {
-          #   type = "terminal";
-          #   key = "";
-          #   format = "{5}";
-          # }
-
-          # {
-          #   type = "editor";
-          #   key = "󰏬";
-          #   format = "{2}";
-          # }
-
-          # "break"
 
           {
             type = "media";
@@ -141,10 +136,7 @@ in
 
           "break"
 
-          {
-            type = "custom";
-            format = "{#38;2;175;95;95}●  {#38;2;175;135;95}●  {#38;2;168;160;95}●  {#38;2;135;135;95}●  {#38;2;95;135;135}●  {#38;2;183;143;143}●";
-          }
+          paletteDots
 
           "break"
           "break"

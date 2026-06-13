@@ -1,0 +1,23 @@
+--- a/config.def.h	2026-06-13 19:32:11.622465659 +0100
++++ b/config.def.h	2026-06-13 19:32:11.626595730 +0100
+@@ -99,9 +99,17 @@
+ /* keyboard mappings for image and thumbnail mode: */
+ static const keymap_t keys[] = {
+ 	/* modifiers    key               function              argument */
+-	{ 0,            XK_q,             g_quit,               0 },
+-	{ 0,            XK_Q,             g_pick_quit,          0 },
+-	{ 0,            XK_Return,        g_switch_mode,        None },
++	/* Clipboard picker UX (Mod+Shift+V): Enter drills in / copies, q backs
++	   out / closes. Per-mode bindings, and the quit/pick_quit entry MUST come
++	   before the switch_mode entry for the same key: process_bindings() runs
++	   EVERY match and switch_mode mutates the global mode mid-loop, so if it
++	   ran first the next same-key entry would match the new mode and also fire.
++	   quit/pick_quit exit() (stopping the loop); switch_mode is therefore last. */
++	{ 0,            XK_Return,        { cg_pick_quit,   MODE_IMAGE }, 0 },    /* full view: copy + close */
++	{ 0,            XK_Return,        { cg_switch_mode, MODE_THUMB }, None }, /* grid: view larger */
++	{ 0,            XK_q,             { cg_quit,        MODE_THUMB }, 0 },    /* grid: close picker */
++	{ 0,            XK_q,             { cg_switch_mode, MODE_IMAGE }, None }, /* full view: back to grid */
++	{ 0,            XK_Q,             g_pick_quit,                    0 },    /* keep: copy from any mode */
+ 	{ 0,            XK_f,             g_toggle_fullscreen,  None },
+ 	{ 0,            XK_b,             g_toggle_bar,         None },
+ 	{ ControlMask,  XK_x,             g_prefix_external,    None },

@@ -4,6 +4,7 @@
   pkgs,
   inputs,
   monoFont,
+  serifFont,
   ...
 }:
 
@@ -27,8 +28,10 @@ in
         enable = true;
         defaultFonts = {
           monospace = fallbacks;
-          serif = fallbacks;
-          sansSerif = fallbacks;
+          # serif + sansSerif resolve to Lora, then fall back to the mono
+          # Nerd Fonts for glyphs Lora lacks (icons, odd unicode).
+          serif = [ serifFont ] ++ fallbacks;
+          sansSerif = [ serifFont ] ++ fallbacks;
         };
       };
 
@@ -38,6 +41,7 @@ in
       nerd-fonts.symbols-only
       cascadia-code
       helvetica-neue-lt-std
+      lora
       siji
 
       inputs.myFonts.packages.${pkgs.stdenv.hostPlatform.system}.ioskeley

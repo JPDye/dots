@@ -26,6 +26,7 @@ in
         Type = "exec";
         ExecStart = "${pkgs.awww}/bin/awww-daemon";
         Restart = "always";
+        RestartSec = 1;
       };
       Install.WantedBy = [ "graphical-session.target" ];
     };

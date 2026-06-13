@@ -2,6 +2,8 @@
   config,
   lib,
   pkgs,
+  colors,
+  monoFont,
   ...
 }:
 
@@ -16,12 +18,30 @@ in
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
       {
-        home.packages = [ pkgs.eww ];
+        # playerctl feeds the powermenu's now-playing pill (deflisten in
+        # eww.yuck); the daemon finds it on PATH via the user profile.
+        home.packages = [
+          pkgs.eww
+          pkgs.playerctl
+        ];
 
         programs.eww = {
           enable = true;
           configDir = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix/eww";
         };
+
+        # Palette export for the live-edited stylesheet: eww/eww.scss opens
+        # with `@import "theme";`, which resolves to this file. It's written
+        # into the repo's eww dir (gitignored) rather than a store-only path
+        # so the whole-dir symlink above — and eww's hot reload on it — keeps
+        # working. Every `colors` entry becomes an scss `$name: #hex;`, plus
+        # `$mono-font` so the stylesheet tracks the theme's font too.
+        home.file.".config/nix/eww/_theme.scss".text =
+          lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (name: value: "\$${name}: #${value};") colors
+            ++ [ ''$mono-font: "${monoFont}";'' ]
+          )
+          + "\n";
 
         systemd.user.services.eww = {
           Unit = {
@@ -33,6 +53,7 @@ in
             Type = "exec";
             ExecStart = "${pkgs.eww}/bin/eww daemon --no-daemonize";
             Restart = "always";
+            RestartSec = 1;
           };
           Install.WantedBy = [ "graphical-session.target" ];
         };
@@ -51,9 +72,9 @@ in
             Type = "exec";
             ExecStart = "${pkgs.nushell}/bin/nu ${config.home.homeDirectory}/.config/nix/eww/powermenu.nu";
             Restart = "always";
+            RestartSec = 1;
             Environment = [
               "PATH=${pkgs.eww}/bin:${pkgs.niri}/bin:/run/current-system/sw/bin"
-              "NIRI_OVERVIEW_ZOOM=${toString config.programs.niri.settings.overview.zoom}"
             ];
           };
           Install.WantedBy = [ "graphical-session.target" ];

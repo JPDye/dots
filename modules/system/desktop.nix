@@ -16,6 +16,11 @@
 
     gnome.gnome-keyring.enable = true;
 
+    # System half of removable-media automounting; udiskie (the per-user
+    # daemon in modules/desktop/udiskie.nix) drives it over DBus. On Arch
+    # the equivalent is `pacman -S udisks2`.
+    udisks2.enable = true;
+
     xserver.xkb.layout = "gb";
   };
 

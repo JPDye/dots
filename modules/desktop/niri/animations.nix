@@ -25,14 +25,6 @@
         };
         custom-shader = builtins.readFile "${inputs.self}/shaders/niri-window-close.glsl";
       };
-
-      window-resize = {
-        kind.easing = {
-          duration-ms = 300;
-          curve = "ease-out-cubic";
-        };
-        custom-shader = builtins.readFile "${inputs.self}/shaders/niri-window-resize.glsl";
-      };
     };
   };
 }

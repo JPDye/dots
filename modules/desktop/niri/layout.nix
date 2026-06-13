@@ -7,6 +7,20 @@
 
 {
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
+    # Alt-Tab switcher theming (niri 25.11+). Not in niri-flake's settings
+    # schema yet, so it goes in as raw KDL via the extraConfig escape hatch.
+    # Padding matches the layout gaps; square corners match the window rules.
+    dotfiles.desktop.niri.extraConfig = ''
+      recent-windows {
+          highlight {
+              active-color "#${colors.border}"
+              urgent-color "#${colors.warning}"
+              padding 16
+              corner-radius 0
+          }
+      }
+    '';
+
     programs.niri.settings = {
       overview = {
         backdrop-color = "#${colors.bg0}";
@@ -18,7 +32,7 @@
             x = 0;
             y = 0;
           };
-          color = "#${colors.orange}";
+          color = "#${colors.mid}";
         };
       };
 
@@ -49,7 +63,7 @@
 
         border = {
           enable = true;
-          width = 1;
+          width = 2;
           active.color = "#${colors.border}";
           inactive.color = "#${colors.mid}";
         };
@@ -59,12 +73,13 @@
         # softness only feathers the outer edge past that solid core.
         shadow = {
           enable = true;
-          spread = 10;
-          softness = 8;
+          spread = 9;
+          softness = 0;
           offset = {
             x = 0;
             y = 0;
           };
+
           color = "#${colors.bg0}";
           inactive-color = "#${colors.bg0}";
         };
@@ -72,10 +87,10 @@
         # Pull windows back toward the screen edges so the outer gap stays
         # at 4px (gaps + strut) while the inner gaps widen.
         struts = {
-          top = -12;
-          bottom = -12;
-          left = -12;
-          right = -12;
+          top = -8;
+          bottom = -8;
+          left = -8;
+          right = -8;
         };
       };
     };

@@ -30,8 +30,8 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
    ```
 4. **Clone the repo**:
    ```bash
-   git clone <url> ~/.config/home-manager
-   cd ~/.config/home-manager
+   git clone <url> ~/.config/nix
+   cd ~/.config/nix
    ```
 
 ### Path A: NixOS host
@@ -90,7 +90,7 @@ nh clean all
 
 Notes:
 - `-b backup` tells home-manager to back up any pre-existing dotfile it would otherwise refuse to overwrite (becomes `<file>.backup`).
-- Run from the flake directory (`~/.config/home-manager`) so `.` resolves correctly. In nushell, quote any flake URL containing `#` (`".#<host>"`) — `#` is a comment delimiter otherwise.
+- Run from the flake directory (`~/.config/nix`) so `.` resolves correctly. In nushell, quote any flake URL containing `#` (`".#<host>"`) — `#` is a comment delimiter otherwise.
 - `nh home switch -c <host>` resolves to `homeConfigurations.<user>@<host>` first, which doesn't match this flake's plain-host attribute names. Use `home-manager switch --flake .#<host>` directly.
 
 ---
@@ -111,15 +111,14 @@ Notes:
 ├── modules/                  # home-manager modules, grouped by domain
 │   ├── theming/              # theme tokens, stylix, fonts
 │   ├── desktop/              # niri, fuzzel, mako, eww, swww, swayosd, cliphist, polkit
-│   ├── terminals/            # alacritty, ghostty, zellij
+│   ├── terminals/            # ghostty, zellij
 │   ├── shell/                # aliases, cli-tools, integrations, nushell, starship, fastfetch
 │   ├── dev/                  # git, helix, nh
 │   └── apps/                 # firefox, spicetify, nixcord
 ├── templates/                # `nix flake init -t` targets: rust, python, go, typst
 ├── fonts/                    # local flake exposing IoskeleyMono
-├── wallpapers/               # background images (halls.png is the default)
-├── shaders/                  # cursor_warp.glsl (used by ghostty)
-└── docs/multi-host-refactor.md
+├── wallpapers/               # background images (socrates.jpg is the default; its blur is derived at build time)
+└── shaders/                  # cursor_warp.glsl (used by ghostty)
 ```
 
 ---
@@ -135,13 +134,13 @@ Three pieces:
    - `programs.niri.settings.outputs` (different monitors on each box).
    - any `lib.mkForce` overrides for shared bindings (e.g. Arch overrides `Mod+Return` to spawn `nixGL ghostty`).
 
-Hardcoded paths are written against `inputs.self.outPath` so the flake works regardless of where it's checked out — except `eww` which uses `mkOutOfStoreSymlink` and points at `~/.config/home-manager/eww` so the user can hand-edit eww files without rebuilding.
+Hardcoded paths are written against `inputs.self.outPath` so the flake works regardless of where it's checked out — except `eww` which uses `mkOutOfStoreSymlink` and points at `~/.config/nix/eww` so the user can hand-edit eww files without rebuilding.
 
 ---
 
 ## flake.nix at a glance
 
-**Inputs:** `nixpkgs` (unstable), `home-manager`, `stylix`, `nixcord`, `claude-code`, `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `helix`, `git-hooks`, plus a local `myFonts` flake under `./fonts`.
+**Inputs:** `nixpkgs` (unstable), `home-manager`, `stylix`, `nixcord`, `claude-code`, `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
 
 **Overlays:** niri, nixGL, firefox-addons.
 
@@ -150,7 +149,8 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 - `homeConfigurations.{desktop-arch,laptop-nix}` — built via `mkHome`. Both import the same domain folders + the host's `hosts/<host>/home.nix` overlay. The `desktop-arch` entry is the standalone-HM target on Arch Linux.
 - `templates.{rust,python,go,typst}` — for `nix flake init -t .#<lang>`.
 - `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix, typos).
-- `checks.x86_64-linux.pre-commit` — runs the same hooks via `git-hooks.nix`.
+- `checks.x86_64-linux.{pre-commit,caches-in-sync,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `caches-in-sync` fails if the `nixConfig` cache literals drift from `caches.nix`; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
+- `hmOptions.<host>` — per-host home-manager option trees, consumed by `nixd` for option completion.
 
 **Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. Only honoured if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `hosts/laptop-nix/configuration.nix`.
 
@@ -228,27 +228,28 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | Module | What it does |
 |--------|--------------|
 | `theme.nix` | Shared colour palette + font name + border tokens. Exposed via `_module.args` so siblings can `inherit (specialArgs) colors monoFont border-style`. Gruvbox-dark-ish: `bg0=1c1c1c`, `fg0=fbf1c7`, accents `red af5f5f`, `green 87875f`, `yellow afa45f`, `orange af875f`, `blue 87afaf`, `pink af8787`. |
-| `stylix.nix` | Base16 theming via [stylix]. Scheme: gruvbox-dark-hard, overridden with `theme.nix` colours. Wallpaper: `wallpapers/book.jpg`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
+| `stylix.nix` | Base16 theming via [stylix]. Scheme: gruvbox-dark-hard, overridden with `theme.nix` colours. Wallpaper: `dotfiles.theme.wallpaper`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
+| `wallpaper.nix` | `dotfiles.theme.wallpaper` — single source of truth for the wallpaper image (default `wallpapers/socrates.jpg`), consumed by awww, stylix and hyprlock. `dotfiles.theme.wallpaperBlurred` defaults to a build-time ImageMagick gaussian blur (sigma 20) of it, shown by `swaybg` in the niri backdrop; set it to a file for a hand-made blur. |
 | `fonts.nix` | Installs Nerd Fonts (fira-code, droid-sans-mono, symbols-only), Cascadia Code, Helvetica Neue LT Std, Siji, plus IoskeleyMono from the local `fonts/` flake. Sets fontconfig fallback chain. |
 
 ### Desktop / Wayland (`modules/desktop/`)
 
 | Module | Notes |
 |--------|-------|
-| `niri.nix` | Niri compositor config. Holds everything that's the same on every host: input (UK keymap, focus-follows-mouse), 8px gaps, 1px red active border, no CSD, layer rules placing wallpaper + eww in the backdrop, every binding, custom shaders for window-open/close/resize animations, startup spawns for `xwayland-satellite`, `mako`, `swww`, `swaybg`. **Outputs are not here** — each host's overlay defines them. |
+| `niri/` | Niri compositor config, split across `default.nix`, `binds.nix`, `layout.nix`, `window-rules.nix`, `animations.nix`, `spawn.nix`. Holds everything that's the same on every host: input (UK keymap, focus-follows-mouse), 8px gaps, 1px red active border, no CSD, layer rules placing wallpaper + eww in the backdrop, every binding, custom shaders for window-open/close/resize animations, startup spawns for `xwayland-satellite`, `mako`, `awww`, `swaybg`. **Outputs are not here** — each host's overlay defines them. |
 | `fuzzel.nix` | App launcher. 5 lines, no icons, monoFont 11px, red border, orange prompt. |
 | `mako.nix` | Notification daemon. 4s timeout, red border, bg0 background. |
-| `eww.nix` | Live-edits `~/.config/home-manager/eww/` (symlinked, not copied — `mkOutOfStoreSymlink` keeps source-of-truth on disk). Two systemd user services: `eww` daemon and `eww-powermenu` running `~/.config/home-manager/eww/powermenu.nu`. |
+| `eww.nix` | Live-edits `~/.config/nix/eww/` (symlinked, not copied — `mkOutOfStoreSymlink` keeps source-of-truth on disk). Two systemd user services: `eww` daemon and `eww-powermenu` running `~/.config/nix/eww/powermenu.nu`. |
 | `swww.nix` | `awww` wallpaper daemon as a systemd user service. Started by niri at session-start. |
 | `swayosd.nix` | On-screen volume/brightness/caps-lock indicator. Triggered by niri `XF86Audio*`/`XF86MonBrightness*` binds. |
-| `cliphist.nix` | Wayland clipboard history. Used by `Mod+V` (`cliphist list \| fuzzel --dmenu \| cliphist decode \| wl-copy`). |
+| `cliphist.nix` | Wayland clipboard history. Browsed via the two-mode picker in binds.nix: `Mod+V` lists text entries in fuzzel (dense small font, ids hidden via `--with-nth`, searchable `[label]` prefixes via `Alt+1`, `Alt+2` deletes an entry, `Alt+3` purges all unlabelled); `Mod+Shift+V` decodes the image entries into `~/.cache/cliphist-images` and opens them as an **nsxiv** thumbnail grid (X11 via xwayland-satellite, floated by a window rule) — `Q` copies the focused image. Labels live in `~/.local/share/cliphist-labels`, GC'd with the history. |
 | `polkit.nix` | `polkit-gnome-authentication-agent-1` as a systemd user service. |
+| `udiskie.nix` | Removable-media automounter (USB drives mount on plug-in, notifications via mako, no tray). Talks to the system `udisks2` daemon — enabled in `modules/system/desktop.nix` on NixOS, `pacman -S udisks2` on Arch. |
 
 ### Terminals (`modules/terminals/`)
 
 | Module | Notes |
 |--------|-------|
-| `alacritty.nix` | Shell `nushell`, beam cursor, auto-copy selection, 5px padding. |
 | `ghostty.nix` | Default command `zellij`. Bar cursor, blinking, custom shader `shaders/cursor_warp.glsl`. 16-colour palette mapped to `theme.nix`. Close confirmation off. On Arch the binary itself isn't wrapped with nixGL — niri spawns it via `nixGL ghostty` instead. |
 | `zellij.nix` | Default shell `nushell`, compact layout, no frames, no startup tips. Unbinds `Ctrl+h` (so it falls through to nushell's BackspaceWord). Custom theme using palette colours. |
 
@@ -272,7 +273,7 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | Module | Notes |
 |--------|-------|
 | `git.nix` | User: Joe, `jpzh.dye@gmail.com`. Delta enabled (line numbers, navigate, hyperlinks). Aliases: `st`, `co`, `sw`, `br`, `lg` (decorated graph log), `last`, `unstage`, `amend`. Sensible defaults: `pull.rebase=true`, `push.autoSetupRemote=true`, `rebase.autoStash=true`, `merge.conflictStyle=zdiff3`, `diff.algorithm=histogram`, `init.defaultBranch=main`. |
-| `helix.nix` | Editor (default `EDITOR`), built from the `helix` flake input (latest master). LSP servers: `nixd`, `taplo`, `marksman`, `tinymist`, `harper-ls`, `typos-lsp`, `bash-language-server`, `yaml-language-server`, `dockerfile-language-server-nodejs`, `basedpyright`, `ruff`, plus `rust-analyzer` (clippy pedantic, fill-arg snippets, hidden trivial inlay hints). Custom theme `stylix-jumps`. Per-language config for Rust/Nix/TOML/Typst/Markdown/Bash/YAML/Dockerfile/Python with auto-format on save. `nixd` is wired to `inputs.self`'s `homeConfigurations.${hostname}.options` for option completion (works regardless of where the flake is checked out). |
+| `helix/` | Editor (default `EDITOR`), built from the `helix` flake input (latest master); split across `default.nix`, `editor.nix`, `languages.nix`, `themes.nix`. LSP servers: `nixd`, `taplo`, `marksman`, `tinymist`, `harper-ls`, `typos-lsp`, `bash-language-server`, `yaml-language-server`, `dockerfile-language-server-nodejs`, `basedpyright`, `ruff`, plus `rust-analyzer` (clippy pedantic, fill-arg snippets, hidden trivial inlay hints). Custom theme `stylix-jumps`. Per-language config for Rust/Nix/TOML/Typst/Markdown/Bash/YAML/Dockerfile/Python with auto-format on save. `nixd` is wired to `inputs.self`'s `homeConfigurations.${hostname}.options` for option completion (works regardless of where the flake is checked out). |
 | `nh.nix` | The `nh` nix-helper. `flake = inputs.self.outPath` (a /nix/store path; pass an explicit path to `nh home switch` if you want it to operate on the live source). Auto-cleans generations: keep last 5, plus everything from past 7 days. Enables `nix-output-monitor`. |
 
 ### Apps (`modules/apps/`)
@@ -296,7 +297,8 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | Apps | `Mod+Space` | Firefox |
 | | `Mod+Return` | ghostty (under nixGL on Arch) |
 | | `Mod+R` | fuzzel app launcher |
-| | `Mod+V` | cliphist → fuzzel → wl-copy (paste from history) |
+| | `Mod+V` | clipboard history, text entries (fuzzel, dense). In-picker: `Alt+1` label · `Alt+2` delete entry · `Alt+3` purge all unlabelled |
+| | `Mod+Shift+V` | clipboard history, images — nsxiv thumbnail grid; navigate, `Q` to copy the focused image |
 | | `Mod+I` | hyprpicker → notify-send (pick a colour, copies hex) |
 | Window | `Mod+Q` | close window |
 | | `Ctrl+Q` | left unbound — passes through to the focused app (Helix binds it for typos; see below) |
@@ -317,14 +319,17 @@ The two exceptions are `theming/theme.nix` and `shell/aliases.nix`, which only p
 | | `Mod+Shift±=/-` | grow/shrink window height by 10% |
 | Fullscreen | `Mod+F` / `Mod+Shift+F` / `Mod+Ctrl+F` | maximise column / fullscreen window / reset height |
 | Screenshot | `Mod+P` / `Ctrl+Print` / `Alt+Print` | region / whole screen / focused window |
+| | `Print` | region → satty (annotate/redact) → clipboard + file |
+| Clipboard image | `Mod+Shift+P` | clipboard image → satty → annotated image back to clipboard |
+| | `Mod+Ctrl+P` | clipboard image → tesseract OCR → text in clipboard |
 | Media | `XF86AudioRaiseVolume`/`Lower`/`Mute` | volume via swayosd (visual indicator) |
 | | `XF86AudioMicMute` | mic mute toggle |
 | | `XF86MonBrightnessUp`/`Down` | brightness via swayosd |
 | Bar | `Mod+Shift+C` | reload eww via SIGUSR1 |
 | System | `Mod+Shift+E` or `Ctrl+Alt+Del` | quit niri (with confirm dialog) |
-| | `Mod+Shift+P` | power off monitors |
+| | `Mod+Ctrl+Shift+P` | power off monitors |
 
-Definitions live in `modules/desktop/niri.nix` (shared) plus host overrides in `hosts/<host>/home.nix` (e.g. Arch overrides `Mod+Return` to `nixGL ghostty`).
+Definitions live in `modules/desktop/niri/` (shared, mostly `binds.nix`) plus host overrides in `hosts/<host>/home.nix` (e.g. Arch overrides `Mod+Return` to `nixGL ghostty`).
 
 ### Zellij (terminal multiplexer)
 
@@ -342,7 +347,7 @@ Plus, from this config: **mouse mode** is on (drag pane borders to resize) and *
 
 ### Helix (editor)
 
-Upstream defaults apply — see `hx --tutor` for the full keymap. Customisations from `modules/dev/helix.nix`:
+Upstream defaults apply — see `hx --tutor` for the full keymap. Customisations from `modules/dev/helix/`:
 
 - `Ctrl+v` (normal mode) — toggle LSP inlay hints.
 - `Ctrl+q` / `Ctrl+Shift+q` (normal mode) — silence / restore the typos-lsp spell checker in the current buffer (other language servers unaffected).
@@ -384,7 +389,7 @@ Zoxide replaces `cd` with a frecency-ranked database of directories you've visit
 
 | Command | Behaviour |
 |---------|----------|
-| `cd home-manager` | Jump to the highest-ranked directory whose path contains `home-manager`. From `/tmp` this lands you in `~/.config/home-manager`. |
+| `cd nix` | Jump to the highest-ranked directory whose path contains `nix`. From `/tmp` this lands you in `~/.config/nix`. |
 | `cd config nix` | Multi-fragment match — every fragment must appear in the path, in order. Picks the highest-ranked match. |
 | `cdi config` | Interactive picker (fzf-style) listing all matches by score; arrow-keys + Enter to confirm. |
 | `cd ~/Pictures` | Plain absolute/relative paths still work — they bypass the database. |
@@ -409,7 +414,7 @@ Atuin replaces shell history with a SQLite database that records each command's 
 | `vi` / `vim` / `nano` | `hx` | Helix as the system editor everywhere — even when something else (`crontab -e`, `git rebase`) launches `$EDITOR`. |
 | `cat` | `bat` | Syntax highlighting, line numbers, automatic paging via `less -FR` for files taller than the terminal. Plain `cat`-like for piped output. |
 | `grep` | `rg` (ripgrep) | ~10× faster, recursive by default, respects `.gitignore` automatically, smart-case matching (lowercase pattern → case-insensitive; mixed → case-sensitive). |
-| `du` | `dust` | Shows directory sizes as a nested bar chart sorted largest-first. Run in `~/.config/home-manager` to see what's using space. |
+| `du` | `dust` | Shows directory sizes as a nested bar chart sorted largest-first. Run in `~/.config/nix` to see what's using space. |
 | `ps` | `procs` | Process listing in coloured columns, with `--tree` for parent/child view, `--watch` for live updates, and process search by name as the last argument. |
 | `sed` | `sd` | Replaces `sed`'s arcane syntax for the common case of find-and-replace. `sd 'foo' 'bar' file.txt` instead of `sed -i 's/foo/bar/g' file.txt`. |
 | `ls` | `eza -1` | Single-column output by default. The bare `eza` invocation also shows git status icons next to each tracked file/dir. |
@@ -437,13 +442,13 @@ Inside any directory:
 
 ### Custom scripts
 
-- `blur-wallpaper <input> [output] [sigma]` — gaussian-blur an image (default sigma 60). Use to generate the blurred companion that niri's `swaybg` shows in the backdrop layer.
+- `blur-wallpaper <input> [output] [sigma]` — gaussian-blur an image (default sigma 20). Ad-hoc tool: the blurred companion niri's `swaybg` shows in the backdrop layer is derived automatically at build time (`dotfiles.theme.wallpaperBlurred`).
 
 ---
 
 ## Templates
 
-`nix flake init -t ~/.config/home-manager#<lang>` drops a `flake.nix`, `flake.lock`, and `.envrc` into the current directory. After `direnv allow`, the dev shell auto-activates on `cd`.
+`nix flake init -t ~/.config/nix#<lang>` drops a `flake.nix`, `flake.lock`, and `.envrc` into the current directory. After `direnv allow`, the dev shell auto-activates on `cd`.
 
 | Template | Provides |
 |----------|----------|
@@ -458,16 +463,15 @@ The nushell scaffolds (`init-rust`, `init-python`, `init-go`) wrap `nix flake in
 
 ## Wallpapers
 
-Wallpapers live in `wallpapers/` at the repo root. Niri uses **two files** per wallpaper:
+Wallpapers live in `wallpapers/` at the repo root. `dotfiles.theme.wallpaper` (`modules/theming/wallpaper.nix`) is the single source of truth: `awww` displays it on the focused workspace, stylix extracts accent colours from it, and hyprlock uses it as the lock-screen background.
 
-- A **sharp** version, displayed by `swww` on the focused workspace.
-- A **blurred** version, displayed by `swaybg` in the niri backdrop layer (visible during the overview / between workspaces / behind transparent windows).
+The **blurred** companion that `swaybg` shows in the niri backdrop layer (visible during the overview / between workspaces / behind transparent windows) is not a checked-in file: `dotfiles.theme.wallpaperBlurred` defaults to a derivation that gaussian-blurs the wallpaper (ImageMagick, sigma 20) at build time, so it can never drift out of sync. Set the option to a file to supply a hand-made blur instead.
 
-Both are referenced from `modules/desktop/niri.nix` via `${inputs.self}/wallpapers/<file>`, so they're loaded out of the flake source — meaning every wallpaper file must be `git add`'d before `home-manager switch` will see it (untracked files are invisible to flakes).
+Because the wallpaper is referenced as a flake-source path, it must be `git add`'d before a rebuild will see it (untracked files are invisible to flakes).
 
 ### blur-wallpaper
 
-The `blur-wallpaper` binary (in `$PATH` on every host once HM is activated) generates the blurred companion using ImageMagick's gaussian blur:
+The `blur-wallpaper` binary (in `$PATH` on every host once HM is activated) applies the same ImageMagick gaussian blur by hand — useful for previewing a sigma or producing a one-off:
 
 ```nu
 blur-wallpaper <input> [output] [sigma]
@@ -484,27 +488,21 @@ Sigma rule of thumb: `10` barely-blurred, `20` is the niri-backdrop default (sti
 # 1. Drop the new image in
 cp ~/Downloads/sunset.jpg wallpapers/sunset.jpg
 
-# 2. Generate the blurred companion
-blur-wallpaper wallpapers/sunset.jpg
-# → wrote wallpapers/sunset-blur.jpg
+# 2. Stage it — flakes only see git-tracked files
+git add wallpapers/sunset.jpg
 
-# 3. Stage both — flakes only see git-tracked files
-git add wallpapers/sunset.jpg wallpapers/sunset-blur.jpg
+# 3. Point dotfiles.theme.wallpaper at it: edit the default in
+#    modules/theming/wallpaper.nix (or set the option in a host overlay).
+#    The blurred backdrop, stylix colours and hyprlock background all follow.
 
-# 4. Edit modules/desktop/niri.nix → spawn-at-startup. Replace the two
-#    filenames in the `swww img …` and `swaybg … -i …` commands:
-#       "${inputs.self}/wallpapers/abbey.jpg"        → sunset.jpg
-#       "${inputs.self}/wallpapers/abbey-blur.jpg"   → sunset-blur.jpg
-
-# 5. Apply
+# 4. Apply
 home-manager switch --flake ".#<host>"
 
-# 6. Replace the running daemons (or just log out / Mod+Shift+E and back in)
-swww img wallpapers/sunset.jpg
-killall swaybg; swaybg -m fill -i wallpapers/sunset-blur.jpg &
+# 5. Replace the running daemons (or just log out / Mod+Shift+E and back in)
+awww img wallpapers/sunset.jpg
+killall swaybg
+swaybg -m fill -i "$(grep -oP '(?<=-i" ")/nix/store/\S+(?=")' ~/.config/niri/config.kdl)" &
 ```
-
-If the active wallpaper for stylix's colour-extraction (`modules/theming/stylix.nix:image`) should also change, edit that path too — stylix uses it to derive accent colours and apply them across the rest of the system.
 
 ---
 
@@ -540,7 +538,7 @@ If the package needs OpenGL (browsers, electron apps, games), add it to the `wra
 ```nu
 nix flake update                                                # bump all inputs
 nix flake update nixpkgs helix niri                             # bump specific inputs
-sudo nixos-rebuild switch --flake ~/.config/home-manager#laptop-nix  # apply system (NixOS only)
+sudo nixos-rebuild switch --flake ~/.config/nix#laptop-nix  # apply system (NixOS only)
 home-manager switch --flake ".#desktop-arch"                            # apply user
 nh clean all                                                    # gc, respecting nh.nix retention
 ```
@@ -557,6 +555,6 @@ nh clean all                                                    # gc, respecting
 
 **GUI app launches but draws garbage / segfaults on Arch.** It probably skipped the nixGL wrapper. Check it's in the `wrapGL`-mapped list in `hosts/desktop-arch/home.nix` and not in shared `home.packages`. Apps launched via a `.desktop` entry may also bypass the wrapper if the `.desktop`'s `Exec=` resolves the original (unwrapped) binary — point the `.desktop` `Exec=` at the wrapped binary in your nix profile instead.
 
-**`nh home switch` operates on a /nix/store path, not my live edits.** `programs.nh.flake = inputs.self.outPath` in `modules/dev/nh.nix` gives `nh` a store path by default. Pass an explicit path: `nh home switch ~/.config/home-manager`.
+**`nh home switch` operates on a /nix/store path, not my live edits.** `programs.nh.flake = inputs.self.outPath` in `modules/dev/nh.nix` gives `nh` a store path by default. Pass an explicit path: `nh home switch ~/.config/nix`.
 
 **niri rejects an option I added — `programs.niri.settings.<X> does not exist`.** The niri-flake HM module's typed schema is pinned to a niri version that may lag the upstream KDL grammar (e.g. top-level `blur`, `window-rule { background-effect.blur }`, per-output `layout`). Either bump `inputs.niri`, or escape into the raw KDL via `programs.niri.config = lib.mkForce "<kdl text>"` for the unsupported bits.

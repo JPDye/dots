@@ -4,7 +4,10 @@
 # NOTE: the flake's eval-time `nixConfig.extra-*` (flake.nix) CANNOT import
 # this file — Nix requires nixConfig values to be literals (see the comment
 # there). The `extra` list below is duplicated there as inline literals; if you
-# add/remove/rekey a cache, update both. Everything else reads from here.
+# add/remove/rekey a cache, update both. This is no longer a trust-the-comment
+# invariant: the `extra` list is re-exported below and flake.nix's
+# `checks.<system>.caches-in-sync` fails `nix flake check` if any entry here is
+# missing from the nixConfig literals. Everything else reads from here.
 let
   # cache.nixos.org is already a default substituter, so it's only needed for
   # the persistent `substituters`/`trustedPublicKeys` lists — not the flake's
@@ -34,4 +37,8 @@ in
   # including cache.nixos.org.
   substituters = map (c: c.url) all;
   trustedPublicKeys = map (c: c.key) all;
+
+  # The structured non-default caches, for flake.nix's caches-in-sync check to
+  # verify each one is mirrored in the literal `nixConfig.extra-*` lists.
+  inherit extra;
 }

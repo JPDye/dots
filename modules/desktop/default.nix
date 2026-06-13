@@ -10,6 +10,7 @@
     ./polkit.nix
     ./swayosd.nix
     ./swww.nix
+    ./udiskie.nix
     ./wlsunset.nix
   ];
 }

@@ -4,6 +4,7 @@
   pkgs,
   colors,
   monoFont,
+  serifFont,
   border-style,
   ...
 }:
@@ -49,6 +50,29 @@ let
       sleep 0.1
     done
   '';
+
+  # Battery charge + state for the lock screen's status label: a Nerd Font
+  # glyph (bolt while charging, fill level otherwise) plus the percentage.
+  # Emits nothing on hosts without a battery, so the label is invisible on
+  # desktops.
+  batteryStatus = pkgs.writeShellScript "battery-status" ''
+    for supply in /sys/class/power_supply/*/; do
+      [ "$(cat "$supply/type" 2>/dev/null)" = Battery ] || continue
+      cap=$(cat "$supply/capacity" 2>/dev/null) || continue
+      case "$(cat "$supply/status" 2>/dev/null)" in
+        Charging | Full) icon='' ;;
+        *)
+          if [ "$cap" -ge 90 ]; then icon=''
+          elif [ "$cap" -ge 65 ]; then icon=''
+          elif [ "$cap" -ge 40 ]; then icon=''
+          elif [ "$cap" -ge 15 ]; then icon=''
+          else icon=''; fi
+          ;;
+      esac
+      printf "$icon %d%%" "$cap"
+      exit 0
+    done
+  '';
 in
 {
   options.dotfiles.desktop.lock.enable =
@@ -73,8 +97,9 @@ in
           package = config.dotfiles.wrapGL pkgs.hyprlock; # GPU-rendered (EGL)
 
           # Themed from `colors` directly rather than the stylix hyprlock
-          # target: that target forces the static wallpaper as the
-          # background, and we want the live screenshot. Disabled in
+          # target: we drive the full layout-10 widget arrangement (avatar,
+          # name, clock, date, username pill, input) by hand, which the
+          # stylix target can't express. That target stays disabled in
           # modules/theming/stylix.nix.
           settings = {
             general = {
@@ -87,56 +112,149 @@ in
               "fadeOut, 1, 5, linear"
             ];
 
+            # Static wallpaper (the desktop's own), dimmed. hyprlock only
+            # applies brightness/contrast/vibrancy inside the blur shader, so
+            # a single near-zero blur pass is what lets us dim it — visually
+            # still crisp, not the live screenshot.
             background = {
               monitor = "";
-              path = "screenshot"; # the live screen, not the wallpaper
-              color = "rgb(${colors.bg0})"; # fallback if screencopy fails
-              blur_passes = 3;
-              blur_size = 7;
-              brightness = 0.6;
+              path = "${config.dotfiles.theme.wallpaper}";
+              color = "rgb(${colors.bg0})"; # fallback if the image is missing
+              blur_passes = 1;
+              blur_size = 2;
+              brightness = 0.7;
+              contrast = 0.9;
+              vibrancy = 0.17;
+              vibrancy_darkness = 0.0;
+              zindex = -3; # below the card's shadow (-2), the card (-1), and every widget (0)
             };
+
+            # Profile photo up top, square-cornered and red-bordered like a
+            # niri window. The source is committed at the repo root; keep it
+            # git-tracked or the flake build won't see it.
+            image = [
+              {
+                monitor = "";
+                path = "${../../avatar.jpg}";
+                size = 120;
+                rounding = 0;
+                border_size = border-style.width;
+                border_color = "rgb(${colors.border})";
+                position = "0, 190";
+                halign = "center";
+                valign = "center";
+              }
+            ];
+
+            # Frosted card behind the whole stack; the avatar straddles its
+            # top edge. A translucent panel fakes a pane of smoked glass
+            # without real blur (hyprlock can't blur behind a shape). Styled
+            # like a niri window: square corners, red border, hard 8px shadow.
+            # hyprlock's own shadow_passes always feathers, so the shadow is
+            # a solid bg0 shape one layer down, oversized by border + spread
+            # on every side (shape borders draw outside `size`). zindex (not
+            # file order) enforces cross-widget layering: wallpaper (-3) <
+            # shadow (-2) < card (-1) < every label/image/input (0), so the
+            # text reads on top. home-manager emits blocks alphabetically, so
+            # `shape` would otherwise land last (on top) and hide everything.
+            shape = [
+              # The hard shadow: card 380x420 + 2 * (2px border + 8px spread).
+              {
+                monitor = "";
+                size = "400, 440";
+                color = "rgb(${colors.bg0})"; # same as niri's shadow color
+                rounding = 0;
+                border_size = 0;
+                position = "0, -20";
+                halign = "center";
+                valign = "center";
+                zindex = -2;
+              }
+              # The glass panel.
+              {
+                monitor = "";
+                size = "380, 420";
+                color = "rgba(${colors.bg0}cc)"; # ~80% smoked glass (darker)
+                rounding = 0;
+                border_size = border-style.width;
+                border_color = "rgb(${colors.border})"; # niri's active-border red
+                position = "0, -20";
+                halign = "center";
+                valign = "center";
+                zindex = -1;
+              }
+            ];
 
             input-field = {
               monitor = "";
-              size = "280, 48";
-              position = "0, -60";
+              size = "320, 55";
+              position = "0, -180";
               halign = "center";
               valign = "center";
 
               outline_thickness = border-style.width;
-              rounding = border-style.radius-int;
-              fade_on_empty = true;
-              placeholder_text = "";
+              rounding = 0; # square, like the niri windows
+              fade_on_empty = false;
+              placeholder_text = "<i>Enter password</i>";
 
-              inner_color = "rgb(${colors.bg0})";
-              outer_color = "rgb(${colors.bg3})";
-              font_color = "rgb(${colors.fg1})";
-              check_color = "rgb(${colors.warning})";
-              fail_color = "rgb(${colors.failure})";
+              # Password dots: centered, sized/spaced relative to field height.
+              dots_size = 0.2;
+              dots_spacing = 0.2;
+              dots_center = true;
+
+              inner_color = "rgba(${colors.bg0}80)"; # dark glass
+              outer_color = "rgb(${colors.border})"; # niri's active-border red until an event recolors it
+              font_family = serifFont;
+              font_color = "rgb(${colors.fg0})";
+              check_color = "rgb(${colors.warning})"; # pulses while PAM checks
+              fail_color = "rgb(${colors.failure})"; # wrong password
+              capslock_color = "rgb(${colors.yellow})"; # Caps Lock is on
             };
 
             label = [
-              # Clock; $TIME is built in and self-updating.
+              # Username under the avatar.
               {
                 monitor = "";
-                text = "$TIME";
-                font_family = monoFont;
-                font_size = 72;
+                text = "$USER";
+                font_family = serifFont;
+                font_size = 22;
                 color = "rgb(${colors.fg1})";
-                position = "0, 130";
+                position = "0, 80";
                 halign = "center";
                 valign = "center";
               }
-              # Date below it.
+              # 12-hour clock, center.
               {
                 monitor = "";
-                text = ''cmd[update:60000] date +"%A %-d %B"'';
-                font_family = monoFont;
-                font_size = 16;
-                color = "rgb(${colors.fg3})";
-                position = "0, 55";
+                text = ''cmd[update:10000] date +"%I:%M"'';
+                font_family = serifFont;
+                font_size = 60;
+                color = "rgb(${colors.fg1})";
+                position = "0, -20";
                 halign = "center";
                 valign = "center";
+              }
+              # Date under the clock.
+              {
+                monitor = "";
+                text = ''cmd[update:60000] date +"%A, %B %-d"'';
+                font_family = serifFont;
+                font_size = 18;
+                color = "rgb(${colors.fg3})";
+                position = "0, -90";
+                halign = "center";
+                valign = "center";
+              }
+              # Battery charge + state, top-right; empty on desktops.
+              {
+                monitor = "";
+                text = "cmd[update:30000] ${batteryStatus}";
+                font_family = monoFont;
+                font_size = 14;
+                color = "rgb(${colors.fg3})";
+                position = "-24, -24";
+                halign = "right";
+                valign = "top";
               }
             ];
           };
