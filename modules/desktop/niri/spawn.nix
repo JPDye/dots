@@ -12,15 +12,8 @@
           "${config.dotfiles.theme.wallpaper}"
         ];
       }
-      {
-        command = [
-          "swaybg"
-          "-m"
-          "fill"
-          "-i"
-          "${config.dotfiles.theme.wallpaperBlurred}"
-        ];
-      }
+      # swaybg (the blurred backdrop) is a systemd user service now — see
+      # backdrop.nix — so `switch` can restart it on a wallpaper change.
     ];
   };
 }

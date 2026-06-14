@@ -37,6 +37,44 @@
             description = "Local TTF font derivation.";
           };
         };
+
+        packages.drafting-mono =
+          let
+            # The foundry names the family "Drafting* Mono" — asterisk and all,
+            # which is awkward to reference in every app config. Rewrite the
+            # name table on each face so the family is a clean "Drafting Mono"
+            # (also fixes the full name and PostScript name).
+            deAsterisk = pkgs.writeText "drafting-deasterisk.py" ''
+              import sys
+              from fontTools.ttLib import TTFont
+              src, dst = sys.argv[1], sys.argv[2]
+              font = TTFont(src)
+              for rec in font["name"].names:
+                  s = rec.toUnicode()
+                  if "Drafting*" in s:
+                      rec.string = s.replace("Drafting*", "Drafting")
+              font.save(dst)
+            '';
+          in
+          pkgs.stdenvNoCC.mkDerivation {
+            name = "drafting-mono";
+            dontConfigure = true;
+            dontUnpack = true;
+            # Upstream ships 14 weights (Thin..Bold + italics); rename them all.
+            nativeBuildInputs = [ (pkgs.python3.withPackages (ps: [ ps.fonttools ])) ];
+            installPhase = ''
+              dest=$out/share/fonts/truetype/drafting-mono
+              mkdir -p "$dest"
+              for f in ${./drafting-mono}/*.ttf; do
+                python3 ${deAsterisk} "$f" "$dest/$(basename "$f")"
+              done
+              install -Dm644 ${./drafting-mono}/LICENSE.md -t $out/share/doc/drafting-mono
+            '';
+
+            meta = {
+              description = ''Drafting Mono (name table renamed to "Drafting Mono"), local TTF font derivation.'';
+            };
+          };
       }
     );
 }

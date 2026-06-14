@@ -4,6 +4,7 @@
   colors,
   monoFont,
   border-style,
+  terminal,
   ...
 }:
 
@@ -23,12 +24,24 @@ in
         main = {
           icons-enabled = false;
           # fuzzel appends the program to this for Terminal=true desktop
-          # entries; ghostty needs -e or it treats the program as a config arg.
-          terminal = "ghostty -e";
+          # entries; the terminal needs -e or it treats the program as a
+          # config arg (true for both ghostty and alacritty).
+          terminal = "${terminal.command} -e";
           lines = 5;
 
           dpi-aware = "yes";
-          font = lib.mkForce "${monoFont}:size=11";
+          # size 8 matches the clipboard picker (Mod+V, binds.nix) so every
+          # fuzzel surface shares one dense look.
+          font = lib.mkForce "${monoFont}:size=8";
+
+          # Nerd Font chevron (nf-fa-chevron-right, U+F054). Drafting Mono has
+          # no such glyph, so it renders through the Symbols Nerd Font Mono
+          # fontconfig fallback, in colors.prompt (the accent). fromJSON
+          # decodes the \uf054 escape together with the literal quotes, so the
+          # value serialises as `prompt="<chevron> "` and fuzzel keeps the
+          # trailing space (it trims unquoted trailing whitespace). The
+          # clipboard picker inherits this; other dmenu helpers set --prompt.
+          prompt = builtins.fromJSON ''"\"\uf054 \""'';
 
           horizontal-pad = 16;
           vertical-pad = 16;

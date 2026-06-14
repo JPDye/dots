@@ -2,6 +2,8 @@
   colors,
   config,
   lib,
+  themeLib,
+  shadow-style,
   ...
 }:
 
@@ -32,7 +34,7 @@
             x = 0;
             y = 0;
           };
-          color = "#${colors.mid}";
+          color = "#${themeLib.alpha shadow-style.opacity colors.mid}";
         };
       };
 
@@ -68,9 +70,10 @@
           inactive.color = "#${colors.mid}";
         };
 
-        # Spread exceeds half the gap (16/2 = 8), so neighbouring windows'
-        # shadows overlap and no backdrop shows through between them; the
-        # softness only feathers the outer edge past that solid core.
+        # Spread exceeds half the gap (16/2 = 8) so neighbouring windows'
+        # shadows meet across it; at shadow-style.opacity the blurred backdrop
+        # now tints through the gaps instead of being fully masked. softness 0
+        # keeps a hard edge past the overlap.
         shadow = {
           enable = true;
           spread = 9;
@@ -80,8 +83,8 @@
             y = 0;
           };
 
-          color = "#${colors.bg0}";
-          inactive-color = "#${colors.bg0}";
+          color = "#${themeLib.alpha shadow-style.opacity colors.bg0}";
+          inactive-color = "#${themeLib.alpha shadow-style.opacity colors.bg0}";
         };
 
         # Pull windows back toward the screen edges so the outer gap stays

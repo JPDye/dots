@@ -24,6 +24,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # `/improve` skill for Claude Code (shadcn/improve): a read-only codebase
+    # auditor that writes self-contained execution plans, never editing source.
+    # A plain source tree (not a flake) — linked into ~/.claude/skills by
+    # modules/dev/claude-code.nix.
+    improve-skill = {
+      url = "github:shadcn/improve";
+      flake = false;
+    };
+
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -46,13 +55,6 @@
 
     niri = {
       url = "github:sodiboo/niri-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # `nscratch` — toggles a window in/out of the named "scratch" workspace
-    # (modules/desktop/niri/scratchpad.nix).
-    niri-scratchpad = {
-      url = "github:gvolpe/niri-scratchpad";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

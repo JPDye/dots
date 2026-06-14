@@ -3,6 +3,7 @@
   config,
   lib,
   themeLib,
+  shadow-style,
   ...
 }:
 
@@ -26,6 +27,18 @@ in
       blur {
           passes 2
           offset 2
+      }
+
+      // Catch-all: every window gets frosted-wallpaper blur behind it. Tiled
+      // windows are semitransparent (opacity 0.92, set in the settings rule
+      // below) so the default xray=true backdrop blur shows through cheaply.
+      // The popups/floating/launcher rules below come after this and override
+      // xray to false, so they frost the windows actually beneath them rather
+      // than the wallpaper.
+      window-rule {
+          background-effect {
+              blur true
+          }
       }
 
       // Right-click menus, dropdowns and tooltips of every window. The
@@ -67,11 +80,11 @@ in
               spread 8
               softness 0
               offset x=0 y=0
-              color "#${float-shadow}"
+              color "#${themeLib.alpha shadow-style.opacity float-shadow}"
               // Explicit so unfocused floats don't inherit the layout
               // shadow's bg0 and vanish; focus is already signalled by the
               // border colour.
-              inactive-color "#${float-shadow}"
+              inactive-color "#${themeLib.alpha shadow-style.opacity float-shadow}"
           }
       }
 
@@ -94,8 +107,8 @@ in
               spread 0
               softness 0
               offset x=6 y=6
-              color "#${colors.bg0}"
-              inactive-color "#${colors.bg0}"
+              color "#${themeLib.alpha shadow-style.opacity colors.bg0}"
+              inactive-color "#${themeLib.alpha shadow-style.opacity colors.bg0}"
           }
       }
 
@@ -113,7 +126,18 @@ in
               spread 8
               softness 0
               offset x=0 y=0
-              color "#${float-shadow}"
+              color "#${themeLib.alpha shadow-style.opacity float-shadow}"
+          }
+      }
+
+      // mako notifications (layer-shell namespace "notifications"). Its
+      // background gets the translucency in mako.nix; xray false so the frost
+      // shows whatever window it pops over, same as the launcher above.
+      layer-rule {
+          match namespace="^notifications$"
+          background-effect {
+              blur true
+              xray false
           }
       }
     '';
@@ -130,34 +154,34 @@ in
 
           clip-to-geometry = true;
           draw-border-with-background = false;
-          opacity = 1.0;
+          # Baseline translucency for every window so the catch-all blur
+          # (extraConfig above) shows through. Per-app rules can pin back to
+          # 1.0 if a window reads badly see-through.
+          opacity = 0.92;
         }
         {
           matches = [ { title = "Firefox"; } ];
-          opacity = 1.0;
           default-column-width = {
             proportion = 1.0;
           };
         }
         {
           matches = [ { app-id = "Spotify"; } ];
-          opacity = 1.0;
           default-column-width = {
             proportion = 1.0;
           };
         }
         {
           matches = [ { app-id = "Slack"; } ];
-          opacity = 1.0;
           default-column-width = {
             proportion = 1.0;
           };
         }
         # Generic sizing classes: any window whose app-id ends in .thin/.wide/
-        # .full opens at a preset column width, e.g.
-        # `ghostty --class=com.mitchellh.ghostty.wide`. The suffix form is
-        # because GTK application ids must contain a dot — a bare "thin" would
-        # be rejected by ghostty.
+        # .full opens at a preset column width. The work-layout (binds.nix)
+        # launches its terminals with `--class=<prefix>.thin` / `.wide`; the
+        # dotted suffix is matched here and also satisfies GTK's requirement
+        # that app-ids contain a dot.
         {
           matches = [ { app-id = "\\.thin$"; } ];
           default-column-width = {
@@ -175,17 +199,6 @@ in
           default-column-width = {
             proportion = 1.0;
           };
-        }
-        # Scratchpad class: opens floating wherever you are; nscratch
-        # (scratchpad.nix) stashes it on the named "scratch" workspace from
-        # the second press on. Deliberately NOT open-on-workspace "scratch":
-        # new windows take focus, so opening there would drag you to the
-        # scratch workspace on first spawn instead of bringing the terminal
-        # to you. Floating via rule rather than nscratch's own flags because
-        # niri can't float an already-mapped window's first frame.
-        {
-          matches = [ { app-id = "\\.scratch$"; } ];
-          open-floating = true;
         }
         # The nsxiv image grid behind Mod+Shift+V (clipboard image picker in
         # binds.nix). It's an X11 client via xwayland-satellite, so niri sees

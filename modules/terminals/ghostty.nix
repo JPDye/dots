@@ -6,14 +6,10 @@
 }:
 
 let
-  cfg = config.dotfiles.terminals.ghostty;
+  cfg = config.dotfiles.terminals;
 in
 {
-  options.dotfiles.terminals.ghostty.enable = lib.mkEnableOption "ghostty terminal" // {
-    default = true;
-  };
-
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg.primary == "ghostty") {
     xdg.configFile."ghostty/shaders/cursor_warp.glsl".source = ../../shaders/cursor_warp.glsl;
 
     programs.ghostty = {

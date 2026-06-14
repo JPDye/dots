@@ -19,7 +19,9 @@ in
 
       settings = {
         border-color = "#${colors.urgent}CC";
-        background-color = "#${colors.bg0}";
+        # Translucent (eb ≈ 92%, matching the launcher and floats) so niri's
+        # notifications layer-rule blur (window-rules.nix) frosts through it.
+        background-color = "#${colors.bg0}eb";
         text-color = "#${colors.fg2}";
         default-timeout = 4000;
       };

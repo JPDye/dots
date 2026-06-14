@@ -12,11 +12,11 @@ in
 {
   imports = [
     ./spawn.nix
+    ./backdrop.nix
     ./layout.nix
     ./window-rules.nix
     ./binds.nix
     ./animations.nix
-    ./scratchpad.nix
   ];
 
   options.dotfiles.desktop.niri = {

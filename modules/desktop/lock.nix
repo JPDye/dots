@@ -6,6 +6,8 @@
   monoFont,
   serifFont,
   border-style,
+  themeLib,
+  shadow-style,
   ...
 }:
 
@@ -162,7 +164,7 @@ in
               {
                 monitor = "";
                 size = "400, 440";
-                color = "rgb(${colors.bg0})"; # same as niri's shadow color
+                color = "rgba(${themeLib.alpha shadow-style.opacity colors.bg0})"; # same as niri's shadow colour, at shadow-style.opacity
                 rounding = 0;
                 border_size = 0;
                 position = "0, -20";

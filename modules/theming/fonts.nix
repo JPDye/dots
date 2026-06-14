@@ -19,17 +19,18 @@ in
   config = lib.mkIf cfg.enable {
     fonts.fontconfig =
       let
+        # Drafting Mono carries no icon or math glyphs, so every category
+        # falls through to Nerd Font symbols (icons) then Libertinus Math
+        # (math symbols). No serif fallback — the desktop is all Drafting Mono.
         fallbacks = [
-          monoFont
-          "FiraCode Nerd Font Mono"
+          "Symbols Nerd Font Mono"
+          "Libertinus Math"
         ];
       in
       {
         enable = true;
         defaultFonts = {
-          monospace = fallbacks;
-          # serif + sansSerif resolve to Lora, then fall back to the mono
-          # Nerd Fonts for glyphs Lora lacks (icons, odd unicode).
+          monospace = [ monoFont ] ++ fallbacks;
           serif = [ serifFont ] ++ fallbacks;
           sansSerif = [ serifFont ] ++ fallbacks;
         };
@@ -39,12 +40,14 @@ in
       nerd-fonts.fira-code
       nerd-fonts.droid-sans-mono
       nerd-fonts.symbols-only
+      libertinus # Serif text backup + Math symbols (see fallbacks above)
       cascadia-code
       helvetica-neue-lt-std
       lora
       siji
 
       inputs.myFonts.packages.${pkgs.stdenv.hostPlatform.system}.ioskeley
+      inputs.myFonts.packages.${pkgs.stdenv.hostPlatform.system}.drafting-mono
     ];
   };
 }

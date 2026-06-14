@@ -53,6 +53,12 @@ in
       ".claude/skills/.keep".text = "";
       ".claude/agents/.keep".text = "";
       ".claude/plugins/.keep".text = "";
+
+      # Third-party skill: shadcn/improve — read-only codebase auditor that
+      # writes execution plans (`/improve`). Pinned via the `improve-skill`
+      # flake input. Living under ~/.claude/skills, it's automatically shared
+      # with claude2 through the skills symlink above.
+      ".claude/skills/improve".source = "${inputs.improve-skill}/skills/improve";
     };
   };
 }

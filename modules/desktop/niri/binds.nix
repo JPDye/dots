@@ -4,6 +4,7 @@
   colors,
   monoFont,
   pkgs,
+  terminal,
   ...
 }:
 
@@ -165,7 +166,7 @@ let
         } \
           | fuzzel --dmenu --config ${fuzzel-clip-config} \
               --with-nth 2 --width 90 --lines 15 \
-              --placeholder "enter copy · alt+1 label · alt+2 delete · alt+3 purge unlabelled"
+              --placeholder "alt+1 label · alt+2 delete · alt+3 purge unlabelled"
       ) && rc=0 || rc=$?
       [ -z "$sel" ] && exit 0
       id=''${sel%%$'\t'*}
@@ -240,12 +241,12 @@ let
   # works), then open a 33%/66% pair there: bacon on the left, a terminal on
   # the right. Widths come from the .thin/.wide window rules in
   # window-rules.nix. Spawning goes through
-  # `niri msg` so the windows are parented to the compositor, and ghostty is
-  # referenced by absolute wrapGL'd path because niri spawns with its own
+  # `niri msg` so the windows are parented to the compositor, and the terminal
+  # is referenced by absolute wrapGL'd path because niri spawns with its own
   # PATH, not the script's.
   work-layout =
     let
-      ghostty = lib.getExe (config.dotfiles.wrapGL pkgs.ghostty);
+      term = lib.getExe (config.dotfiles.wrapGL terminal.package);
       zellij = lib.getExe config.programs.zellij.package;
       # Runs bacon inside zellij rather than as the terminal's direct child,
       # so the pane survives as a normal zellij session (new tabs, scrollback,
@@ -295,14 +296,14 @@ let
         zoxide add "$dir"
 
         thin_count() {
-          niri msg --json windows | jq '[.[] | select(.app_id == "com.mitchellh.ghostty.thin")] | length'
+          niri msg --json windows | jq '[.[] | select(.app_id == "${terminal.appIdPrefix}.thin")] | length'
         }
 
         # bacon comes from each project's dev shell (templates/rust), not the
         # user profile, so the layout launches it through `direnv exec` to
         # load the .envrc environment first.
         before=$(thin_count)
-        niri msg action spawn -- ${ghostty} --class=com.mitchellh.ghostty.thin --working-directory="$dir" \
+        niri msg action spawn -- ${term} --class=${terminal.appIdPrefix}.thin --working-directory="$dir" \
           -e ${zellij} --layout ${bacon-layout}
 
         # Wait until the thin window has opened (it takes focus) so the wide
@@ -312,7 +313,7 @@ let
           sleep 0.05
         done
 
-        niri msg action spawn -- ${ghostty} --class=com.mitchellh.ghostty.wide --working-directory="$dir"
+        niri msg action spawn -- ${term} --class=${terminal.appIdPrefix}.wide --working-directory="$dir"
       '';
     };
 
@@ -416,9 +417,15 @@ in
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
     programs.niri.settings.binds = {
       "Mod+Space".action.spawn = "firefox";
-      "Mod+Return".action.spawn = "ghostty";
+      "Mod+Return".action.spawn = terminal.command;
       "Mod+Shift+Return".action.spawn = lib.getExe work-layout;
-      "Mod+R".action.spawn = "fuzzel";
+      # Placeholder hint only on the launcher (drun mode); the dmenu helpers
+      # (clipboard picker, calc, work-layout) pass their own --prompt.
+      "Mod+R".action.spawn = [
+        "fuzzel"
+        "--placeholder"
+        "search apps"
+      ];
       "Mod+V".action.spawn = lib.getExe clipboard-picker;
       "Mod+Shift+V".action.spawn = [
         (lib.getExe clipboard-picker)
@@ -494,16 +501,14 @@ in
       "Mod+Ctrl+Shift+WheelScrollDown".action.move-column-right = [ ];
       "Mod+Ctrl+Shift+WheelScrollUp".action.move-column-left = [ ];
 
-      # Indices include the named "scratch" workspace (scratchpad.nix), which
-      # always sorts first — the first dynamic workspace is index 2.
-      "Mod+1".action.focus-workspace = 2;
-      "Mod+2".action.focus-workspace = 3;
-      "Mod+3".action.focus-workspace = 4;
-      "Mod+4".action.focus-workspace = 5;
-      "Mod+Ctrl+1".action.move-window-to-workspace = 2;
-      "Mod+Ctrl+2".action.move-window-to-workspace = 3;
-      "Mod+Ctrl+3".action.move-window-to-workspace = 4;
-      "Mod+Ctrl+4".action.move-window-to-workspace = 5;
+      "Mod+1".action.focus-workspace = 1;
+      "Mod+2".action.focus-workspace = 2;
+      "Mod+3".action.focus-workspace = 3;
+      "Mod+4".action.focus-workspace = 4;
+      "Mod+Ctrl+1".action.move-window-to-workspace = 1;
+      "Mod+Ctrl+2".action.move-window-to-workspace = 2;
+      "Mod+Ctrl+3".action.move-window-to-workspace = 3;
+      "Mod+Ctrl+4".action.move-window-to-workspace = 4;
 
       "Mod+Comma".action.consume-window-into-column = [ ];
       "Mod+Period".action.expel-window-from-column = [ ];

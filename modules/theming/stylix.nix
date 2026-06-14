@@ -74,8 +74,9 @@ in
 
       # Per-target overrides: stylix only configures a target when its module
       # is enabled. firefox/spicetify/zellij/mako are disabled so other modules
-      # (textfox, spicetify customColorScheme, etc.) can own that theming;
-      # ghostty defers to stylix.
+      # (textfox, spicetify customColorScheme, etc.) can own that theming; the
+      # active terminal defers to stylix (its module forces a custom palette on
+      # top).
       targets = lib.mkMerge [
         (lib.mkIf config.dotfiles.apps.firefox.enable {
           firefox.enable = false;
@@ -94,8 +95,11 @@ in
           # blurred screenshot.
           hyprlock.enable = false;
         })
-        (lib.mkIf config.dotfiles.terminals.ghostty.enable {
+        (lib.mkIf (config.dotfiles.terminals.primary == "ghostty") {
           ghostty.enable = true;
+        })
+        (lib.mkIf (config.dotfiles.terminals.primary == "alacritty") {
+          alacritty.enable = true;
         })
       ];
     };

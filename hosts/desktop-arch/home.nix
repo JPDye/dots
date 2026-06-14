@@ -2,6 +2,7 @@
   lib,
   pkgs,
   mkNixGLWrap,
+  terminal,
   ...
 }:
 
@@ -30,8 +31,9 @@ in
     # and laptop-nix runs the nixpkgs build too, so versions stay in step.
     package = wrapGL pkgs.niri;
 
-    # Host-specific niri bits: monitors and the ghostty launcher override
-    # (ghostty needs nixGL on Arch since its OpenGL libs aren't where nixpkgs expects).
+    # Host-specific niri bits: monitors and the terminal launcher override
+    # (the terminal needs nixGL on Arch since its OpenGL libs aren't where
+    # nixpkgs expects).
     settings = {
       outputs = {
         "HDMI-A-1" = {
@@ -50,7 +52,7 @@ in
       binds."Mod+Return" = lib.mkForce {
         action.spawn = [
           "nixGL"
-          "ghostty"
+          terminal.command
         ];
       };
     };

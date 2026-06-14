@@ -74,6 +74,10 @@ let
     in
     ch 0 + ch 1 + ch 2;
 
+  # Append an 8-bit alpha channel to an "rrggbb" color -> "rrggbbaa", for the
+  # niri (#rrggbbaa) and hyprlock (rgba(rrggbbaa)) shadow colors. opacity 0..1.
+  alpha = opacity: hex: hex + toPair (builtins.floor (opacity * 255 + 0.5));
+
   dark = rec {
     bg0 = "1c1c1c";
     bg1 = "3c3836";
@@ -167,8 +171,15 @@ in
   };
 
   config._module.args = {
-    monoFont = "IoskeleyMono Nerd Font";
-    serifFont = "Lora";
+    # Drafting Mono everywhere. Upstream names the family "Drafting* Mono";
+    # the fonts flake rewrites the name table to drop the asterisk, so the
+    # clean "Drafting Mono" is what fontconfig and apps see. serifFont
+    # deliberately holds the same family (a fully monospaced desktop); the
+    # fallback chains in theming/fonts.nix + system/fonts.nix add only the
+    # Nerd Font icon and Libertinus Math glyph coverage Drafting Mono lacks —
+    # no serif fallback.
+    monoFont = "Drafting Mono";
+    serifFont = "Drafting Mono";
 
     border-style = {
       radius-float = 1.0;
@@ -176,11 +187,17 @@ in
       width = 2;
     };
 
+    # Shared shadow opacity, applied to every shadow color via
+    # `themeLib.alpha`. Single knob for how see-through shadows are.
+    shadow-style = {
+      opacity = 0.65;
+    };
+
     colors = if cfg.variant == "light" then light else dark;
     colorsDark = dark;
     colorsLight = light;
 
     # Color-format helpers for consumer modules.
-    themeLib = { inherit rgbDec mix; };
+    themeLib = { inherit rgbDec mix alpha; };
   };
 }
