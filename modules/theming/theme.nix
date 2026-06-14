@@ -190,7 +190,7 @@ in
     # Shared shadow opacity, applied to every shadow color via
     # `themeLib.alpha`. Single knob for how see-through shadows are.
     shadow-style = {
-      opacity = 0.65;
+      opacity = 0.95;
     };
 
     colors = if cfg.variant == "light" then light else dark;

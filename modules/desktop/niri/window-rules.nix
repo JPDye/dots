@@ -21,36 +21,9 @@ in
     # only the wallpaper; menus and the launcher float over windows, so they
     # need `xray false` to frost what's actually beneath them.
     dotfiles.desktop.niri.extraConfig = ''
-      // Milder frost than the default (passes 3, offset 3): dual-kawase
-      // doubles the blur scale per pass, so one pass fewer roughly halves
-      // it. Drop offset next if it's still too strong.
-      blur {
-          passes 2
-          offset 2
-      }
-
-      // Catch-all: every window gets frosted-wallpaper blur behind it. Tiled
-      // windows are semitransparent (opacity 0.92, set in the settings rule
-      // below) so the default xray=true backdrop blur shows through cheaply.
-      // The popups/floating/launcher rules below come after this and override
-      // xray to false, so they frost the windows actually beneath them rather
-      // than the wallpaper.
       window-rule {
           background-effect {
-              blur true
-          }
-      }
-
-      // Right-click menus, dropdowns and tooltips of every window. The
-      // opacity is what makes the blur visible — popups are opaque on
-      // their own.
-      window-rule {
-          popups {
-              opacity 0.92
-              background-effect {
-                  blur true
-                  xray false
-              }
+              blur false
           }
       }
 
@@ -67,13 +40,8 @@ in
           default-column-width {
               fixed 900
           }
-          opacity 0.92
           border {
               width 1
-          }
-          background-effect {
-              blur true
-              xray false
           }
           shadow {
               on
@@ -157,7 +125,7 @@ in
           # Baseline translucency for every window so the catch-all blur
           # (extraConfig above) shows through. Per-app rules can pin back to
           # 1.0 if a window reads badly see-through.
-          opacity = 0.92;
+          opacity = 1.0;
         }
         {
           matches = [ { title = "Firefox"; } ];
