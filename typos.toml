@@ -1,0 +1,34 @@
+# Default locale "en" accepts both en-US and en-GB spellings, so American
+# identifiers baked into the code (the `colors` variable, `mold`,
+# `rust-analyzer`, ...) aren't flagged — en-gb produced 226 such false
+# positives. Prose files (md/txt) override to "en-gb" to enforce British
+# spelling there. Helix's typos-lsp servers mirror this split.
+[default]
+locale = "en"
+
+[default.extend-words]
+# stylix theme palette uses hex strings that look like words
+BA = "BA"
+# deliberate regex stem in the firefox niri window-rule — matches
+# Authenticate/Authenticating/Authentication window titles by prefix
+authenticat = "authenticat"
+
+# Prose gets British spelling enforced; code above stays lenient.
+[type.md]
+locale = "en-gb"
+# Skip backtick-quoted inline code so American-spelled identifiers referenced
+# in docs (`colors`, `rust-analyzer`, `mold`, ...) aren't flagged as prose.
+extend-ignore-re = ['`[^`\n]+`', '(?s)```.*?```']
+
+[type.txt]
+locale = "en-gb"
+
+[files]
+extend-exclude = [
+  "shaders/*",
+  "flake.lock",
+  # Verbatim Claude Code content, installed to ~/.claude. The STE ruleset
+  # mandates American spelling, so the en-gb prose rule must not touch it.
+  "modules/dev/ste-writing/*",
+  "modules/dev/claude-user-memory.md",
+]
