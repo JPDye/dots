@@ -1,0 +1,8 @@
+# The GravityZone kit carries the tenant auth token, the customer ID and a
+# tracking key in installer.xml. Keep all of it out of the repo, so unpacking
+# installer.tar next to bootstrap.sh cannot commit a credential by accident.
+installer
+installer.xml
+bdconfigure
+*.tar
+linux-amd64/
