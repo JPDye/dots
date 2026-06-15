@@ -1,0 +1,58 @@
+# CI: evaluate every flake output and build the cheap checks.
+# Deliberately does NOT build the host closures (checks.*.nixos-laptop-nix /
+# home-desktop-arch) — many-GB closures exceed hosted-runner disk. Eval
+# catches the historical failure mode (option/schema breakage) in minutes.
+#
+# The two cachix entries below are duplicated from caches.nix — keep them in
+# sync, but you don't have to trust yourself to: the caches-in-sync flake check
+# (run by `nix flake check`, i.e. this very workflow) now reads this file and
+# fails on drift.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  flake-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@v16
+        with:
+          extra-conf: |
+            extra-substituters = https://helix.cachix.org https://niri.cachix.org
+            extra-trusted-public-keys = helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=
+
+      # Two flake inputs are read *at eval time* (import-from-derivation):
+      # stylix's base16.nix reads scheme YAML out of base16-schemes, and
+      # textfox's HM module reads its theme source out of textfox-git.
+      # `--no-build` refuses to realise either on the runner's empty store,
+      # so build the tiny IFD inputs first. If this workflow ever fails
+      # again with "path '….drv' is not valid", add that drv's package here.
+      - name: Realise import-from-derivation inputs (stylix, textfox)
+        run: |
+          nix build --no-link --inputs-from . nixpkgs#base16-schemes
+          nix build --no-link --inputs-from . textfox#packages.x86_64-linux.default
+
+      - name: Evaluate all outputs (no builds)
+        run: nix flake check --no-build
+
+      - name: Build lightweight checks
+        run: nix build --no-link .#checks.x86_64-linux.pre-commit .#checks.x86_64-linux.caches-in-sync
+
+      # The four project templates are pinned independently of the root
+      # flake (go/python/typst carry their own flake.lock; rust/shell.nix
+      # pins nixpkgs + rust-overlay inline by rev+hash). The root flake
+      # check never evaluates the shells inside them, so a rotten pin
+      # would otherwise surface only on the next `nix flake init` +
+      # direnv reload. Eval-only: instantiates the shell derivations
+      # (fetches pinned source tarballs, builds nothing).
+      - name: Evaluate templates (pin bitrot guard)
+        run: |
+          for t in go python typst; do
+            nix flake check --no-build "path:templates/$t"
+          done
+          nix-instantiate templates/rust/shell.nix

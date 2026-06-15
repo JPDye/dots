@@ -1,0 +1,120 @@
+* { all: unset }
+
+// Palette ($red, $bg0, $yellow, ...) comes from theme.nix via _theme.scss,
+// which home-manager generates into this dir on switch (gitignored).
+@import "theme";
+
+// Semantic color variables for easy theme changes
+$primary: $red;      // main UI elements, borders, active states
+$secondary: $orange; // highlights, headers, accents
+$accent: $green;     // additional highlights (shadows the theme's orange `accent` alias)
+$tertiary: $blue;
+
+// Background and surface colors
+$surface-darkgrey: $bg0;
+$surface-lightgrey: $bg3;
+$surface-grey: #464040; // one-off, not in the theme palette
+
+// Legacy color names (mapped to semantic colors)
+$surface-fg: $secondary;
+$surface-red: $primary;
+$surface-green: $green;
+
+.powermenu {
+  background: none;
+  font-family: $mono-font;
+  color: rgba($surface-fg, 0.8);
+  opacity: 1.0;
+}
+
+.btns-box {
+  font-size: 1.2em;
+  font-weight: bold;
+
+  button {
+    // The Mono symbols font centers each glyph in a uniform single cell;
+    // the default proportional fallback bakes whitespace into the advance,
+    // which made the icons sit off-centre.
+    font-family: "Symbols Nerd Font Mono";
+    padding: 0.2em;
+    min-width: 1.2em;
+    min-height: 1.2em;
+    border-radius: 0;
+    border: 1px solid rgba($primary, 1.0);
+    background-color: rgba($surface-darkgrey, 0.75);
+    color: rgba($accent, 0.8); // green icons in red outlines, like the pills
+    transition: 100ms ease-out;
+
+    // Symbols fonts have no bold; GTK would synthesize one by smearing.
+    // Sizing the inner label keeps the button's own em metrics unchanged.
+    label {
+      font-weight: normal;
+      font-size: 0.8em;
+    }
+
+    &:hover {
+      background-color: rgba($surface-darkgrey, 1.0);
+      border-color: rgba($primary, 1.0);
+      color: rgba($accent, 1.0);
+    }
+
+    // First click on a destructive button arms it; second click executes.
+    // The icon takes the backdrop colour so it reads as negative space
+    // punched out of the red block.
+    &.armed {
+      transition: 200ms linear;
+      background-color: rgba($primary, 0.7);
+      border-color: rgba($primary, 0.9);
+      color: $surface-darkgrey;
+    }
+  }
+}
+
+.clock-box,
+.media-box,
+.stats-box {
+  font-size: 1.2em;
+  font-weight: bold;
+
+  // Vertical padding and min-height match the buttons so every box in
+  // all four quadrants comes out the same height.
+  .pill {
+    padding: 0.2em 0.45em 0.2em 0.25em;
+    min-height: 1.2em;
+    border-radius: 0;
+    background-color: rgba($surface-darkgrey, 0.75);
+  }
+
+  .value {
+    font-size: 0.65em;
+  }
+
+  .icon {
+    font-family: "Symbols Nerd Font Mono"; // same centering fix as the buttons
+    font-weight: normal; // no real bold in symbols fonts; avoid fake-bold smear
+    font-size: 0.8em;
+    min-width: 1.2em;
+  }
+}
+
+// Every pill dresses the same: red outline, green icon (the per-quadrant
+// icon colours are gone). The buttons above match.
+.clock-box .pill,
+.media-box .pill,
+.stats-box .pill {
+  border: 1px solid rgba($primary, 1.0);
+  .icon { color: rgba($accent, 0.8); }
+}
+
+// Severity tint for the stats icons (thresholds live in eww.yuck's stats/bat
+// widgets). Literal $orange/$red rather than the semantic aliases: severity
+// colours shouldn't follow a re-themed $primary.
+.stats-box .pill.warn .icon { color: rgba($orange, 0.9); }
+.stats-box .pill.crit .icon { color: rgba($red, 1.0); }
+
+// The duration pill is clickable (play/pause); brighten like the buttons do.
+.media-toggle .pill:hover {
+  background-color: rgba($surface-darkgrey, 1.0);
+  border-color: rgba($primary, 1.0);
+  .icon { color: rgba($accent, 1.0); }
+}
