@@ -1,0 +1,140 @@
+; Padding is computed by powermenu.nu from the niri overview zoom, so the
+; widgets land in the dim margin around the workspace overview.
+(defvar pad-x "300")
+(defvar pad-y "150")
+
+; Flipped to true by powermenu.nu just after opening the window so the
+; layout fades in. There is no fade-out: the window closes instantly with
+; the overview (keeping it alive for an animation is how an invisible
+; full-screen surface ends up eating all input).
+(defvar menu-open false)
+
+; Name of the destructive button awaiting its second (confirming) click.
+(defvar confirm "")
+
+; Computed from /proc/uptime rather than `uptime -p`: the daemon's PATH
+; resolves coreutils' uptime, which has no -p flag.
+(defpoll uptime :interval "60s"
+  :initial ""
+  `awk '{s=int($1); d=int(s/86400); h=int(s%86400/3600); m=int(s%3600/60); printf "%s%dh %dm", (d?d"d ":""), h, m}' /proc/uptime`)
+
+; Now-playing metadata as a JSON object (artist/album/title/duration), one
+; line per change, no polling — see media.nu for the encoding dance. The
+; path is spelled via ~ because the daemon's cwd is not the config dir;
+; ~/.config/eww is home-manager's symlink to this directory. playerctl is
+; installed by modules/desktop/eww.nix; nu and playerctl resolve from the
+; daemon's PATH the same way `eww`/`awk` above do.
+(deflisten media
+  :initial `{"artist":"","album":"","title":"","duration":"","status":""}`
+  `nu ~/.config/eww/media.nu`)
+
+; Playback position for the duration pill's current/total. MPRIS doesn't
+; signal position changes, so this one has to poll — :run-while keeps it
+; dormant except while the menu is actually on screen.
+(defpoll position :interval "1s"
+  :run-while menu-open
+  :initial "0:00"
+  `playerctl metadata --format '{{duration(position)}}' 2>/dev/null || true`)
+
+(defwindow powermenu
+  :monitor 0
+  :namespace "eww"
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (layout))
+
+(defwidget layout []
+  (revealer :transition "crossfade" :reveal menu-open :duration "200ms"
+    (box :class "inner"
+         :style "padding-left: ${pad-x}px; padding-right: ${pad-x}px; padding-top: ${pad-y}px; padding-bottom: ${pad-y}px;"
+         :space-evenly false :orientation "vertical" :hexpand true :vexpand true
+      (box :valign "start" :space-evenly false :hexpand true :vexpand true
+        (mediainfo)
+        (buttons))
+      (box :valign "end" :space-evenly false :hexpand true :vexpand true
+        (clock)
+        (stats)))))
+
+; One datapoint: an icon and its value sharing a single pill background.
+; ?level ("warn"/"crit") recolors the icon via eww.scss — the stats pills
+; pass it when their reading crosses a threshold.
+(defwidget pill [icon text ?level]
+  (box :class "pill ${level}" :space-evenly false :spacing 5
+    (label :class "icon" :text icon :halign "center")
+    (label :class "value" :text text :halign "center")))
+
+(defwidget clock []
+  (box :class "clock-box"
+       :space-evenly false :spacing 8
+       :valign "end" :halign "start"
+    (pill :icon "󱑆" :text {formattime(EWW_TIME, "%H:%M")})
+    (pill :icon "󰃭" :text {formattime(EWW_TIME, "%a %d %b")})
+    (pill :icon "󰔛" :text uptime)))
+
+; Like (pill) but width-limited and self-hiding: tags can be long or absent
+; (album on streams, duration on radio), so each datapoint caps its label
+; and drops out entirely when its field is empty.
+(defwidget media-pill [icon text limit]
+  (box :class "pill" :visible {text != ""} :space-evenly false :spacing 5
+    (label :class "icon" :text icon :halign "center")
+    (label :class "value" :text text :limit-width limit :halign "center")))
+
+(defwidget mediainfo []
+  (box :class "media-box"
+       :space-evenly false :spacing 8
+       :valign "start" :halign "start"
+    (media-pill :icon "󰠃" :text {media.artist} :limit 24)
+    (media-pill :icon "󰀥" :text {media.album} :limit 24)
+    (media-pill :icon "󰝚" :text {media.title} :limit 32)
+    ; The duration pill doubles as a play/pause toggle (boxes can't take
+    ; onclick, hence the eventbox). The icon flips on its own: playerctl
+    ; changes the status, which comes back around through media.nu.
+    (eventbox :class "media-toggle" :cursor "pointer"
+              :onclick "playerctl play-pause"
+      (media-pill :icon {media.status == "Playing" ? "󰏤" : "󰐊"} :limit 16
+                  :text {media.duration != "" ? "${position}/${media.duration}" : ""}))))
+
+(defwidget stats []
+  (box :class "stats-box"
+       :space-evenly false :spacing 8
+       :hexpand true :valign "end" :halign "end"
+    (bat :cap {EWW_BATTERY?.BAT0?.capacity ?: -1}
+         :status {EWW_BATTERY?.BAT0?.status ?: ""})
+    (pill :icon "󰻠" :text "${round(EWW_CPU.avg, 0)}%"
+          :level {EWW_CPU.avg >= 70 ? "crit" : EWW_CPU.avg >= 40 ? "warn" : ""})
+    (pill :icon "󰍛" :text "${round(EWW_RAM.used_mem_perc, 0)}%"
+          :level {EWW_RAM.used_mem_perc >= 70 ? "crit" : EWW_RAM.used_mem_perc >= 40 ? "warn" : ""})))
+
+(defwidget bat [cap status]
+  (box :visible {cap >= 0}
+    (pill :icon {status == "Charging" ? "󰂄" :
+                 status == "Full" || status == "Not charging" ? "󰚥" :
+                 cap >= 90 ? "󰁹" :
+                 cap >= 70 ? "󰂀" :
+                 cap >= 50 ? "󰁾" :
+                 cap >= 30 ? "󰁼" :
+                 cap >= 15 ? "󰁻" : "󰁺"}
+          :text "${cap}%"
+          ; Plugged in means the low charge is being dealt with — no tint.
+          :level {status == "Charging" || status == "Full" || status == "Not charging" ? "" :
+                  cap < 20 ? "crit" : cap < 40 ? "warn" : ""})))
+
+(defwidget buttons []
+  (box :class "btns-box" :spacing 8
+       :hexpand true :valign "start" :halign "end"
+       :space-evenly false
+    (pbtn :name "lock"     :icon "󰌾" :action "loginctl lock-session")
+    (pbtn :name "reboot"   :icon "󰜉" :action "reboot"   :danger "yes")
+    (pbtn :name "shutdown" :icon "󰐥" :action "poweroff" :danger "yes")))
+
+; Destructive buttons (:danger "yes") arm on the first click and only run on
+; the second; moving the pointer away disarms them.
+(defwidget pbtn [name icon action ?danger]
+  (eventbox :onhoverlost "eww update confirm="
+    (button :class {confirm == name ? "pbtn armed" : "pbtn"}
+            :onclick {danger == "yes" && confirm != name ?
+                      "eww update confirm=${name}" :
+                      "eww update confirm= ; ${action}"}
+      icon)))
