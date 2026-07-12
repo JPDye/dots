@@ -10,16 +10,16 @@ _:
     ./hardware-configuration.nix
 
     ../../modules/system
+
+    # Pick a form-factor profile once you know the machine — laptops get
+    # TLP/fwupd, desktops don't. See hosts/{laptop-nix,jd}/configuration.nix.
+    #   ../../profiles/laptop.nix
+    #   ../../profiles/desktop.nix
   ];
 
   networking.hostName = "@HOSTNAME@";
 
   # installer:luks (line replaced with boot.initrd.luks config, or deleted, by install-host.sh)
-
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
 
   # Don't touch unless you know what you're doing.
   system.stateVersion = "@STATE_VERSION@";

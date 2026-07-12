@@ -10,6 +10,9 @@
 
     ../../modules/system
 
+    # Form factor: this is a laptop (TLP battery management, fwupd, …).
+    ../../profiles/laptop.nix
+
     # No exact T14s Gen 3 AMD profile in nixos-hardware. Combine the closest
     # chassis match (t14s-amd-gen1 — same form factor, deep sleep tweak) with
     # the AMD pstate driver (big battery win on Ryzen 6000-series).
@@ -33,15 +36,6 @@
       size = 18 * 1024; # MiB; ≥ RAM (14Gi) + headroom
     }
   ];
-
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
-
-  # Firmware updates via `fwupdmgr refresh && fwupdmgr update`. ThinkPads
-  # publish BIOS/EC updates through LVFS; without this they sit unapplied.
-  services.fwupd.enable = true;
 
   environment.systemPackages = with pkgs; [
     libGL

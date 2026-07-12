@@ -15,6 +15,13 @@ in
     };
 
   config = lib.mkIf cfg.enable {
+    # GPU / OpenGL for any GUI host (both form factors want this identically —
+    # so it lives here, not in a profiles/ file that would duplicate it).
+    hardware.graphics = {
+      enable = true;
+      enable32Bit = true;
+    };
+
     services = {
       dbus = {
         enable = true;
