@@ -202,7 +202,8 @@
       # `homeHosts` is for standalone home-manager activation on non-NixOS
       # boxes — never list a NixOS host here or you'll end up with two
       # parallel HM activations fighting over the same files.
-      nixosHosts = [ "laptop-nix" ];
+      nixosHosts = [
+        "jd" "laptop-nix" ];
       homeHosts = [ "desktop-arch" ];
 
       pre-commit-check = inputs.git-hooks.lib.${system}.run {
