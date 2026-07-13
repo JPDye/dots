@@ -8,11 +8,10 @@ let
   cfg = config.dotfiles.system.power;
 in
 {
+  # Default OFF: this is laptop-only (battery charge thresholds, on-battery perf
+  # caps), so a bare desktop must not inherit it. profiles/laptop.nix opts in.
   options.dotfiles.system.power.enable =
-    lib.mkEnableOption "laptop power management (tlp + upower + poweralertd)"
-    // {
-      default = true;
-    };
+    lib.mkEnableOption "laptop power management (tlp + upower + poweralertd)";
 
   config = lib.mkIf cfg.enable {
     services.tlp = {

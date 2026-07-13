@@ -47,6 +47,14 @@ host that disabled them wouldn't boot / would have no user / no network).
 
 ## Where things live (don't guess)
 
+- **Form-factor config → `profiles/{laptop,desktop}.nix`.** The middle tier
+  between always-shared `modules/` and a host's per-machine divergence: settings
+  true of *all laptops* (or *all desktops*) but not universal. Each NixOS host
+  imports exactly one profile in its `configuration.nix`. Laptop-only system
+  modules (e.g. `power` — TLP/battery) default their toggle **off** and are
+  switched on by `profiles/laptop.nix`, so a bare desktop never inherits them.
+  Per-machine values (resume_offset, monitor `outputs`, nixos-hardware chassis
+  profile) still live in the host, not the profile.
 - **GUI / GPU packages → shared `home.nix`**, inside the
   `map config.dotfiles.wrapGL (…)` list. `wrapGL` is identity on NixOS and
   nixGL-wrapping on Arch (`hosts/desktop-arch/home.nix` sets it; helper in

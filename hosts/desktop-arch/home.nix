@@ -35,6 +35,16 @@ in
     # (the terminal needs nixGL on Arch since its OpenGL libs aren't where
     # nixpkgs expects).
     settings = {
+      layout = {
+        preset-column-widths = [
+          { proportion = 0.25; }
+          { proportion = 0.333; }
+          { proportion = 0.5; }
+          { proportion = 0.666; }
+          { proportion = 0.75; }
+        ];
+      };
+
       outputs = {
         "HDMI-A-1" = {
           scale = 1.0;

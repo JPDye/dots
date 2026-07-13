@@ -203,7 +203,9 @@
       # boxes — never list a NixOS host here or you'll end up with two
       # parallel HM activations fighting over the same files.
       nixosHosts = [
-        "jd" "laptop-nix" ];
+        "nix-desktop"
+        "laptop-nix"
+      ];
       homeHosts = [ "desktop-arch" ];
 
       pre-commit-check = inputs.git-hooks.lib.${system}.run {

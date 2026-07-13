@@ -154,6 +154,19 @@ in
           max-width = 1000;
         }
         {
+          # Firefox auth/passkey/security-key dialogs are regular toplevels,
+          # not real dialogs, so niri tiles them by default. Float them.
+          # Both keys in one match are combined with AND: firefox app-id AND
+          # a matching title.
+          matches = [
+            {
+              app-id = "^firefox$";
+              title = "(?i)passkey|security key|sign in|authenticat";
+            }
+          ];
+          open-floating = true;
+        }
+        {
           matches = [ { app-id = ".*blueman.*"; } ];
           open-floating = true;
           min-width = 500;
