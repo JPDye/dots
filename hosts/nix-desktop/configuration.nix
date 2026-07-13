@@ -19,13 +19,21 @@
     inputs.nixos-hardware.nixosModules.common-cpu-intel
   ];
 
-  networking.hostName = "jd";
+  networking.hostName = "nix-desktop";
 
   # /nix and /home live on the 1TB sdb (btrfs, one filesystem, two subvolumes).
   # sda holds only / and /boot. btrfs is needed in the initrd because /nix is
   # required for early boot. Swap stays on the sda root (/swapfile) — btrfs
   # swapfiles are finicky and complicate hibernate resume offsets.
-  boot.supportedFilesystems = [ "btrfs" ];
+  boot = {
+    supportedFilesystems = [ "btrfs" ];
+
+    # Hibernate from /swapfile on the sda root partition.
+    # If /swapfile gets fragmented, defrag and re-derive resume_offset:
+    #   sudo filefrag -v /swapfile | awk 'NR==4 {gsub(/\.\./, " "); print $4}'
+    resumeDevice = "/dev/disk/by-uuid/ea6e6e01-3bba-409c-8235-3560fd1a1536";
+    kernelParams = [ "resume_offset=3266560" ];
+  };
 
   fileSystems."/nix" = {
     device = "/dev/disk/by-uuid/f944d39f-3497-4e56-b9d2-4a5286622330";
@@ -46,12 +54,6 @@
       "noatime"
     ];
   };
-
-  # Hibernate from /swapfile on the sda root partition.
-  # If /swapfile gets fragmented, defrag and re-derive resume_offset:
-  #   sudo filefrag -v /swapfile | awk 'NR==4 {gsub(/\.\./, " "); print $4}'
-  boot.resumeDevice = "/dev/disk/by-uuid/ea6e6e01-3bba-409c-8235-3560fd1a1536";
-  boot.kernelParams = [ "resume_offset=3266560" ];
 
   swapDevices = [
     {

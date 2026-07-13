@@ -9,6 +9,9 @@ locale = "en"
 [default.extend-words]
 # stylix theme palette uses hex strings that look like words
 BA = "BA"
+# deliberate regex stem in the firefox niri window-rule — matches
+# Authenticate/Authenticating/Authentication window titles by prefix
+authenticat = "authenticat"
 
 # Prose gets British spelling enforced; code above stays lenient.
 [type.md]

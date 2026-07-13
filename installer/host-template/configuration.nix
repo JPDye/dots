@@ -12,7 +12,7 @@ _:
     ../../modules/system
 
     # Pick a form-factor profile once you know the machine — laptops get
-    # TLP/fwupd, desktops don't. See hosts/{laptop-nix,jd}/configuration.nix.
+    # TLP/fwupd, desktops don't. See hosts/{laptop-nix,nix-desktop}/configuration.nix.
     #   ../../profiles/laptop.nix
     #   ../../profiles/desktop.nix
   ];

@@ -156,8 +156,8 @@ in
         {
           # Firefox auth/passkey/security-key dialogs are regular toplevels,
           # not real dialogs, so niri tiles them by default. Float them.
-          # Both keys in one match are ANDed: firefox app-id AND a matching
-          # title.
+          # Both keys in one match are combined with AND: firefox app-id AND
+          # a matching title.
           matches = [
             {
               app-id = "^firefox$";
