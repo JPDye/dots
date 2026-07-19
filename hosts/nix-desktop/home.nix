@@ -42,6 +42,14 @@
 
       # Override the base border width (base sets 2) down to 1px.
       border.width = lib.mkForce 1;
+
+      preset-column-widths = [
+        { proportion = 0.25; }
+        { proportion = 0.333; }
+        { proportion = 0.5; }
+        { proportion = 0.666; }
+        { proportion = 0.75; }
+      ];
     };
   };
 }

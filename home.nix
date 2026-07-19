@@ -68,8 +68,10 @@ in
             pkgs2511.orca-slicer # 2.3.2 — 2.4.1 regressed file dialogs on 26.11
             pkgs2511.bambu-studio # cached build — avoids the hour-long compile
             openscad # 3D CAD modeller (GL); 2021.01 stable, cached
+            freecad-wayland # qt6 + native Wayland build for niri
             proton-vpn
             qbittorrent
+            roomeqwizard
             slack
             vlc
 
