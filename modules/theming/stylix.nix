@@ -26,6 +26,16 @@ in
       platformTheme.name = lib.mkForce "gtk";
     };
 
+    # The gtk platform theme above makes Qt apps open native GTK3 file
+    # dialogs, and GTK3 aborts the whole process (fatal g_log) if the
+    # org.gtk.Settings.FileChooser GSettings schema isn't on XDG_DATA_DIRS.
+    # Nothing else in this config publishes compiled schemas, so every Qt
+    # file dialog (FreeCAD Open/Save As, ...) would crash without these.
+    xdg.systemDirs.data = [
+      "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+      "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}"
+    ];
+
     stylix = {
       enable = true;
       polarity = config.dotfiles.theme.variant;

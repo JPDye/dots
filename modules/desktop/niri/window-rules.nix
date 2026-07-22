@@ -47,11 +47,11 @@ in
               spread 8
               softness 0
               offset x=0 y=0
-              color "#${themeLib.alpha shadow-style.opacity float-shadow}"
+              color "#${float-shadow}"
               // Explicit so unfocused floats don't inherit the layout
               // shadow's bg0 and vanish; focus is already signalled by the
               // border colour.
-              inactive-color "#${themeLib.alpha shadow-style.opacity float-shadow}"
+              inactive-color "#${float-shadow}"
           }
       }
 

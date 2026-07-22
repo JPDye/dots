@@ -34,7 +34,7 @@
             x = 0;
             y = 0;
           };
-          color = "#${themeLib.alpha shadow-style.opacity colors.mid}";
+          color = "#${colors.mid}";
         };
       };
 
@@ -83,8 +83,8 @@
             y = 0;
           };
 
-          color = "#${themeLib.alpha shadow-style.opacity colors.bg0}";
-          inactive-color = "#${themeLib.alpha shadow-style.opacity colors.bg0}";
+          color = "#${colors.bg0}";
+          inactive-color = "#${colors.bg0}";
         };
 
         # Pull windows back toward the screen edges so the outer gap stays

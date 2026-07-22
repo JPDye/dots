@@ -49,6 +49,21 @@ in
     # authenticates through PAM, which only the system config can provide.
     security.pam.services.hyprlock = { };
 
+    # GSettings schemas for the GTK3 file chooser. Stylix (HM scope) forces
+    # Qt's platform theme to gtk, so every Qt app opens GTK3's file dialog
+    # in-process, and GTK3 fatally aborts ("No GSettings schemas are
+    # installed on the system") if org.gtk.Settings.FileChooser isn't on
+    # XDG_DATA_DIRS. The HM-side fix (xdg.systemDirs.data in
+    # theming/stylix.nix) lands in environment.d, but niri-session's
+    # import-environment then overwrites XDG_DATA_DIRS in the user manager
+    # with the value from /etc/set-environment — which is generated from
+    # *this* option. The dirs must be here to survive into niri.service and
+    # everything it spawns. Keep in sync with modules/theming/stylix.nix.
+    environment.sessionVariables.XDG_DATA_DIRS = [
+      "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+      "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}"
+    ];
+
     xdg.portal = {
       enable = true;
       extraPortals = with pkgs; [
