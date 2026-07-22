@@ -46,10 +46,17 @@ let
   # deliberate locks (keybind, powermenu, suspend) keep the default grace
   # of 0. The pgrep guard turns overlapping fires — both idle tiers,
   # repeated lock events — into no-ops instead of second instances that
-  # exit with an error.
+  # exit with an error. hyprlock must be backgrounded, not exec'd:
+  # home-manager runs `swayidle -w`, which waits for each command before
+  # reading further events, so a foreground locker blocks swayidle for the
+  # whole locked stretch and the idle tiers that fire meanwhile queue up
+  # and replay the moment you unlock — relocking the session you just
+  # opened (and only then powering off the monitors).
   lock = pkgs.writeShellScript "lock" ''
     export PATH=${lockBinPath}:$PATH
-    pgrep -x hyprlock >/dev/null || exec ${hyprlock} "$@"
+    if ! pgrep -x hyprlock >/dev/null; then
+      ${hyprlock} "$@" &
+    fi
   '';
 
   # hyprlock can't fork-once-locked like `swaylock -f`, so to guarantee the
