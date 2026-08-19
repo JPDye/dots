@@ -11,7 +11,7 @@ A unified Nix flake driving three hosts from one module set:
 - **`laptop-nix`**, **`nix-desktop`** — NixOS. `hosts/<host>/configuration.nix`
   (system) + home-manager run *as a NixOS module*. Built by `mkNixos` in
   `flake.nix` (host lists: `nixosHosts` / `homeHosts` there).
-- **`desktop-arch`** — standalone home-manager on Arch Linux. Built by `mkHome`.
+- **`laptop-arch`** — standalone home-manager on Arch Linux. Built by `mkHome`.
 
 `home.nix` is the shared HM base; it imports every domain under `modules/` plus
 the active host's `hosts/<host>/home.nix` overlay.
@@ -58,7 +58,7 @@ host that disabled them wouldn't boot / would have no user / no network).
   profile) still live in the host, not the profile.
 - **GUI / GPU packages → shared `home.nix`**, inside the
   `map config.dotfiles.wrapGL (…)` list. `wrapGL` is identity on NixOS and
-  nixGL-wrapping on Arch (`hosts/desktop-arch/home.nix` sets it; helper in
+  nixGL-wrapping on Arch (`hosts/laptop-arch/home.nix` sets it; helper in
   `modules/wrap-gl.nix`). Do **not** put packages in host overlays — overlays
   carry only per-host divergence (monitor `outputs`, `lib.mkForce` bind
   overrides, the `wrapGL` definition).
@@ -84,11 +84,15 @@ host that disabled them wouldn't boot / would have no user / no network).
   `modules/desktop/niri/default.nix`).
 - **flakes only see git-tracked files**: `git add` new wallpapers/fonts/modules
   before a rebuild, or they're invisible.
-- **walker won't see new apps until elephant restarts**: elephant (walker's
-  backend, a long-running user service) scans desktop entries at startup, and
-  a rebuild swaps the profile symlink out from under it. After adding a GUI
-  app, `systemctl --user restart elephant.service walker.service` or it won't
-  appear in the launcher.
+- **walker needs elephant to restart before it sees a new app**: elephant
+  (walker's backend, a long-running user service) scans desktop entries at
+  startup, and a rebuild replaces the profile symlink under it. The
+  `refreshWalker` activation hook in `modules/desktop/walker.nix` now restarts
+  both services on every `switch`, so this is automatic. The hook is a no-op
+  when no graphical session is live, so a rebuild from a TTY still needs
+  `systemctl --user restart elephant.service walker.service` after login.
+  A CLI tool never appears in walker either way, because walker lists desktop
+  entries and a CLI tool ships none.
 
 ## Verifying a change
 

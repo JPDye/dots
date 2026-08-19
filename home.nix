@@ -55,6 +55,7 @@ in
           with pkgs;
           [
             # GUI / GL-using — wrapped through dotfiles.wrapGL on hosts that need it
+            bitwarden-desktop # vault GUI; the firefox addon lives in modules/apps/firefox.nix
             chromium
             dbeaver-bin
             foliate

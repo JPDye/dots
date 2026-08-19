@@ -110,10 +110,22 @@ in
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
       {
-        # hyprlock authenticates through PAM: on NixOS that needs
-        # security.pam.services.hyprlock (modules/system/desktop.nix); on
-        # non-NixOS hosts /etc/pam.d/hyprlock must exist (e.g. install the
-        # distro's own hyprlock once) or unlocking will fail.
+        # hyprlock authenticates through PAM. On NixOS that needs
+        # security.pam.services.hyprlock (modules/system/desktop.nix). On
+        # non-NixOS hosts two root-owned files must exist, and standalone
+        # home-manager can write neither:
+        #
+        #   1. /etc/pam.d/hyprlock. Without it libpam falls back to
+        #      /etc/pam.d/other, a pam_deny stack on Arch.
+        #   2. /run/wrappers/bin/unix_chkpwd. nixpkgs patches pam_unix.so to
+        #      exec the setuid password helper from that NixOS path, and the
+        #      nix-built hyprlock links nix libpam. Arch installs the helper at
+        #      /usr/bin/unix_chkpwd, so the exec fails and PAM returns
+        #      PAM_AUTHINFO_UNAVAIL.
+        #
+        # Either one missing gives the same symptom: a correct password is
+        # rejected with "auth failed". Run `nix run .#arch-pam-setup` once per
+        # Arch machine to install both (hosts/laptop-arch/pam-setup.nix).
         #
         # While locked, Ctrl+Alt+F1..F12 still switches to a raw tty — the
         # kernel handles VT switching, so the locker can't (and shouldn't)

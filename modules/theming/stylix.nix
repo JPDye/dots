@@ -20,8 +20,10 @@ in
     qt = {
       enable = true;
       # Override stylix's own qt target (which defaults to qtct). We want
-      # qt apps to follow the gtk theme instead.
-      platformTheme.name = lib.mkForce "gtk";
+      # qt apps to follow the gtk theme instead. `gtk3` is Qt's own GTK3
+      # platform theme plugin — not the legacy `gtk2` qtstyleplugins path. The
+      # old alias `gtk` warns since home-manager 26.05.
+      platformTheme.name = lib.mkForce "gtk3";
     };
 
     # The gtk platform theme above makes Qt apps open native GTK3 file

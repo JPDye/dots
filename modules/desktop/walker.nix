@@ -336,5 +336,17 @@ in
     # Pin elephant to the cached nixpkgs build too; it bundles every provider
     # (.so) in lib/elephant/providers, so calc/clipboard/files all work.
     programs.elephant.package = pkgs.elephant;
+
+    # Refresh the launcher on every `switch` so a newly added GUI app shows up
+    # without a relogin. elephant scans desktop entries once, at startup, and a
+    # switch replaces the profile symlink under the running process. Walker
+    # restarts with it, because walker reads its app list from elephant.
+    # Guarded to be a clean no-op when no graphical session is live (TTY
+    # switch, headless rebuild, first boot before login).
+    home.activation.refreshWalker = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if ${pkgs.systemd}/bin/systemctl --user is-active graphical-session.target >/dev/null 2>&1; then
+        run ${pkgs.systemd}/bin/systemctl --user restart elephant.service walker.service || true
+      fi
+    '';
   };
 }

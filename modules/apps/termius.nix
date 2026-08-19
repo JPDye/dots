@@ -14,6 +14,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Termius keeps its database key in the OS keyring and hangs on a blank
+    # splash when no login keyring exists. On Arch run
+    # `nix run .#arch-pam-setup` once (hosts/laptop-arch/pam-setup.nix).
     home.packages = [ pkgs.termius ];
   };
 }

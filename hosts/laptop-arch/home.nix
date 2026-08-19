@@ -6,21 +6,27 @@
 }:
 
 let
-  # MSI Prestige 14 AI Evo: Core Ultra 7 255H with an Arc iGPU, driven by Mesa
-  # — so nixGLIntel (the Mesa variant) is the right wrapper, same as the
-  # desktop. mkNixGLWrap lives in modules/wrap-gl.nix.
+  # MSI Prestige 14 AI Evo: Core Ultra 7 255H with an Arc iGPU, driven by Mesa,
+  # so nixGLIntel (the Mesa variant, which also covers AMD) is the right
+  # wrapper. mkNixGLWrap lives in modules/wrap-gl.nix.
   wrapGL = mkNixGLWrap "${pkgs.nixgl.nixGLIntel}/bin/nixGLIntel";
 in
 {
   dotfiles.wrapGL = wrapGL;
 
-  # Stock cached orca build: the login-fixed relink (modules/apps/orca-slicer.nix)
-  # is a ~1 h uncached local recompile, only worth it where Bambu cloud login is
-  # actually used (the desktop).
-  dotfiles.apps.orca-slicer.loginFix = false;
+  # No slicer on this laptop: the printer lives with the desktop, which is the
+  # only host that needs orca (modules/apps/orca-slicer.nix).
+  dotfiles.apps.orca-slicer.enable = false;
 
-  # nixGL itself, exposed in PATH for ad-hoc wrapping (`nixGL <cmd>`).
-  home.packages = [ pkgs.nixgl.nixGLIntel ];
+  home.packages = [
+    # nixGL itself, exposed in PATH for ad-hoc wrapping (`nixGL <cmd>`).
+    pkgs.nixgl.nixGLIntel
+
+    # Root-level PAM setup for hyprlock (pam-setup.nix). It is also a flake
+    # output, so `nix run .#arch-pam-setup` works before the first rebuild.
+    # This entry puts the same command in PATH after a rebuild.
+    (pkgs.callPackage ./pam-setup.nix { })
+  ];
 
   # Install niri into the user profile — on Arch there's no system-level
   # `programs.niri.enable` to do it. nixGL-wrapped so its GL/Vulkan calls find
@@ -28,8 +34,9 @@ in
   # systemd unit is auto-enabled).
   programs.niri = {
     enable = true;
-    # nixpkgs' niri (26.04), matching the other hosts — see the version note in
-    # hosts/desktop-arch/home.nix.
+    # nixpkgs' niri (26.04), not niri-flake's niri-stable build (25.08). The
+    # shared config uses post-25.08 features (recent-windows switcher), and
+    # laptop-nix runs the nixpkgs build too, so versions stay in step.
     package = wrapGL pkgs.niri;
 
     settings = {

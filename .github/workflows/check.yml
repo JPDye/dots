@@ -1,6 +1,6 @@
 # CI: evaluate every flake output and build the cheap checks.
 # Deliberately does NOT build the host closures (checks.*.nixos-laptop-nix /
-# home-desktop-arch) — many-GB closures exceed hosted-runner disk. Eval
+# home-laptop-arch) — many-GB closures exceed hosted-runner disk. Eval
 # catches the historical failure mode (option/schema breakage) in minutes.
 #
 # The two cachix entries below are duplicated from caches.nix — keep them in

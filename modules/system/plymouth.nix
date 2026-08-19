@@ -14,8 +14,8 @@ in
 
   config = lib.mkIf cfg.enable {
     boot = {
-      # Boot splash (laptop-nix only — NixOS owns the boot path; desktop-arch is
-      # Arch's domain). deus_ex is fixed pixel art from adi1090x's theme pack, so
+      # Boot splash (laptop-nix only — NixOS owns the boot path; the Arch host
+      # boots Arch's own stack). deus_ex is fixed pixel art from adi1090x's theme pack, so
       # it doesn't derive from the home-manager palette — nothing to keep in sync.
       plymouth = {
         enable = true;

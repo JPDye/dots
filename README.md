@@ -4,7 +4,7 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
 
 - **`laptop-nix`** — NixOS laptop (`hosts/laptop-nix/configuration.nix` + matching home overlay). Imports `profiles/laptop.nix`.
 - **`nix-desktop`** — NixOS desktop, stamped by the installer ISO (`hosts/nix-desktop/`). Imports `profiles/desktop.nix`.
-- **`desktop-arch`** — standalone home-manager on Arch Linux. Same modules, GPU-using GUI apps wrapped with nixGL.
+- **`laptop-arch`** — standalone home-manager on Arch Linux. Same modules, GPU-using GUI apps wrapped with nixGL.
 
 ![screenshot](https://github.com/JPDye/dots/blob/main/sc2.png)
 ![screenshot](https://github.com/JPDye/dots/blob/main/sc1.png)
@@ -91,7 +91,7 @@ sudo nixos-rebuild switch --flake .#<name>
 nix run nixpkgs#home-manager -- init --switch  # or skip if already installed
 
 # Create a per-host overlay (only the unavoidable bits — monitors and, on
-# non-NixOS, a nixGL wrap function for GUI apps). See hosts/desktop-arch/home.nix
+# non-NixOS, a nixGL wrap function for GUI apps). See hosts/laptop-arch/home.nix
 # as a working example.
 mkdir hosts/<name>
 $EDITOR hosts/<name>/home.nix
@@ -103,7 +103,15 @@ $EDITOR hosts/<name>/home.nix
 home-manager switch -b backup --flake ".#<name>"
 ```
 
-If the OS doesn't supply OpenGL libs at the standard nixpkgs paths (most non-NixOS distros), set `dotfiles.wrapGL` in the host overlay so GUI apps run under nixGL — `hosts/desktop-arch/home.nix` shows the pattern with the Mesa variant (`nixGLIntel`, also covers AMD).
+If the OS doesn't supply OpenGL libs at the standard nixpkgs paths (most non-NixOS distros), set `dotfiles.wrapGL` in the host overlay so GUI apps run under nixGL — `hosts/laptop-arch/home.nix` shows the pattern with the Mesa variant (`nixGLIntel`, also covers AMD).
+
+Two desktop features need one root step that home-manager cannot do, because PAM configuration lives in `/etc`:
+
+```bash
+nix run .#arch-pam-setup     # prompts for sudo, idempotent, once per machine
+```
+
+It writes `/etc/pam.d/hyprlock` plus a tmpfiles rule that links `/run/wrappers/bin/unix_chkpwd` to Arch's `/usr/bin/unix_chkpwd`, and it wires `pam_gnome_keyring` into `/etc/pam.d/login` (installing Arch's `gnome-keyring` for the PAM module). Skip it and hyprlock rejects the correct password, and apps that store secrets through the keyring (Termius) hang on a blank splash. See the Troubleshooting entry below for the reason.
 
 ### Daily use
 
@@ -143,8 +151,10 @@ Notes:
 │   │   ├── configuration.nix      # NixOS system config
 │   │   ├── hardware-configuration.nix
 │   │   └── home.nix               # per-host HM overlay (desktop monitors, unwrapped GUI apps)
-│   └── desktop-arch/
-│       └── home.nix               # per-host HM overlay (Arch monitors, nixGL-wrapped GUI apps)
+│   └── laptop-arch/
+│       ├── home.nix               # per-host HM overlay (Arch monitors, nixGL-wrapped GUI apps)
+│       ├── pam-setup.nix          # root PAM files for hyprlock (`nix run .#arch-pam-setup`)
+│       └── pam-setup.sh
 ├── profiles/                 # form-factor tier: laptop.nix / desktop.nix, one per NixOS host
 ├── modules/                  # modules, grouped by domain (home-manager + NixOS system)
 │   ├── theming/              # theme tokens, stylix, fonts
@@ -171,7 +181,7 @@ Notes:
 
 Three pieces:
 
-1. **`mkHome` in `flake.nix`** keys a home configuration by hostname and threads `inputs`, `hostname`, and `system` through `extraSpecialArgs`. Only non-NixOS hosts get one (`homeHosts = [ "desktop-arch" ]` in flake.nix); on the NixOS hosts the same shared module list runs via the home-manager NixOS module instead, so every host is built from one module set either way.
+1. **`mkHome` in `flake.nix`** keys a home configuration by hostname and threads `inputs`, `hostname`, and `system` through `extraSpecialArgs`. Only non-NixOS hosts get one (`homeHosts = [ "laptop-arch" ]` in flake.nix); on the NixOS hosts the same shared module list runs via the home-manager NixOS module instead, so every host is built from one module set either way.
 2. **Per-module toggles**: every module under `modules/` exposes `dotfiles.<domain>.<name>.enable` (default `true`). To skip something on a host, set its toggle `false` in that host's overlay. (System modules under `modules/system/` follow the same pattern for *feature* modules — `dotfiles.system.<name>` — while structural ones like `boot`, `nix`, and `users` stay always-on; see CLAUDE.md.) Two exceptions stay unwrapped because they only set `_module.args` for other modules: `theming/theme.nix` and `shell/aliases.nix`.
 3. **Per-host overlays at `hosts/<host>/home.nix`**: the only place per-host divergence lives. Includes things like:
    - `dotfiles.wrapGL` (set on Arch to the nixGL wrapper; GUI apps are declared in shared `home.nix` and wrapped automatically per host via this setting).
@@ -190,7 +200,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 
 **Outputs:**
 - `nixosConfigurations.{nix-desktop,laptop-nix}` — the NixOS hosts.
-- `homeConfigurations.desktop-arch` — built via `mkHome`; the standalone-HM target on Arch Linux. It imports the same domain folders + `hosts/desktop-arch/home.nix`. (the NixOS hosts have no `homeConfigurations` entries — their home-manager configs run as NixOS modules, nested at `nixosConfigurations.<host>.config.home-manager.users.jd`.)
+- `homeConfigurations.laptop-arch` — built via `mkHome`; the standalone-HM target on Arch Linux. It imports the same domain folders + `hosts/laptop-arch/home.nix`. (the NixOS hosts have no `homeConfigurations` entries — their home-manager configs run as NixOS modules, nested at `nixosConfigurations.<host>.config.home-manager.users.jd`.)
 - `templates.{rust,python,go,typst}` — for `nix flake init -t .#<lang>`.
 - `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix, typos).
 - `checks.x86_64-linux.{pre-commit,caches-in-sync,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `caches-in-sync` fails if the `nixConfig` cache literals or the CI workflow's (`.github/workflows/check.yml`) cachix literals drift from `caches.nix`; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
@@ -249,7 +259,7 @@ sudo tailscale up
 
 **`hosts/laptop-nix/home.nix`** contains only `programs.niri.settings.outputs` for `eDP-1`, `HDMI-A-1`, and `DP-7`. No packages, no extra `sessionPath`.
 
-**`hosts/desktop-arch/home.nix`** sets `dotfiles.wrapGL` (to the nixGL wrapper), installs `nixgl.nixGLIntel` for ad-hoc use, enables `programs.niri` with a wrapped `pkgs.niri`, widens the column-width presets, and defines outputs `HDMI-A-1` (rotated 90°), `DP-10`, `DP-9`. It does not list packages — they come from shared `home.nix`, wrapped via the `wrapGL` it sets. `Mod+Return` needs no override: `modules/desktop/niri/binds.nix` spawns the terminal by its absolute `wrapGL`'d path.
+**`hosts/laptop-arch/home.nix`** sets `dotfiles.wrapGL` (to the nixGL wrapper), installs `nixgl.nixGLIntel` and the `arch-pam-setup` command, enables `programs.niri` with a wrapped `pkgs.niri`, tightens `layout.gaps` for the 14" panel, disables `orca-slicer`, and defines outputs `eDP-1` and `DP-3`. It does not list GUI packages. They come from shared `home.nix`, wrapped via the `wrapGL` it sets. `Mod+Return` needs no override: `modules/desktop/niri/binds.nix` spawns the terminal by its absolute `wrapGL`'d path.
 
 ---
 
@@ -640,7 +650,7 @@ Add the package to the `map config.dotfiles.wrapGL (…)` list in shared `home.n
 nix flake update                                                # bump all inputs
 nix flake update nixpkgs helix niri                             # bump specific inputs
 sudo nixos-rebuild switch --flake ~/.config/nix#laptop-nix  # apply system (NixOS only)
-home-manager switch --flake ".#desktop-arch"                            # apply user
+home-manager switch --flake ".#laptop-arch"                             # apply user
 nh clean all                                                    # gc, respecting nh.nix retention
 ```
 
@@ -657,5 +667,12 @@ nh clean all                                                    # gc, respecting
 **GUI app launches but draws garbage / segfaults on Arch.** It probably skipped the nixGL wrapper. Check it's in the `map config.dotfiles.wrapGL (…)` list in shared `home.nix` (so it gets nixGL-wrapped on Arch). Apps launched via a `.desktop` entry may also bypass the wrapper if the `.desktop`'s `Exec=` resolves the original (unwrapped) binary — point the `.desktop` `Exec=` at the wrapped binary in your nix profile instead.
 
 **`nh home switch` fails with "No installable specified and no flake found".** `NH_FLAKE` is missing from the shell. The `nh` module exports it through `home.sessionVariables`, which writes only to `hm-session-vars.sh`. That file is a POSIX script, and nushell never sources it. `modules/dev/nh.nix` therefore sets the variable in `programs.nushell.environmentVariables` as well. If the variable is still empty, pass the path: `nh home switch ~/.config/nix -c <host>`.
+
+**hyprlock says "auth failed" for the correct password on Arch.** Two root-owned files are missing. Run `nix run .#arch-pam-setup` to install both, then lock and retry.
+
+1. `/etc/pam.d/hyprlock`. hyprlock calls `pam_start("hyprlock")`. Without that file libpam falls back to `/etc/pam.d/other`, which is a `pam_deny` stack on Arch.
+2. `/run/wrappers/bin/unix_chkpwd`. nixpkgs patches `pam_unix.so` to exec the setuid password helper from that NixOS path, and the nix-built hyprlock links nix libpam. Arch installs the helper at `/usr/bin/unix_chkpwd`, so the exec fails and PAM returns `PAM_AUTHINFO_UNAVAIL` (9) instead of a real verdict.
+
+The store cannot hold a setuid binary, so the fix is a symlink to Arch's helper, not a copy. `/run` is a tmpfs, so the link is a `/etc/tmpfiles.d` rule that systemd recreates at every boot. The NixOS hosts need none of this: `security.pam.services.hyprlock` in `modules/system/desktop.nix` handles it. Failed attempts also increment `pam_faillock`, so the setup script resets those counters at the end.
 
 **niri rejects an option I added — `programs.niri.settings.<X> does not exist`.** The niri-flake HM module's typed schema is pinned to a niri version that may lag the upstream KDL grammar (e.g. top-level `blur`, `window-rule { background-effect.blur }`, per-output `layout`). Either bump `inputs.niri`, or put the raw KDL in `dotfiles.desktop.niri.extraConfig` — it's appended to the generated config and re-run through `niri validate` (so mistakes fail the build, not the session). See `modules/desktop/niri/default.nix`.

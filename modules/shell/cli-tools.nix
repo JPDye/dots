@@ -26,6 +26,10 @@ in
       tdf
       wl-clipboard
       libqalculate
+      # git, bat and delta all default to `less` as their pager. NixOS ships it
+      # in the required system path, Arch does not, so `git branch` fails with
+      # "cannot run less" on the Arch host. Provide it from the flake instead.
+      less
       # Combined traceroute+ping TUI (binary: `trip`). Needs raw sockets, so
       # run `sudo trip <host>`; a capless cap_net_raw wrapper is a NixOS
       # system concern, intentionally not done here (see plan 033).

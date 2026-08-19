@@ -211,7 +211,6 @@
         "laptop-nix"
       ];
       homeHosts = [
-        "desktop-arch"
         "laptop-arch"
       ];
 
@@ -364,9 +363,18 @@
 
       formatter.${system} = pkgs.nixfmt;
 
-      # `nix build .#installer-iso` → result/iso/nixos-*.iso; flash it to a
-      # USB stick to install this flake on a new machine (see README).
-      packages.${system}.installer-iso = installer.config.system.build.isoImage;
+      packages.${system} = {
+        # `nix build .#installer-iso` → result/iso/nixos-*.iso. Flash it to a
+        # USB stick to install this flake on a new machine (see README).
+        installer-iso = installer.config.system.build.isoImage;
+
+        # `nix run .#arch-pam-setup` → root-level PAM plumbing on the Arch
+        # host: the files hyprlock needs to authenticate, plus gnome-keyring
+        # PAM integration so apps can store secrets. Standalone home-manager
+        # runs as the user and cannot write /etc, so this is a one-time sudo
+        # step rather than a module. See hosts/laptop-arch/pam-setup.nix.
+        arch-pam-setup = pkgs.callPackage ./hosts/laptop-arch/pam-setup.nix { };
+      };
 
       # `pre-commit` is the formatting/lint gate; the per-host entries build the
       # real thing (NixOS toplevel / HM activation package) so `nix flake check`
