@@ -72,6 +72,33 @@ if [[ -e "$FLAKE_SRC/hosts/$host" ]]; then
   exit 1
 fi
 
+read -rp "Form factor [laptop/desktop/none]: " form
+form=${form,,}
+if [[ ! $form =~ ^(laptop|desktop|none)$ ]]; then
+  echo "form factor must be laptop, desktop, or none" >&2
+  exit 1
+fi
+
+# Hibernate needs swap at least the size of RAM, so default to RAM rounded up
+# plus 4 GiB of headroom. MemTotal is in kB and 1 GiB is 1048576 kB.
+ram_gib=$((($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) + 1048575) / 1048576))
+swap_default=$((ram_gib + 4))
+read -rp "Swapfile size in GiB for hibernate, 0 for none [$swap_default]: " swap_gib
+swap_gib=${swap_gib:-$swap_default}
+if [[ ! $swap_gib =~ ^[0-9]+$ ]]; then
+  echo "swap size must be a whole number of GiB (0 for none)" >&2
+  exit 1
+fi
+# The root partition is the disk minus the 1 GiB ESP. Cap the swapfile at half
+# of it so the install itself still has room.
+if [[ $swap_gib -gt 0 ]]; then
+  disk_gib=$(($(blockdev --getsize64 "$disk") / 1073741824))
+  if ((swap_gib * 2 >= disk_gib - 1)); then
+    echo "a $swap_gib GiB swapfile does not fit on a $disk_gib GiB disk" >&2
+    exit 1
+  fi
+fi
+
 read -rp "Encrypt the root partition with LUKS? [y/N]: " encrypt
 encrypt=${encrypt,,}
 luks_pw=""
@@ -203,6 +230,65 @@ else
   sed -i "/# installer:luks/d" "$hostdir/configuration.nix"
 fi
 
+if [[ $form == none ]]; then
+  sed -i "/# installer:profile/d" "$hostdir/configuration.nix"
+else
+  sed -i "s|# installer:profile.*|../../profiles/$form.nix|" "$hostdir/configuration.nix"
+  if ! grep -qF "../../profiles/$form.nix" "$hostdir/configuration.nix"; then
+    echo "failed to stamp the $form profile into $hostdir_rel/configuration.nix" >&2
+    exit 1
+  fi
+fi
+
+# Create the swapfile here rather than letting NixOS's mkswap service do it on
+# first boot: resume_offset can only be read off a file that already exists.
+# The dd size and the stamped `size` must agree in whole MiB, or that service
+# decides the file is the wrong size and recreates it, invalidating the offset.
+if [[ $swap_gib -gt 0 ]]; then
+  dd if=/dev/zero of=/mnt/swapfile bs=1M count=$((swap_gib * 1024)) status=progress
+  chmod 0600 /mnt/swapfile
+  mkswap /mnt/swapfile
+  # Field 4 of filefrag's first extent row is the starting physical block.
+  resume_offset=$(filefrag -v /mnt/swapfile | awk 'NR==4 { gsub(/\.\./, " "); print $4 }')
+  if [[ ! $resume_offset =~ ^[0-9]+$ ]]; then
+    echo "could not derive resume_offset from /mnt/swapfile (got '$resume_offset')" >&2
+    exit 1
+  fi
+  # The offset is relative to the filesystem, so resumeDevice is the root
+  # filesystem's UUID, which is the mapper device when LUKS is in use.
+  resume_uuid=$(blkid -s UUID -o value "$root_dev")
+  cat >"$tmp/swap.nix" <<'SWAPDOC'
+  # Hibernate from /swapfile on the root partition.
+  # If /swapfile gets fragmented, defrag and re-derive resume_offset:
+  #   sudo filefrag -v /swapfile | awk 'NR==4 {gsub(/\.\./, " "); print $4}'
+SWAPDOC
+  cat >>"$tmp/swap.nix" <<SWAPCFG
+  boot = {
+    resumeDevice = "/dev/disk/by-uuid/$resume_uuid";
+    kernelParams = [ "resume_offset=$resume_offset" ];
+  };
+
+  swapDevices = [
+    {
+      device = "/swapfile";
+      size = $swap_gib * 1024; # MiB
+    }
+  ];
+SWAPCFG
+  sed -i -e "/# installer:swap/r $tmp/swap.nix" -e "/# installer:swap/d" \
+    "$hostdir/configuration.nix"
+  if ! grep -qF 'device = "/swapfile";' "$hostdir/configuration.nix"; then
+    echo "failed to stamp swap config into $hostdir_rel/configuration.nix" >&2
+    exit 1
+  fi
+else
+  sed -i "/# installer:swap/d" "$hostdir/configuration.nix"
+fi
+
+# Deleting marker lines leaves stray blank lines, and this file gets committed
+# and later linted by pre-commit's nixfmt hook. Canonicalise it here.
+nixfmt "$hostdir/configuration.nix"
+
 # Flakes only see git-tracked files — commit the stamped host so the
 # nixos-install evaluation can see it.
 git -C "$dest" add --all
@@ -231,7 +317,7 @@ echo "Done. After rebooting into '$host':"
 echo "  - review + push the new host: git push -u origin $branch (then merge)"
 echo "    (if the clone fallback was used the repo has no history — fetch"
 echo "     origin and cherry-pick the install commit onto it)"
-echo "  - swapfile/hibernate is machine-specific and NOT set up — crib from"
-echo "    hosts/laptop-nix/configuration.nix if wanted"
+echo "  - add a nixos-hardware chassis profile if one matches this machine:"
+echo "    see hosts/laptop-nix/configuration.nix for the import pattern"
 echo
 echo "Reboot with: reboot"

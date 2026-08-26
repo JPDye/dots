@@ -55,16 +55,17 @@ gets built. Keeping the machine current afterwards is an ordinary online
 `nixos-rebuild`.
 
 Boot the stick and run `sudo install-host`. All prompts come first (target
-disk with confirm-to-wipe, hostname, optional LUKS root encryption, jd's
-password), then it runs unattended: partitions GPT (1 GiB ESP + ext4 root),
-clones the repo to `~jd/.config/nix` (falling back to the bundled snapshot
-when offline), generates `hardware-configuration.nix`, stamps a new
-`hosts/<name>/` from `installer/host-template/`, registers it in `nixosHosts`
-on an `install-<name>` branch, and runs `nixos-install --flake`. Wifi
-credentials entered via `nmtui` carry over to the installed system. After
-first boot: push the branch and merge; add machine-specific extras
-(nixos-hardware profile, swapfile/hibernate) by cribbing from
-`hosts/laptop-nix`.
+disk with confirm-to-wipe, hostname, form factor, swapfile size, optional
+LUKS root encryption, jd's password), then it runs unattended: partitions
+GPT (1 GiB ESP + ext4 root), clones the repo to `~jd/.config/nix` (falling
+back to the bundled snapshot when offline), generates
+`hardware-configuration.nix`, creates the swapfile and derives its
+hibernate `resume_offset`, stamps a new `hosts/<name>/` from
+`installer/host-template/` with the form-factor profile and swap config
+filled in, registers it in `nixosHosts` on an `install-<name>` branch, and
+runs `nixos-install --flake`. Wifi credentials entered via `nmtui` carry
+over to the installed system. After first boot: push the branch and merge,
+and add a nixos-hardware chassis profile if one matches the machine.
 
 ### Path A: NixOS host
 

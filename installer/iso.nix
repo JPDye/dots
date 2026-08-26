@@ -77,7 +77,9 @@ let
       cryptsetup
       dosfstools
       e2fsprogs
+      gawk
       git
+      nixfmt
       parted
       util-linux
     ];
