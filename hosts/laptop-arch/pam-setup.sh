@@ -57,6 +57,15 @@ if [[ ! -e /usr/lib/security/pam_gnome_keyring.so ]]; then
   pacman -S --needed gnome-keyring
 fi
 
+# The file must already exist with an auth stack. On an absent file `grep -q`
+# fails the same way as "not yet added", and the append below would then
+# create a login stack made only of optional lines, which rejects nothing.
+if [[ ! -f /etc/pam.d/login ]] || ! grep -Eq '^[[:space:]]*auth[[:space:]]' /etc/pam.d/login; then
+  echo "error: /etc/pam.d/login is missing or has no auth line." >&2
+  echo "       reinstall the package that owns it (pacman -Qo /etc/pam.d/login), then run this again." >&2
+  exit 1
+fi
+
 # This host starts niri from a TTY, so /etc/pam.d/login is the session entry
 # point. Appending is correct: the auth line needs the password captured by
 # system-local-login first, and auto_start needs pam_systemd's session.
