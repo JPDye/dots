@@ -11,7 +11,7 @@ let
   cfg = config.dotfiles.desktop.eww;
 in
 {
-  options.dotfiles.desktop.eww.enable = lib.mkEnableOption "eww bar + powermenu" // {
+  options.dotfiles.desktop.eww.enable = lib.mkEnableOption "eww powermenu" // {
     default = true;
   };
 
@@ -88,7 +88,7 @@ in
 
         systemd.user.services.eww-powermenu = {
           Unit = {
-            Description = "eww powermenu/bar toggle";
+            Description = "eww powermenu toggle";
             PartOf = [ "graphical-session.target" ];
             After = [
               "eww.service"
