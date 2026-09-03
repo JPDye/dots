@@ -24,11 +24,12 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
    # /etc/nix/nix.conf or ~/.config/nix/nix.conf
    experimental-features = nix-command flakes
    ```
-3. **Trust your user** so per-flake substituters (helix.cachix, niri.cachix) and `trusted-public-keys` are honoured. Otherwise `direnv reload` and every `nix` command spam warnings about ignoring the flake's `nixConfig`:
-   ```bash
-   echo 'trusted-users = root @wheel' | sudo tee -a /etc/nix/nix.conf
-   sudo systemctl restart nix-daemon
+3. **Register the binary caches system-wide** so helix and niri come from their caches instead of compiling locally. Append the two `extra` entries from `caches.nix` to `/etc/nix/nix.conf` (the same two lines the CI workflow uses):
    ```
+   extra-substituters = https://helix.cachix.org https://niri.cachix.org
+   extra-trusted-public-keys = helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=
+   ```
+   then `sudo systemctl restart nix-daemon`. Do **not** add your user to `trusted-users`: a trusted user is root-equivalent to the daemon, and with the caches system-wide nothing needs it. If an earlier setup added `trusted-users = root @wheel`, remove that line. The `caches-in-sync` flake check keeps the two lines above in step with `caches.nix`.
 4. **Clone the repo**:
    ```bash
    git clone <url> ~/.config/nix
@@ -221,7 +222,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 - `checks.x86_64-linux.{pre-commit,caches-in-sync,installer-template,hm-options,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `caches-in-sync` fails if the `nixConfig` cache literals or the CI workflow's (`.github/workflows/check.yml`) cachix literals drift from `caches.nix`; `installer-template` evaluates `installer/host-template/` so template drift fails eval here instead of mid-install on a wiped disk; `hm-options` asserts that the `hmOptions` output (nixd's option-completion source, `modules/dev/helix/languages.nix`) still resolves for every host; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
 - `hmOptions.<host>` — per-host home-manager option trees, consumed by `nixd` for option completion.
 
-**Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. Only honoured if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `modules/system/nix.nix`, which reads both lists from `caches.nix`.
+**Substituters declared in `nixConfig`:** helix.cachix.org and niri.cachix.org, URLs only. The daemon accepts them for any user because the same caches are trusted system-wide: `modules/system/nix.nix` on NixOS (both lists read from `caches.nix`), `/etc/nix/nix.conf` on Arch (prerequisite step 3). The public keys are deliberately not in `nixConfig`. That setting only works for trusted users, and no user is trusted.
 
 ---
 
@@ -689,7 +690,7 @@ nh clean all                                                    # gc, respecting
 
 **`Command 'welcome' not found` in nushell startup.** The home-manager-symlinked `welcome.nu` resolves to a hashed nix-store name, so `use ~/.config/nushell/welcome.nu` registers a module under that hash. Fixed by `source`ing the file instead of `use`ing it (see `modules/shell/nushell.nix`).
 
-**`ignoring untrusted substituter 'https://niri.cachix.org'`.** Substituters declared in `flake.nix#nixConfig` only apply if the user is trusted. Either run `sudo nixos-rebuild switch` to pick up the system-wide caches in `modules/system/nix.nix` (sourced from `caches.nix`), or add your user to `nix.settings.trusted-users`.
+**`ignoring untrusted substituter 'https://niri.cachix.org'`.** The system does not list that cache. On NixOS run `sudo nixos-rebuild switch` so `modules/system/nix.nix` installs the caches from `caches.nix`. On Arch add the two lines from prerequisite step 3 to `/etc/nix/nix.conf` and restart the daemon. Do not add your user to `trusted-users` to silence it: that makes the user root-equivalent to the daemon.
 
 **`Existing file '...' would be clobbered`.** Pass `-b backup` to home-manager. The conflicting file becomes `<file>.backup`.
 

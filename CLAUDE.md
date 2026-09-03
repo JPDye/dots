@@ -89,13 +89,15 @@ boot, or would have no user, or no network.
 
 ## Invariants that bite
 
-- **caches**: the extra caches live in **three** places — `caches.nix` (source
-  of truth), `flake.nix`'s `nixConfig.extra-*` literals (Nix requires literal
-  `nixConfig` values, so `flake.nix` can't import `caches.nix`), and
-  `.github/workflows/check.yml`'s `extra-conf` block (YAML can't read Nix).
-  Editing a cache means editing **all three**;
-  `checks.<system>.caches-in-sync` reads the flake and the CI workflow and
-  fails `nix flake check` on drift from `caches.nix`.
+- **caches**: the extra caches live in **four** places — `caches.nix` (source
+  of truth), `flake.nix`'s `nixConfig.extra-substituters` (URLs only: Nix
+  requires literal `nixConfig` values, and the public keys are deliberately
+  absent because that setting is ignored for untrusted users and no user is
+  trusted), `.github/workflows/check.yml`'s `extra-conf` block (URLs and keys,
+  YAML can't read Nix), and README.md's Arch prerequisite step 3 (URLs and
+  keys, pasted into `/etc/nix/nix.conf`). Editing a cache means editing **all
+  four**; `checks.<system>.caches-in-sync` reads the flake, the CI workflow
+  and the README and fails `nix flake check` on drift from `caches.nix`.
 - **niri schema lag**: `programs.niri.settings.*` uses niri-flake's typed schema,
   which can lag the niri binary. KDL the schema doesn't know yet goes through
   `dotfiles.desktop.niri.extraConfig` (raw KDL — see
