@@ -102,7 +102,7 @@ in
     # success; hyprlock stays the in-session locker (modules/desktop/lock.nix).
     # Enabling regreet pulls in services.greetd, the cage session command, and
     # the greetd PAM stack automatically — nothing else to wire for auth.
-    programs.regreet = {
+    services.displayManager.regreet = {
       enable = true;
 
       # Drafting Mono everywhere, including the login box. Installed
