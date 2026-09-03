@@ -68,30 +68,46 @@ let
     }
   );
 
-  install-host = pkgs.writeShellApplication {
-    name = "install-host";
-    # nixos-generate-config / nixos-install / nixos-enter / udevadm come from
-    # the ISO's system PATH (writeShellApplication only prepends to it).
-    runtimeInputs = with pkgs; [
-      coreutils
-      cryptsetup
-      dosfstools
-      e2fsprogs
-      gawk
-      git
-      nixfmt
-      parted
-      util-linux
-    ];
-    runtimeEnv = {
-      FLAKE_SRC = "${inputs.self}";
-      REPO_URL = "https://github.com/JPDye/dots.git";
-      SELF_REV = inputs.self.rev or "";
-      TEMPLATE_DIR = "${./host-template}";
-      STATE_VERSION = lib.trivial.release;
+  # install-host.sh rewrites these comment markers with sed. A comment cannot
+  # break the `installer-template` check, so assert here that every marker
+  # still exists. A reworded template then fails `nix flake check` instead of
+  # installing a host with a missing hostname, state version, LUKS device,
+  # profile import or swap config.
+  templateText = builtins.readFile ./host-template/configuration.nix;
+  markerPresent =
+    marker:
+    lib.assertMsg (lib.hasInfix "# installer:${marker}" templateText) "installer/host-template/configuration.nix lost its '# installer:${marker}' marker";
+
+  install-host =
+    assert markerPresent "hostname";
+    assert markerPresent "state-version";
+    assert markerPresent "luks";
+    assert markerPresent "profile";
+    assert markerPresent "swap";
+    pkgs.writeShellApplication {
+      name = "install-host";
+      # nixos-generate-config / nixos-install / nixos-enter / udevadm come from
+      # the ISO's system PATH (writeShellApplication only prepends to it).
+      runtimeInputs = with pkgs; [
+        coreutils
+        cryptsetup
+        dosfstools
+        e2fsprogs
+        gawk
+        git
+        nixfmt
+        parted
+        util-linux
+      ];
+      runtimeEnv = {
+        FLAKE_SRC = "${inputs.self}";
+        REPO_URL = "https://github.com/JPDye/dots.git";
+        SELF_REV = inputs.self.rev or "";
+        TEMPLATE_DIR = "${./host-template}";
+        STATE_VERSION = lib.trivial.release;
+      };
+      text = builtins.readFile ./install-host.sh;
     };
-    text = builtins.readFile ./install-host.sh;
-  };
 in
 {
   imports = [ (modulesPath + "/installer/cd-dvd/installation-cd-minimal.nix") ];
