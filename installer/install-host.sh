@@ -155,6 +155,13 @@ else
   git -C "$repo" remote add origin "$REPO_URL"
 fi
 
+# The bundled snapshot was checked before the prompts. The clone is the tree
+# we stamp into, and it can be newer than the ISO, so check it as well.
+if [[ -e "$repo/hosts/$host" ]]; then
+  echo "hosts/$host already exists in $REPO_URL" >&2
+  exit 1
+fi
+
 hostdir_rel="hosts/$host"
 mkdir "$repo/$hostdir_rel"
 for f in configuration.nix home.nix; do
@@ -164,6 +171,10 @@ for f in configuration.nix home.nix; do
 done
 if ! grep -qF "networking.hostName = \"$host\";" "$repo/$hostdir_rel/configuration.nix"; then
   echo "failed to stamp hostname into $hostdir_rel/configuration.nix" >&2
+  exit 1
+fi
+if ! grep -qF "system.stateVersion = \"$STATE_VERSION\";" "$repo/$hostdir_rel/configuration.nix"; then
+  echo "failed to stamp stateVersion into $hostdir_rel/configuration.nix" >&2
   exit 1
 fi
 
@@ -223,9 +234,19 @@ nixos-generate-config --root /mnt --show-hardware-config \
   >"$hostdir/hardware-configuration.nix"
 
 if [[ $encrypt == y ]]; then
-  luks_uuid=$(blkid -s UUID -o value "$(part 2)")
+  # -c /dev/null bypasses blkid's cache, so a re-run after a failed attempt
+  # reads the UUID of the partition we just formatted, not a stale one.
+  luks_uuid=$(blkid -c /dev/null -s UUID -o value "$(part 2)")
+  if [[ -z $luks_uuid ]]; then
+    echo "failed to read the LUKS UUID of $(part 2)" >&2
+    exit 1
+  fi
   sed -i "s|# installer:luks.*|boot.initrd.luks.devices.cryptroot.device = \"/dev/disk/by-uuid/$luks_uuid\";|" \
     "$hostdir/configuration.nix"
+  if ! grep -qF "by-uuid/$luks_uuid" "$hostdir/configuration.nix"; then
+    echo "failed to stamp the LUKS device into $hostdir_rel/configuration.nix" >&2
+    exit 1
+  fi
 else
   sed -i "/# installer:luks/d" "$hostdir/configuration.nix"
 fi
