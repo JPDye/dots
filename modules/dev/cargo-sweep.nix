@@ -77,8 +77,8 @@ in
         # nightly-only manifest features (`cargo-features = [...]`) or an edition
         # this cargo doesn't know — makes `cargo metadata` fail, and cargo-sweep
         # then SILENTLY SKIPS that project (its target/ is never pruned). If a
-        # big project stops being swept, that's the cause; point this at a newer
-        # cargo (see modules/dev/cargo-sweep.nix maintenance note / plan 016).
+        # big project stops being swept, that is the cause. Point the PATH
+        # below at a newer cargo.
         Environment = [ "PATH=${lib.makeBinPath [ pkgs.cargo ]}" ];
         # Background chore: yield to interactive work.
         Nice = 19;

@@ -31,8 +31,9 @@ in
       # "cannot run less" on the Arch host. Provide it from the flake instead.
       less
       # Combined traceroute+ping TUI (binary: `trip`). Needs raw sockets, so
-      # run `sudo trip <host>`; a capless cap_net_raw wrapper is a NixOS
-      # system concern, intentionally not done here (see plan 033).
+      # run `sudo trip <host>`. A cap_net_raw wrapper would be
+      # `security.wrappers` in modules/system/, a NixOS concern this
+      # home-manager module cannot own, so it is intentionally not done here.
       trippy
       # bind's client tools, under an attr name that doesn't mention any of
       # them: dig, host, nslookup, delv, nsupdate.

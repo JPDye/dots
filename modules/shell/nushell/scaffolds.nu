@@ -1,6 +1,6 @@
 # Scaffold a project from a template in this flake:
 #   - copies the template files into cwd
-#   - flake-based templates (python, go) are invisible to nix until tracked, so
+#   - flake-based templates (python, go, typst) are invisible to nix until tracked, so
 #     git-init and stage them; shell.nix-based templates (rust) are read off
 #     disk by `use nix` and need no git at all — skip the dance for those
 #   - allows direnv so the dev shell auto-activates
