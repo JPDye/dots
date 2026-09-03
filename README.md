@@ -6,8 +6,8 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
 - **`nix-desktop`** — NixOS desktop, stamped by the installer ISO (`hosts/nix-desktop/`). Imports `profiles/desktop.nix`.
 - **`laptop-arch`** — standalone home-manager on Arch Linux. Same modules, GPU-using GUI apps wrapped with nixGL.
 
-![screenshot](https://github.com/JPDye/dots/blob/main/sc2.png)
-![screenshot](https://github.com/JPDye/dots/blob/main/sc1.png)
+![screenshot](sc2.png)
+![screenshot](sc1.png)
 
 ---
 
@@ -146,7 +146,7 @@ nh clean all
 
 Notes:
 - `-b backup` tells home-manager to back up any pre-existing dotfile it would otherwise refuse to overwrite (becomes `<file>.backup`).
-- Run from the flake directory (`~/.config/nix`) so `.` resolves correctly. In nushell, quote any flake URL containing `#` (`".#<host>"`) — `#` is a comment delimiter otherwise.
+- Run from the flake directory (`~/.config/nix`) so `.` resolves correctly. Nushell starts a comment at `#` only after whitespace, so `.#<host>` works unquoted. Some examples in this README quote it (`".#<host>"`) and some do not. Both forms work in Nushell and in bash.
 - `nh home switch` needs `-c <host>`. Without it, nh derives the attribute name from the machine hostname. The Arch boxes report the hostname `arch`, which does not match the config name `laptop-arch`. The flake path comes from `NH_FLAKE`, which `modules/dev/nh.nix` sets, so the command needs no path: `nh home switch -c laptop-arch`.
 
 ---
@@ -161,13 +161,13 @@ Notes:
 │   ├── laptop-nix/
 │   │   ├── configuration.nix      # NixOS system config
 │   │   ├── hardware-configuration.nix
-│   │   └── home.nix               # per-host HM overlay (laptop monitors, unwrapped GUI apps)
+│   │   └── home.nix               # per-host HM overlay (laptop monitors)
 │   ├── nix-desktop/
 │   │   ├── configuration.nix      # NixOS system config
 │   │   ├── hardware-configuration.nix
-│   │   └── home.nix               # per-host HM overlay (desktop monitors, unwrapped GUI apps)
+│   │   └── home.nix               # per-host HM overlay (desktop monitors, mkForce overrides)
 │   └── laptop-arch/
-│       ├── home.nix               # per-host HM overlay (Arch monitors, nixGL-wrapped GUI apps)
+│       ├── home.nix               # per-host HM overlay (Arch monitors, wrapGL definition)
 │       ├── pam-setup.nix          # root PAM files for hyprlock (`nix run .#arch-pam-setup`)
 │       └── pam-setup.sh
 ├── profiles/                 # form-factor tier: laptop.nix / desktop.nix, one per NixOS host
@@ -201,7 +201,7 @@ Three pieces:
 3. **Per-host overlays at `hosts/<host>/home.nix`**: the only place per-host divergence lives. Includes things like:
    - `dotfiles.wrapGL` (set on Arch to the nixGL wrapper; GUI apps are declared in shared `home.nix` and wrapped automatically per host via this setting).
    - `programs.niri.settings.outputs` (different monitors on each box).
-   - any `lib.mkForce` override of a shared setting (the only one today: Arch forces `layout.gaps` to 8, tighter than the shared 16, for its 14" panel).
+   - any `lib.mkForce` override of a shared setting (two today: Arch forces `layout.gaps` to 8, tighter than the shared 16, for its 14" panel, and nix-desktop forces `border.width` to 1).
 
 Hardcoded paths are written against `inputs.self.outPath` so the flake works regardless of where it's checked out — except `eww` which uses `mkOutOfStoreSymlink` and points at `~/.config/nix/eww` so the user can hand-edit eww files without rebuilding.
 
@@ -209,7 +209,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 
 ## flake.nix at a glance
 
-**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
+**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `asd-ste100-skill` (the ASD-STE100 skill for Claude Code, also inlined into opencode's `AGENTS.md`), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
 
 **Overlays:** niri, nixGL, firefox-addons.
 
@@ -218,7 +218,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 - `homeConfigurations.laptop-arch` — built via `mkHome`; the standalone-HM target on Arch Linux. It imports the same domain folders + `hosts/laptop-arch/home.nix`. (the NixOS hosts have no `homeConfigurations` entries — their home-manager configs run as NixOS modules, nested at `nixosConfigurations.<host>.config.home-manager.users.jd`.)
 - `templates.{rust,python,go,typst}` — for `nix flake init -t .#<lang>`.
 - `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix, shellcheck, typos, nu-check).
-- `checks.x86_64-linux.{pre-commit,caches-in-sync,installer-template,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `caches-in-sync` fails if the `nixConfig` cache literals or the CI workflow's (`.github/workflows/check.yml`) cachix literals drift from `caches.nix`; `installer-template` evaluates `installer/host-template/` so template drift fails eval here instead of mid-install on a wiped disk; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
+- `checks.x86_64-linux.{pre-commit,caches-in-sync,installer-template,hm-options,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `caches-in-sync` fails if the `nixConfig` cache literals or the CI workflow's (`.github/workflows/check.yml`) cachix literals drift from `caches.nix`; `installer-template` evaluates `installer/host-template/` so template drift fails eval here instead of mid-install on a wiped disk; `hm-options` asserts that the `hmOptions` output (nixd's option-completion source, `modules/dev/helix/languages.nix`) still resolves for every host; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
 - `hmOptions.<host>` — per-host home-manager option trees, consumed by `nixd` for option completion.
 
 **Substituters declared in `nixConfig`:** helix.cachix.org, niri.cachix.org. Only honoured if the system trusts them — see `nix.settings.substituters` / `trusted-public-keys` in `modules/system/nix.nix`, which reads both lists from `caches.nix`.
@@ -231,10 +231,11 @@ NixOS-side config. The actual settings live in `modules/system/*` (split into
 boot, networking, nix, greeter, power, fonts, containers, …); this file is the
 thin host entry point — it imports `../../modules/system`, the
 `hardware-configuration.nix`, and the `nixos-hardware` profiles, then sets the
-host-specific bits (hostname, swap/resume offset, graphics, `fwupd`).
-`hosts/nix-desktop/configuration.nix` has the same shape. Each NixOS host
-imports exactly one `profiles/` file for its form factor. The
-modules/system highlights:
+host-specific bits (hostname, swap/resume offset, extra filesystems, extra
+graphics libraries, per-host module toggles such as `bitdefender`, and
+`stateVersion`). `hosts/nix-desktop/configuration.nix` has the same shape.
+Each NixOS host imports exactly one `profiles/` file for its form factor.
+The modules/system highlights:
 
 - **User:** `jd`, shell `nushell`, in `wheel`, `networkmanager`, `wireshark`.
 - **Boot:** systemd-boot + EFI.
@@ -278,7 +279,7 @@ So rebuilding this host on new hardware leaves the units failing until that scri
 | GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `steam`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
 | CAD / slicers (also wrapped) | `lycheeslicer` (resin/MSLA), `openscad`, `freecad-wayland` (qt6 native Wayland), `zoo-design-studio` (local pkg, see `pkgs/`), `dune3d` |
 
-Two GUI apps are **not** in `home.packages`, because a module owns each: `claude-code` (`modules/dev/claude-code.nix`) and `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle).
+GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
 
 **Shared `home.sessionPath`:** just `~/.apps`.
 
@@ -322,7 +323,7 @@ Not every file follows it. A module that only publishes `_module.args` or option
 
 | Module | Notes |
 |--------|-------|
-| `niri/` | Niri compositor config, split across `default.nix`, `binds.nix`, `layout.nix`, `window-rules.nix`, `animations.nix`, `spawn.nix`. Holds everything that's the same on every host: input (UK keymap, focus-follows-mouse), 16px gaps (the Arch overlay forces 8px for its 14" panel), 2px red active border, no CSD, layer rules placing wallpaper + eww in the backdrop, every binding, custom shaders for window-open/close/resize animations, startup spawns for `xwayland-satellite`, `mako`, `awww`, `swaybg`. **Outputs are not here** — each host's overlay defines them. |
+| `niri/` | Niri compositor config, split across `default.nix`, `binds.nix`, `layout.nix`, `window-rules.nix`, `animations.nix`, `spawn.nix`, `backdrop.nix` (the `swaybg` backdrop service and the live wallpaper re-apply hook). Holds everything that's the same on every host: input (UK keymap, focus-follows-mouse), 16px gaps (the Arch overlay forces 8px for its 14" panel), 2px red active border, no CSD, layer rules placing wallpaper + eww in the backdrop, every binding, custom shaders for window-open/close/resize animations, startup spawns for `xwayland-satellite`, `mako`, `awww` (`swaybg` is a user service in `backdrop.nix`). **Outputs are not here** — each host's overlay defines them. |
 | `walker.nix` | Wayland launcher, run as a user service so it opens instantly. One window with prefix-activated providers via its `elephant` backend: apps, `=` calc, `:` clipboard (text + image history), `/` files. Themed `niri` to match a window (dark fill, 2px red border, square corners). Bound at `Mod+R` (apps), `Mod+V` (clipboard), `Mod+=` (calc). |
 | `lock.nix` | Screen lock + idle management: hand-themed **hyprlock** (palette colours, GPU/EGL, wrapped via `dotfiles.wrapGL`) + **swayidle**. `Mod+Escape` locks. Idle timers differ on AC vs battery (lock ~5 min on power, ~10 min on battery; monitors off shortly after). Locks before sleep. Needs `security.pam.services.hyprlock` (set in `modules/system/desktop.nix`) on NixOS. |
 | `mako.nix` | Notification daemon. 4s timeout, red border, bg0 background. |
@@ -628,7 +629,7 @@ systemctl --user restart swaybg.service
 ### A new host
 
 1. Decide whether it's a NixOS host or standalone HM.
-2. Create `hosts/<name>/home.nix` (the HM overlay). Set per-host bits: `home.sessionPath`, host-specific `home.packages`, `programs.niri.settings.outputs`, any `lib.mkForce` overrides.
+2. Create `hosts/<name>/home.nix` (the HM overlay). Set only per-host divergence: `programs.niri.settings.outputs`, any `lib.mkForce` overrides, and on a non-NixOS host the `dotfiles.wrapGL` definition. Packages go in the shared `home.nix` (see CLAUDE.md).
 3. (NixOS only) Create `hosts/<name>/configuration.nix` and `hardware-configuration.nix`, then add `"<name>"` to the `nixosHosts` list in `flake.nix`.
 4. (Standalone HM only) Add `"<name>"` to the `homeHosts` list in `flake.nix`. Never do this for a NixOS host — home-manager runs via the NixOS module there, and a standalone entry would create two parallel HM activations fighting over the same files.
 5. Apply — NixOS: `sudo nixos-rebuild switch --flake .#<name>` (home-manager activates with the system). Standalone HM: `home-manager switch --flake .#<name>`.

@@ -121,10 +121,10 @@ changed.
    `deadnix`, `statix`, `shellcheck`, `typos`, `nu-check`. Catches formatting,
    dead code, spelling, and shell / Nushell syntax. It evaluates no Nix.
 2. `nix flake check --no-build` (minutes). What CI runs. Catches option and
-   eval breakage across every host, plus `caches-in-sync` and the installer
-   host template (both assert at eval time). It does **not** catch build-time
-   failures, such as `niri validate` on the generated KDL or the shellcheck
-   inside `writeShellApplication`.
+   eval breakage across every host, plus `caches-in-sync`, `hm-options` and
+   the installer host template (all three assert at eval time). It does
+   **not** catch build-time failures, such as `niri validate` on the
+   generated KDL or the shellcheck inside `writeShellApplication`.
 3. `nix flake check` (full). Everything above, and it builds each host's NixOS
    toplevel + HM activation. This is the gate before a `switch`.
 
