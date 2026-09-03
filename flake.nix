@@ -116,23 +116,24 @@
   };
 
   # Nix guards `nixConfig` with `forceTrivialValue`: every value must be a
-  # *literal* (string/bool/int/list-of-strings) written right here — not a
-  # `let` binding, not `(import ./caches.nix).substituters`, not any
-  # computed expression, or loading the flake errors with "flake configuration
-  # setting … is a thunk" (which breaks `nix eval` / `nix flake check`). So the
-  # two extra caches are inlined literally below. Keep them in sync with the
-  # `extra` list in caches.nix — the source of truth for the system-level
-  # substituters in modules/system/nix.nix (those aren't literal-constrained).
-  # Drift is caught by `checks.<system>.caches-in-sync` (defined in outputs),
-  # which fails `nix flake check` if any caches.nix entry is missing here.
+  # *literal* written right here, not a `let` binding or an import, or loading
+  # the flake fails with "flake configuration setting … is a thunk". So the two
+  # extra cache URLs are inlined below. Keep them in sync with the `extra` list
+  # in caches.nix, the source of truth for the system-level substituters in
+  # modules/system/nix.nix. `checks.<system>.caches-in-sync` fails
+  # `nix flake check` on drift.
+  #
+  # URLs only, no public keys. `extra-trusted-public-keys` is a restricted
+  # setting: the daemon ignores it with a warning for a user who is not in
+  # trusted-users, and no user is trusted on the NixOS hosts. The keys are
+  # system config instead: modules/system/nix.nix on NixOS, /etc/nix/nix.conf
+  # on Arch (README prerequisite 3), the CI workflow's extra-conf. A URL the
+  # system already trusts is accepted for any user without a warning, so the
+  # list below stays useful and quiet.
   nixConfig = {
     extra-substituters = [
       "https://helix.cachix.org"
       "https://niri.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs="
-      "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
     ];
   };
 
@@ -274,14 +275,13 @@
       };
 
       # Turns the "KEEP IN SYNC" comment on caches.nix into an enforced invariant.
-      # nixConfig values must be literals (see the comment on `nixConfig` above), so
-      # the two extra caches are hand-inlined there — AND in the CI workflow's
-      # `extra-conf` block (.github/workflows/check.yml, which YAML can't read Nix) —
-      # and both copies can silently drift from caches.nix. This check pulls the cache
-      # tokens out of BOTH files, restricts them to cachix substituter urls / public
-      # keys, and asserts each file's sets equal caches.nix's `extra` exactly — in
-      # both directions (a cache present in only one file fails the check). nix flake
-      # check runs it (and CI runs nix flake check).
+      # The two extra caches are hand-inlined in three places that cannot import
+      # caches.nix: flake.nix's nixConfig (URLs only, see the comment there), the
+      # CI workflow's extra-conf block (YAML), and README.md's Arch bootstrap step
+      # (nix.conf lines the user pastes). This check pulls the cache tokens out
+      # of all three, restricts them to cachix substituter URLs / public keys, and
+      # asserts each file's sets equal caches.nix's `extra` exactly, in both
+      # directions. nix flake check runs it (and CI runs nix flake check).
       caches-in-sync =
         let
           inherit (nixpkgs) lib;
@@ -297,14 +297,13 @@
           isCacheUrl = t: lib.hasPrefix "https://" t && lib.hasSuffix ".cachix.org" t;
           # Also require the "name:key" colon: this check `readFile`s the WHOLE of
           # flake.nix — including this predicate's own ".cachix.org-" literal — and a
-          # bare ".cachix.org-" token must not match itself (it would add a spurious
-          # entry to declaredKeys and fail the in-sync check). Real keys are
+          # bare ".cachix.org-" token must not match itself (it would count as a
+          # key token and fail the in-sync check). Real keys are
           # "<name>:<base64>", so they carry the colon; the literal does not.
           isCacheKey = t: lib.hasInfix ".cachix.org-" t && lib.hasInfix ":" t;
 
           sortStr = lib.sort (a: b: a < b);
           declaredUrls = sortStr (lib.unique (builtins.filter isCacheUrl tokens));
-          declaredKeys = sortStr (lib.unique (builtins.filter isCacheKey tokens));
           expectedUrls = sortStr (map (c: c.url) extra);
           expectedKeys = sortStr (map (c: c.key) extra);
 
@@ -318,18 +317,30 @@
           ciTokens = builtins.filter builtins.isString (builtins.split "[[:space:]]+" ciText);
           ciUrls = sortStr (lib.unique (builtins.filter isCacheUrl ciTokens));
           ciKeys = sortStr (lib.unique (builtins.filter isCacheKey ciTokens));
+
+          # README.md's Arch bootstrap step (prerequisite 3) inlines the same two
+          # caches with their keys as plain nix.conf lines in a fenced block, so
+          # the whitespace tokenizer sees them the same way it sees the CI YAML.
+          readmeText = builtins.readFile ./README.md;
+          readmeTokens = builtins.filter builtins.isString (builtins.split "[[:space:]]+" readmeText);
+          readmeUrls = sortStr (lib.unique (builtins.filter isCacheUrl readmeTokens));
+          readmeKeys = sortStr (lib.unique (builtins.filter isCacheKey readmeTokens));
         in
-        assert lib.assertMsg (declaredUrls == expectedUrls && declaredKeys == expectedKeys) ''
-          flake.nix nixConfig cache literals are out of sync with caches.nix `extra`.
+        assert lib.assertMsg (declaredUrls == expectedUrls) ''
+          flake.nix nixConfig cache URLs are out of sync with caches.nix `extra`.
             declared substituters: ${lib.concatStringsSep ", " declaredUrls}
-            expected (caches.nix):  ${lib.concatStringsSep ", " expectedUrls}
-            declared keys:          ${lib.concatStringsSep ", " declaredKeys}
-            expected keys:          ${lib.concatStringsSep ", " expectedKeys}'';
+            expected (caches.nix):  ${lib.concatStringsSep ", " expectedUrls}'';
         assert lib.assertMsg (ciUrls == expectedUrls && ciKeys == expectedKeys) ''
           .github/workflows/check.yml cachix literals are out of sync with caches.nix `extra`.
             declared substituters: ${lib.concatStringsSep ", " ciUrls}
             expected (caches.nix):  ${lib.concatStringsSep ", " expectedUrls}
             declared keys:          ${lib.concatStringsSep ", " ciKeys}
+            expected keys:          ${lib.concatStringsSep ", " expectedKeys}'';
+        assert lib.assertMsg (readmeUrls == expectedUrls && readmeKeys == expectedKeys) ''
+          README.md cache literals (Arch prerequisite 3) are out of sync with caches.nix `extra`.
+            declared substituters: ${lib.concatStringsSep ", " readmeUrls}
+            expected (caches.nix):  ${lib.concatStringsSep ", " expectedUrls}
+            declared keys:          ${lib.concatStringsSep ", " readmeKeys}
             expected keys:          ${lib.concatStringsSep ", " expectedKeys}'';
         pkgs.runCommand "caches-in-sync" { } "touch $out";
 

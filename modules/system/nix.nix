@@ -1,6 +1,7 @@
 let
-  # Shared with the flake's eval-time `nixConfig` (flake.nix) so the two
-  # cache lists can't drift.
+  # Source of truth for the cache list. The flake's `nixConfig` (URLs only),
+  # the CI workflow and the README repeat it, and `caches-in-sync` fails
+  # `nix flake check` if any copy drifts.
   caches = import ../../caches.nix;
 in
 {
@@ -10,10 +11,11 @@ in
         "nix-command"
         "flakes"
       ];
-      trusted-users = [
-        "root"
-        "jd"
-      ];
+      # No trusted-users beyond the NixOS default, root. A trusted user can
+      # feed the daemon unsigned store paths and arbitrary substituters, which
+      # the Nix manual calls root-equivalent. jd runs coding agents with shell
+      # access, so that trust must not exist. The caches below are system-wide,
+      # so no user needs it for cache hits.
 
       # 256 MiB — default 64 MiB warns "downloaded more than buffer size" on
       # larger fetches (e.g. cuda/electron closures). Store dedup is handled
