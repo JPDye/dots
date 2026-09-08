@@ -53,16 +53,13 @@ let
     mv "$tmp" "$f"
   '';
 
-  # ASD-STE100 skill (`/asd-ste100`, from the `asd-ste100-skill` flake input):
-  # Simplified Technical English rules for rewriting ambiguous agent-facing
-  # English. SKILL.md points at references/ and examples/, so both come along.
-  # Only the README stays out.
-  ste100Skill = pkgs.runCommand "asd-ste100-skill" { } ''
-    mkdir -p $out
-    cp -r ${inputs.asd-ste100-skill}/. $out/
-    chmod -R u+w $out
-    rm $out/README.md
-  '';
+  # ASD-STE100 skill (`/asd-ste100`, the `ste100` plugin in the
+  # `byteful-skills` flake input): Simplified Technical English rules for
+  # rewriting ambiguous agent-facing English. SKILL.md points at references/
+  # and examples/, so the whole skill dir is linked as-is. opencode scans
+  # ~/.claude/skills too, so this one link serves both tools (see
+  # opencode.nix).
+  ste100Skill = "${inputs.byteful-skills}/plugins/ste100/skills/asd-ste100";
 
   # The user memory below turns the STE100 ruleset on for every reply, but
   # that memory loads once at session start and fades as a long session fills

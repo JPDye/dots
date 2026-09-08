@@ -38,12 +38,16 @@ let
   # @-imports in rules files, so the @-reference is swapped for the full
   # STE100 ruleset (frontmatter stripped) at build time. The skill itself
   # stays invocable as `asd-ste100`: opencode discovers it from
-  # ~/.claude/skills, where claude-code.nix installs it.
+  # ~/.claude/skills, where claude-code.nix links it from the same
+  # `byteful-skills` input. Do not link a second copy under
+  # ~/.config/opencode/skills: opencode wants skill names unique across every
+  # scanned dir and warns on a duplicate.
   agentsMd = pkgs.runCommand "opencode-agents-md" { } ''
     substitute ${./claude-user-memory.md} $out \
       --replace-fail '@~/.claude/skills/asd-ste100/SKILL.md' \
                      '(inlined below from the asd-ste100 skill)'
-    awk '/^---$/ && c < 2 { c++; next } c == 2' ${inputs.asd-ste100-skill}/SKILL.md >> $out
+    awk '/^---$/ && c < 2 { c++; next } c == 2' \
+      ${inputs.byteful-skills}/plugins/ste100/skills/asd-ste100/SKILL.md >> $out
   '';
 
   # Flake-owned slice of opencode's config, deep-merged (`jq '.[0] * .[1]'`, so

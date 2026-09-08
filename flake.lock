@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "asd-ste100-skill": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1788073886,
-        "narHash": "sha256-xHiTjEOGdqiEbgpq8fuKDEkbTTRaDu7avb/7c1cp18Q=",
-        "owner": "danyuchn",
-        "repo": "asd-ste100-skill",
-        "rev": "e4d64d1dc7f80baa6c590bbf47a99280a90e1b40",
-        "type": "github"
-      },
-      "original": {
-        "owner": "danyuchn",
-        "repo": "asd-ste100-skill",
-        "type": "github"
-      }
-    },
     "base16": {
       "inputs": {
         "fromYaml": "fromYaml"
@@ -82,6 +66,22 @@
         "repo": "base16-vim",
         "rev": "577fe8125d74ff456cf942c733a85d769afe58b7",
         "type": "github"
+      }
+    },
+    "byteful-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1788775727,
+        "narHash": "sha256-AtWRcHp0+2tmXAJhXYrrE7IzLP+xTxtUHqPmfK+fo7U=",
+        "ref": "refs/heads/main",
+        "rev": "ba9adcfba6b88315382d1618a0f9dcfbea2c9232",
+        "revCount": 20,
+        "type": "git",
+        "url": "https://github.com/trybyteful/skills"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://github.com/trybyteful/skills"
       }
     },
     "claude-code": {
@@ -637,7 +637,7 @@
     },
     "root": {
       "inputs": {
-        "asd-ste100-skill": "asd-ste100-skill",
+        "byteful-skills": "byteful-skills",
         "claude-code": "claude-code",
         "firefox-addons": "firefox-addons",
         "git-hooks": "git-hooks",

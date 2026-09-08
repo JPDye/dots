@@ -43,12 +43,22 @@
       flake = false;
     };
 
-    # ASD-STE100 skill for Claude Code (danyuchn/asd-ste100-skill): Simplified
-    # Technical English rules for rewriting ambiguous agent-facing English.
-    # A plain source tree (not a flake). modules/dev/claude-code.nix links it
-    # into ~/.claude/skills and modules/dev/opencode.nix inlines it.
-    asd-ste100-skill = {
-      url = "github:danyuchn/asd-ste100-skill";
+    # Byteful's Claude Code plugin marketplace (trybyteful/skills). Used here
+    # for its `ste100` plugin only: the ASD-STE100 skill, a verbatim copy of
+    # danyuchn/asd-ste100-skill with its LICENSE. A plain source tree (not a
+    # flake). modules/dev/claude-code.nix links the skill into ~/.claude/skills,
+    # where opencode also finds it, and modules/dev/opencode.nix inlines it
+    # into AGENTS.md.
+    #
+    # The repo is PRIVATE, so any evaluation that has to fetch it needs GitHub
+    # credentials with read access. `git+https` rather than `github:` on
+    # purpose: Nix's git fetcher runs git, which asks git's credential helper
+    # (`gh auth login` provides it locally, README prerequisite 4), whereas
+    # `github:` would need an `access-tokens` line in nix.conf. CI writes the
+    # BYTEFUL_SKILLS_TOKEN secret into ~/.netrc (see check.yml). The installer
+    # ISO bakes the fetched source in, so Path 0 installs stay offline.
+    byteful-skills = {
+      url = "git+https://github.com/trybyteful/skills";
       flake = false;
     };
 

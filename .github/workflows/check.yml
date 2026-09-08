@@ -26,6 +26,23 @@ jobs:
             extra-substituters = https://helix.cachix.org https://niri.cachix.org
             extra-trusted-public-keys = helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=
 
+      # `byteful-skills` is a private repo. The runner's own GITHUB_TOKEN
+      # cannot read it, so a fine-grained PAT with "Contents: read" on
+      # trybyteful/skills lives in the BYTEFUL_SKILLS_TOKEN repo secret.
+      # git's https transport reads ~/.netrc, and Nix's git fetcher runs
+      # git, so one netrc entry covers the fetch. Fail early with a clear
+      # message when the secret is missing (for example on a fork's PR).
+      - name: Authenticate git to the private byteful-skills input
+        env:
+          TOKEN: ${{ secrets.BYTEFUL_SKILLS_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "BYTEFUL_SKILLS_TOKEN secret is not set. Nix cannot fetch the byteful-skills input." >&2
+            exit 1
+          fi
+          printf 'machine github.com\nlogin x-access-token\npassword %s\n' "$TOKEN" > ~/.netrc
+          chmod 600 ~/.netrc
+
       # Two flake inputs are read *at eval time* (import-from-derivation):
       # stylix's base16.nix reads scheme YAML out of base16-schemes, and
       # textfox's HM module reads its theme source out of textfox-git.

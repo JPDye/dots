@@ -30,7 +30,13 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
    extra-trusted-public-keys = helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=
    ```
    then `sudo systemctl restart nix-daemon`. Do **not** add your user to `trusted-users`: a trusted user is root-equivalent to the daemon, and with the caches system-wide nothing needs it. If an earlier setup added `trusted-users = root @wheel`, remove that line. The `caches-in-sync` flake check keeps the two lines above in step with `caches.nix`.
-4. **Clone the repo**:
+4. **Give git read access to the private `byteful-skills` input.** That flake input is a private GitHub repo. Nix fetches it with git over https, so git needs a credential that can read it before the first evaluation. Log in with the GitHub CLI and register it as git's credential helper:
+   ```bash
+   nix run nixpkgs#gh -- auth login       # https protocol, `repo` scope
+   nix run nixpkgs#gh -- auth setup-git
+   ```
+   `setup-git` writes the helper into `~/.gitconfig`, a file this flake does not manage, so it survives the switch. CI does not log in: it builds a `~/.netrc` from the `BYTEFUL_SKILLS_TOKEN` repo secret instead (see `.github/workflows/check.yml`).
+5. **Clone the repo**:
    ```bash
    git clone <url> ~/.config/nix
    cd ~/.config/nix
@@ -210,7 +216,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 
 ## flake.nix at a glance
 
-**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `asd-ste100-skill` (the ASD-STE100 skill for Claude Code, also inlined into opencode's `AGENTS.md`), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
+**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `byteful-skills` (Byteful's Claude Code plugin marketplace, a **private** repo fetched over `git+https`, so evaluation needs a GitHub credential: prerequisite step 4 locally, the `BYTEFUL_SKILLS_TOKEN` secret in CI. Used for its `ste100` plugin: the ASD-STE100 skill, linked into `~/.claude/skills` for Claude Code and opencode, and inlined into opencode's `AGENTS.md`), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
 
 **Overlays:** niri, nixGL, firefox-addons.
 
@@ -370,7 +376,7 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 |--------|-------|
 | `bacon.nix` | Shared `bacon` (Rust auto-runner) prefs merged into each project's `bacon.toml`: default clippy job, extra `cov`/`cov-html`/`nextest` jobs, and a palette-matched skin. |
 | `cargo-sweep.nix` | systemd-user timer (weekly) that prunes stale Rust `target/` artefacts under `~/Code` / `~/Projects` with `cargo-sweep`. |
-| `claude-code.nix` | Installs Claude Code (from the `claude-code` flake input) plus `claude2`, a wrapper on `CLAUDE_CONFIG_DIR=~/.claude2` for a second account (settings, skills, agents and plugins are shared back to `~/.claude` by out-of-store symlink; login and history stay separate). Owns files under `~/.claude`: the `/improve` skill (patched to append this repo's addendum and to dispatch its executor at opus), the `asd-ste100` skill (from the `asd-ste100-skill` flake input), an `ste100` output style under `~/.claude/output-styles` (select it with `/config`), and `CLAUDE.md`. A flake-owned slice of `~/.claude/settings.json` is merged into the live file on **every activation** (shallow merge, managed keys win, unlisted keys stay editable), including a `hooks.UserPromptSubmit` reminder that restates the STE100 rule next to every prompt. |
+| `claude-code.nix` | Installs Claude Code (from the `claude-code` flake input) plus `claude2`, a wrapper on `CLAUDE_CONFIG_DIR=~/.claude2` for a second account (settings, skills, agents and plugins are shared back to `~/.claude` by out-of-store symlink; login and history stay separate). Owns files under `~/.claude`: the `/improve` skill (patched to append this repo's addendum and to dispatch its executor at opus), the `asd-ste100` skill (from the `ste100` plugin in the `byteful-skills` flake input), an `ste100` output style under `~/.claude/output-styles` (select it with `/config`), and `CLAUDE.md`. A flake-owned slice of `~/.claude/settings.json` is merged into the live file on **every activation** (shallow merge, managed keys win, unlisted keys stay editable), including a `hooks.UserPromptSubmit` reminder that restates the STE100 rule next to every prompt. |
 | `docker.nix` | Rootless docker as a systemd user service, mirrored from NixOS's `virtualisation.docker.rootless` unit. Installs `docker` and `docker-compose`, and sets `DOCKER_HOST` to the rootless socket (POSIX and nushell env both). Default off, and only `laptop-arch` enables it. The NixOS hosts get docker from `modules/system/containers.nix` instead. |
 | `gh.nix` | GitHub CLI (`programs.gh`) configured with `git_protocol = "https"`. It must match whatever `gh auth login --git-protocol` chose: home-manager owns the config as a store symlink, so a mismatch makes gh try to rewrite a read-only file and fail. |
 | `git.nix` | User: Joe, `jpzh.dye@gmail.com`. Delta enabled (line numbers, navigate, hyperlinks). Aliases: `st`, `co`, `sw`, `br`, `lg` (decorated graph log), `last`, `unstage`, `amend`. Sensible defaults: `pull.rebase=true`, `push.autoSetupRemote=true`, `rebase.autoStash=true`, `merge.conflictStyle=zdiff3`, `diff.algorithm=histogram`, `init.defaultBranch=main`. |
