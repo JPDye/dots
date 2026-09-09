@@ -56,10 +56,21 @@ let
   # ASD-STE100 skill (`/asd-ste100`, the `ste100` plugin in the
   # `byteful-skills` flake input): Simplified Technical English rules for
   # rewriting ambiguous agent-facing English. SKILL.md points at references/
-  # and examples/, so the whole skill dir is linked as-is. opencode scans
-  # ~/.claude/skills too, so this one link serves both tools (see
+  # and examples/, so the whole skill dir is linked as-is below. opencode
+  # scans ~/.claude/skills too, so this one link serves both tools (see
   # opencode.nix).
   ste100Skill = "${inputs.byteful-skills}/plugins/ste100/skills/asd-ste100";
+
+  # ste100Skill ships read-only from the flake input. Copy it out and append
+  # our house-rule addendum (em-dash ban, no cataphoric teasers, both
+  # stricter than official STE) to SKILL.md. Same pattern as improveSkill
+  # below.
+  ste100SkillPatched = pkgs.runCommand "ste100-skill" { } ''
+    mkdir -p $out
+    cp -r ${ste100Skill}/. $out/
+    chmod -R u+w $out
+    cat ${./ste-writing/ste100-house-rules-addendum.md} >> $out/SKILL.md
+  '';
 
   # The user memory below turns the STE100 ruleset on for every reply, but
   # that memory loads once at session start and fades as a long session fills
@@ -83,10 +94,11 @@ let
 
   # shadcn/improve ships read-only from the flake input. Copy it out, append our
   # machine addendum (Nushell shell, flake-managed installs, Nushell cleanup
-  # commands) to SKILL.md, and bump the default executor from sonnet to opus, so
-  # both customisations are re-applied on every input bump. --replace-fail makes
-  # an input reword that loses the patch break the build instead of silently
-  # reverting the executor to sonnet.
+  # commands) to SKILL.md, and point the default executor at the harness's
+  # default model instead of a pinned sonnet, so both customisations are
+  # re-applied on every input bump. --replace-fail makes an input reword that
+  # loses the patch break the build instead of silently reverting the
+  # executor to sonnet.
   improveSkill = pkgs.runCommand "improve-skill" { } ''
     mkdir -p $out
     cp -r ${inputs.improve-skill}/skills/improve/. $out/
@@ -94,7 +106,7 @@ let
     cat ${./improve-skill-addendum.md} ${./improve-addendum-shared.md} >> $out/SKILL.md
     substituteInPlace $out/references/closing-the-loop.md \
       --replace-fail 'Executor model: default `sonnet`;' \
-                     'Executor model: default `opus` (dispatch it at high reasoning effort);'
+                     'Executor model: use the default model (dispatch it at high reasoning effort);'
   '';
 in
 {
@@ -161,9 +173,10 @@ in
         # automatically shared with claude2 through the skills symlink above.
         ".claude/skills/improve".source = improveSkill;
 
-        # ASD-STE100 skill (`/asd-ste100`): Simplified Technical English.
-        # Shared with claude2 through the skills symlink above.
-        ".claude/skills/asd-ste100".source = ste100Skill;
+        # ASD-STE100 skill (`/asd-ste100`): Simplified Technical English,
+        # plus our house-rule addendum (see ste100SkillPatched above). Shared
+        # with claude2 through the skills symlink above.
+        ".claude/skills/asd-ste100".source = ste100SkillPatched;
 
         # STE100 as an output style. Installing the file only makes it appear
         # in the picker. Select it with /config -> Output style. The choice
@@ -198,6 +211,9 @@ in
       theme = config.dotfiles.theme.variant;
       effortLevel = "xhigh";
       switchModelsOnFlag = false;
+      # Default output style for every project. A project's own
+      # .claude/settings.local.json can still set its own outputStyle.
+      outputStyle = "STE100";
       # Applies the STE100 ruleset from claude-user-memory.md to every reply.
       # The reminder repeats on each prompt, so it sits next to the newest
       # turn rather than at the top of the session. The `hooks` key is

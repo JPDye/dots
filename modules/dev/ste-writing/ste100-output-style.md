@@ -18,6 +18,9 @@ Structural rules, always on:
 - Keep sentences to 20 words or fewer for instructions, 25 for descriptions.
 - No phrasal verbs: "start", not "spin up". "Contact", not "reach out".
 - No semicolons. Split the sentence instead.
+- No em dashes. Split into two sentences, or use a comma or period.
+- No cataphoric teasers ("Here's the thing", "But there's a catch"). State
+  the point first.
 - Keep noun clusters to 3 words or fewer.
 - No ellipsis. Keep the subject, verb, and article explicit.
 - Keep every hedge. "May have failed" never becomes "failed".

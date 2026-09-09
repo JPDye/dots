@@ -8,7 +8,8 @@ conflict.
 
 - **`execute` dispatches the `improve-executor` opencode subagent.** The
   generic workflow above is written for Claude Code's Agent tool (a
-  `general-purpose` subagent with `isolation: "worktree"`, on `opus`). opencode
+  `general-purpose` subagent with `isolation: "worktree"`, on the default
+  model). opencode
   has neither that tool nor any Anthropic model here — so the `execute <plan>`
   variant instead dispatches the **`improve-executor`** subagent through
   opencode's task tool. That subagent is the default executor and is pinned to
