@@ -8,12 +8,14 @@
 
 let
   cfg = config.dotfiles.shell.fastfetch;
-  percent = {
-    type = 6;
-    green = 30;
-    cyan = 60;
-    red = 100;
-  };
+  # Only the three commented-out readouts below used this, so it stays
+  # commented out with them. deadnix fails on an unused let binding.
+  # percent = {
+  #   type = 6;
+  #   green = 30;
+  #   cyan = 60;
+  #   red = 100;
+  # };
 
   # Row of palette dots bracketing the output, derived from the theme so a
   # re-skin propagates here.
@@ -114,30 +116,39 @@ in
             format = "{1}";
           }
 
+          # CPU, memory and disk readouts, switched off on 2026-09-20.
+          # fastfetch runs on every new terminal (via welcome.nu), and cpuusage
+          # alone cost 213 ms of fastfetch's 220 ms total, because it samples CPU
+          # load across a fixed interval. Three extra "break" entries sit after
+          # the closing palette dots below, so the output keeps its former
+          # height.
+          #
+          # {
+          #   type = "cpuusage";
+          #   key = "";
+          #   inherit percent;
+          # }
+          #
+          # {
+          #   type = "memory";
+          #   key = "";
+          #   inherit percent;
+          # }
+          #
+          # {
+          #   type = "disk";
+          #   inherit percent;
+          #   key = "󰋊";
+          # }
+
           "break"
-
-          {
-            type = "cpuusage";
-            key = "";
-            inherit percent;
-          }
-
-          {
-            type = "memory";
-            key = "";
-            inherit percent;
-          }
-
-          {
-            type = "disk";
-            inherit percent;
-            key = "󰋊";
-          }
-
           "break"
 
           paletteDots
 
+          "break"
+          "break"
+          "break"
           "break"
           "break"
           "break"

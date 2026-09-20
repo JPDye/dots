@@ -26,14 +26,26 @@
       overview = {
         backdrop-color = "#${colors.bg0}";
         zoom = 0.6;
+        # softness 0 + a positive spread draws a hard ring around each
+        # workspace rather than a blur, because the shader punches the view
+        # rect back out. niri then scales spread by `view_size.h / 1080`
+        # (compute_workspace_shadow_config, src/layout/workspace.rs), so the
+        # number here is not pixels. On nix-desktop's 2160-tall output that
+        # doubles it, and spread 1 lands on a 2px ring. The overview zoom
+        # (0.6 above) scales the ring again at render time.
+        #
+        # The colour is the same dark seam the tiled layout shadow uses
+        # below, not the red border colour. It is pinned to the *dark* bg0
+        # for the same reason: the seam must stay dark when the light
+        # variant is active.
         workspace-shadow = {
           softness = 0;
-          spread = 2;
+          spread = 1;
           offset = {
             x = 0;
             y = 0;
           };
-          color = "#${colors.red}";
+          color = "#${colorsDark.bg0}";
         };
       };
 

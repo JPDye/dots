@@ -167,15 +167,15 @@ in
               zindex = -3; # below the card's shadow (-2), the card (-1), and every widget (0)
             };
 
-            # Profile photo up top, square-cornered and red-bordered like a
-            # niri window. The source is committed at the repo root; keep it
+            # Profile photo up top, rounded and red-bordered like a niri
+            # window. The source is committed at the repo root; keep it
             # git-tracked or the flake build won't see it.
             image = [
               {
                 monitor = "";
                 path = "${../../avatar.jpg}";
                 size = 120;
-                rounding = 0;
+                rounding = 4; # matches the niri window radius
                 border_size = border-style.width;
                 border_color = "rgb(${colors.border})";
                 position = "0, 190";
@@ -187,7 +187,7 @@ in
             # Frosted card behind the whole stack; the avatar straddles its
             # top edge. A translucent panel fakes a pane of smoked glass
             # without real blur (hyprlock can't blur behind a shape). Styled
-            # like a niri window: square corners, red border, hard 8px shadow.
+            # like a niri window: 4px corners, red border, hard 2px shadow.
             # hyprlock's own shadow_passes always feathers, so the shadow is
             # a solid bg0 shape one layer down, oversized by border + spread
             # on every side (shape borders draw outside `size`). zindex (not
@@ -196,12 +196,15 @@ in
             # text reads on top. home-manager emits blocks alphabetically, so
             # `shape` would otherwise land last (on top) and hide everything.
             shape = [
-              # The hard shadow: card 380x420 + 2 * (2px border + 8px spread).
+              # The hard shadow: card 380x420 + 2 * (2px border + 2px spread).
               {
                 monitor = "";
-                size = "400, 440";
+                size = "388, 428";
                 color = "rgba(${themeLib.alpha shadow-style.opacity colors.bg0})"; # same as niri's shadow colour, at shadow-style.opacity
-                rounding = 0;
+                # 8, not 4: the shadow sits 2px outside the card's 2px border,
+                # so its radius is the card's (4) plus the border (2) plus the
+                # spread (2), which keeps the visible ring an even width.
+                rounding = 8;
                 border_size = 0;
                 position = "0, -20";
                 halign = "center";
@@ -213,7 +216,7 @@ in
                 monitor = "";
                 size = "380, 420";
                 color = "rgba(${colors.bg0}cc)"; # ~80% smoked glass (darker)
-                rounding = 0;
+                rounding = 4;
                 border_size = border-style.width;
                 border_color = "rgb(${colors.border})"; # niri's active-border red
                 position = "0, -20";
@@ -231,7 +234,7 @@ in
               valign = "center";
 
               outline_thickness = border-style.width;
-              rounding = 0; # square, like the niri windows
+              rounding = 4; # matches the niri window radius
               fade_on_empty = false;
               placeholder_text = "<i>Enter password</i>";
 

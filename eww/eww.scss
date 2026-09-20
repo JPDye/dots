@@ -39,7 +39,7 @@ $surface-green: $green;
     padding: 0.2em;
     min-width: 1.2em;
     min-height: 1.2em;
-    border-radius: 0;
+    border-radius: 4px;
     border: 1px solid rgba($primary, 1.0);
     background-color: rgba($surface-darkgrey, 0.75);
     color: rgba($accent, 0.8); // green icons in red outlines, like the pills
@@ -81,7 +81,7 @@ $surface-green: $green;
   .pill {
     padding: 0.2em 0.45em 0.2em 0.25em;
     min-height: 1.2em;
-    border-radius: 0;
+    border-radius: 4px;
     background-color: rgba($surface-darkgrey, 0.75);
   }
 

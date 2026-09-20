@@ -102,14 +102,17 @@ in
         }
 
         /* The window chrome: matches a niri window — dark fill, 2px red border,
-           square corners, and a hard 8px shadow ring (no blur/softening) in the
-           fuzzel colour. The shadow is CSS, not a niri layer-rule, because niri
-           won't render a shadow that hugs walker's layer-shell surface. */
+           the shared corner radius, and a hard shadow ring (no blur/softening)
+           in the fuzzel colour. The shadow is CSS, not a niri layer-rule,
+           because niri won't render a shadow that hugs walker's layer-shell
+           surface. The ring is 4px, half the niri float rule's spread 8: a
+           layer-shell surface has no gap to fill, so it only needs enough to
+           separate the box from whatever sits behind it. */
         .box-wrapper {
-          box-shadow: 0 0 0 8px #${shadowColor};
+          box-shadow: 0 0 0 4px #${shadowColor};
           background: @window_bg_color;
           padding: 20px;
-          border-radius: 0;
+          border-radius: ${toString border-style.radius-int}px;
           border: ${toString border-style.width}px solid @border_color;
         }
 

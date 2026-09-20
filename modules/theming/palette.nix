@@ -267,8 +267,10 @@ rec {
   };
 
   border-style = {
-    radius-float = 1.0;
-    radius-int = 1;
+    # Corner radius, one source of truth. niri window-rules take the float
+    # (geometry-corner-radius), CSS consumers take the int (greeter, walker).
+    radius-float = 4.0;
+    radius-int = 4;
     width = 2;
   };
 
@@ -280,7 +282,7 @@ rec {
 
   # Wallpaper — single source of truth, consumed by the home-manager
   # surfaces (awww, stylix, hyprlock) and by the greeter backdrop.
-  wallpaper = ../../wallpapers/berries.jpg;
+  wallpaper = ../../wallpapers/rockman.png;
 
   # Color-format helpers for consumer modules.
   themeLib = {

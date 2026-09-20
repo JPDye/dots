@@ -40,6 +40,11 @@ in
       packages =
         (with pkgs; [
           # CLI / non-GL — installed unwrapped on every host
+          # Offline C/POSIX reference: `man 3 printf`, `man 2 write`. Neither
+          # nixpkgs nor Arch pulls these in on its own, and section 3 is the C
+          # library reference the dev shells assume you have.
+          man-pages # Linux man-pages project: sections 2, 3, 4, 5, 7
+          man-pages-posix # POSIX pages: sections 0p, 1p, 3p
           ffmpeg
           wireguard-tools
           pavucontrol

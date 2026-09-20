@@ -70,6 +70,25 @@
           };
         };
 
+        # C. The toolchain is per-project, not global: the "Modern C" repo's
+        # shell.nix puts a version-matched clang-tools on PATH through direnv,
+        # and writes a compile_flags.txt that carries -std=c23. clangd reads
+        # that file itself, so no -std flag belongs here. Helix already
+        # defaults C to clangd, so this block only adds the arguments.
+        clangd = {
+          command = "clangd";
+          args = [
+            "--background-index"
+            # Lint diagnostics inline, in the spirit of the clippy::pedantic
+            # check configured for rust-analyzer above.
+            "--clang-tidy"
+            "--completion-style=detailed"
+            # Do not add an #include on completion. Writing the includes by
+            # hand is part of learning the language.
+            "--header-insertion=never"
+          ];
+        };
+
         taplo = {
           command = "taplo";
           args = [
@@ -128,6 +147,42 @@
           ];
           language-servers = [
             "rust-analyzer"
+            "typos"
+          ];
+        }
+        {
+          name = "c";
+          auto-format = true;
+          formatter = {
+            command = "clang-format";
+            # `--style=file` uses the project's .clang-format when it has one
+            # and falls back to LLVM style otherwise, which matches helix's
+            # own C indent defaults (2 spaces). `--assume-filename` sets the
+            # language, because clang-format reads the buffer on stdin and
+            # would otherwise guess.
+            args = [
+              "--assume-filename=x.c"
+              "--style=file"
+              "--fallback-style=LLVM"
+            ];
+          };
+          # Helix maps `.h` to cpp, not c (its languages.toml carries a
+          # literal `# TODO: ["h"]` on the C entry), so a C header would open
+          # with C++ semantics. Claim it for C here. Reverse this if a C++
+          # project ever lands on one of these hosts.
+          file-types = [
+            "c"
+            "h"
+          ];
+          # Root the workspace where the flags file is, so clangd reads it for
+          # a source file in a subdirectory. Helix defines no roots for C.
+          roots = [
+            "compile_flags.txt"
+            "compile_commands.json"
+            "Makefile"
+          ];
+          language-servers = [
+            "clangd"
             "typos"
           ];
         }

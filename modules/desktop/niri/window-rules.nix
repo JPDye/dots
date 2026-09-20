@@ -1,4 +1,5 @@
 {
+  border-style,
   colors,
   config,
   lib,
@@ -17,13 +18,44 @@ in
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
     # These ride the extraConfig escape hatch because niri-flake's settings
     # schema predates them (blur, is-floating matches and per-rule shadows are
-    # all niri 26.04+). `blur { off }` is the master switch: niri renders blur
-    # as `requested && !blur.off` (background_effect.rs), so this kills the
-    # compositor blur for every window and layer regardless of any per-surface
-    # request (a bare per-rule `blur false` wouldn't stop client-requested blur).
+    # all niri 26.04+). `blur` is the master switch: niri renders blur as
+    # `requested && !blur.off` (background_effect.rs), so `on` only permits
+    # blur. Each surface still opts in over ext-background-effect-v1, and the
+    # window-rules below do that opting in on the app's behalf. The
+    # block takes on/off, passes, noise and saturation and nothing else. It
+    # has no radius node. Per-surface control is a separate node, and it is
+    # `background-effect { blur ... }` on a window-rule or layer-rule.
     dotfiles.desktop.niri.extraConfig = ''
       blur {
-          off
+          on
+          passes 4
+          noise 0.02
+          saturation 1.0
+      }
+
+      // The master switch only permits blur. A surface still has to ask for
+      // it over ext-background-effect-v1, and almost no app asks, so these
+      // rules ask on the app's behalf. `background-effect` is absent from
+      // niri-flake's typed window-rule schema, so it cannot live in
+      // window-rules below. Order also forces it here: niri applies later
+      // rules last, extraConfig is appended after the rendered settings, and
+      // the firefox opt-out must follow the global opt-in.
+      window-rule {
+          background-effect {
+              blur true
+          }
+      }
+      // `xray` is deliberately unset. niri defaults it to true whenever any
+      // background effect is active (background_effect.rs: "since it's
+      // cheaper"), and xray samples the wallpaper rather than the windows
+      // stacked behind. A blurred wallpaper is the wanted look here, so do
+      // not "fix" this by adding `xray false`.
+
+      window-rule {
+          match app-id="^firefox$"
+          background-effect {
+              blur false
+          }
       }
 
       // Floating windows hover over other (often dark) windows, so they get
@@ -63,25 +95,36 @@ in
     programs.niri.settings = {
       window-rules = [
         {
+          # Radius from the shared token (modules/theming/palette.nix), so
+          # walker's CSS corners and the greeter's cannot drift from these.
           geometry-corner-radius = {
-            top-left = 0.0;
-            top-right = 0.0;
-            bottom-left = 0.0;
-            bottom-right = 0.0;
+            top-left = border-style.radius-float;
+            top-right = border-style.radius-float;
+            bottom-left = border-style.radius-float;
+            bottom-right = border-style.radius-float;
           };
 
           clip-to-geometry = true;
           draw-border-with-background = false;
-          # Opaque baseline. Blur is globally off (extraConfig above), so
-          # there's nothing for translucency to reveal; per-app rules can drop
-          # this if a window should read see-through.
-          opacity = 1.0;
+          # Near-opaque baseline. niri fades the whole surface, text
+          # included, so this stays close to 1.0. It is also the aperture for
+          # the blur: the effect draws behind the window, so only 1 - opacity
+          # of it shows. A per-app rule can set 1.0 back.
+          opacity = 0.92;
         }
         {
           matches = [ { title = "Firefox"; } ];
           default-column-width = {
             proportion = 1.0;
           };
+        }
+        {
+          # Firefox opts out of the translucent baseline. An opaque window
+          # shows nothing behind it, so this also hides any blur under it.
+          # niri 26.04 has no per-window blur node, so opacity is the only
+          # per-app control available.
+          matches = [ { app-id = "^firefox$"; } ];
+          opacity = 1.0;
         }
         {
           matches = [ { app-id = "Spotify"; } ];

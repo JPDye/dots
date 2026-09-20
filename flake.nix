@@ -481,6 +481,10 @@
           path = ./templates/typst;
           description = "Typst dev shell (typst, tinymist, typstyle)";
         };
+        c = {
+          path = ./templates/c;
+          description = "C23 dev shell (clang, clangd, sanitizers, valgrind, gdb)";
+        };
       };
     };
 }
