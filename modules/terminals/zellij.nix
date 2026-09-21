@@ -8,10 +8,10 @@
 let
   cfg = config.dotfiles.terminals.zellij;
   emphasis = {
-    emphasis_0 = "#${colors.orange}";
-    emphasis_1 = "#${colors.pink}";
-    emphasis_2 = "#${colors.red}";
-    emphasis_3 = "#${colors.yellow}";
+    emphasis_0 = "#${colors.primary}";
+    emphasis_1 = "#${colors.secondary}";
+    emphasis_2 = "#${colors.tertiary}";
+    emphasis_3 = "#${colors.info}";
   };
 in
 {
@@ -44,33 +44,39 @@ in
         theme = "custom";
         themes.custom = {
 
+          # The focused pane frame takes the same `border` the niri window
+          # border uses, so a focused pane and a focused window read alike.
           frame_selected = emphasis // {
-            base = "#${colors.red}";
+            base = "#${colors.border}";
             emphasis_2 = "#${colors.grey}";
           };
 
+          # `mid` is the palette's at-rest red tint, the same token niri's
+          # inactive borders and the lock ring use. An unfocused frame
+          # therefore reads as a dimmed version of the focused red, not as a
+          # separate grey.
           frame_unselected = emphasis // {
-            base = "#${colors.bg2}";
-            emphasis_2 = "#${colors.green}";
+            base = "#${colors.neutral}";
+            emphasis_2 = "#${colors.success}";
           };
 
           frame_highlight = emphasis // {
-            base = "#${colors.orange}";
-            emphasis_2 = "#${colors.green}";
+            base = "#${colors.secondary}";
+            emphasis_2 = "#${colors.success}";
           };
 
           ribbon_selected = emphasis // {
             base = "#${colors.bg0}";
-            background = "#${colors.orange}";
+            background = "#${colors.primary}";
           };
 
           ribbon_unselected = emphasis // {
-            base = "#${colors.orange}";
+            base = "#${colors.primary}";
             background = "#${colors.bg0}";
           };
 
           text_unselected = emphasis // {
-            base = "#${colors.mid}";
+            base = "#${colors.neutral}";
             background = "#${colors.bg0}";
           };
 
@@ -80,12 +86,12 @@ in
           };
 
           list_unselected = emphasis // {
-            base = "#${colors.mid}";
+            base = "#${colors.neutral}";
             background = "#${colors.bg0}";
           };
 
           list_selected = emphasis // {
-            base = "#${colors.mid}";
+            base = "#${colors.neutral}";
             background = "#${colors.bg1}";
           };
 
@@ -95,12 +101,12 @@ in
           };
 
           table_cell_selected = emphasis // {
-            base = "#${colors.mid}";
+            base = "#${colors.neutral}";
             background = "#${colors.bg1}";
           };
 
           table_cell_unselected = emphasis // {
-            base = "#${colors.mid}";
+            base = "#${colors.neutral}";
             background = "#${colors.bg0}";
           };
         };

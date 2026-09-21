@@ -194,9 +194,9 @@ in
         commit = "";
         pr = "";
       };
-      # Follows dotfiles.theme.variant, so the TUI matches the terminal it
+      # The palette is dark-only, so the TUI matches the terminal it
       # runs in. "dark"/"light" are both valid Claude Code theme names.
-      theme = config.dotfiles.theme.variant;
+      theme = "dark";
       effortLevel = "xhigh";
       switchModelsOnFlag = false;
       # Default output style for every project. A project's own

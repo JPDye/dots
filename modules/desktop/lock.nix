@@ -244,12 +244,12 @@ in
               dots_center = true;
 
               inner_color = "rgba(${colors.bg0}80)"; # dark glass
-              outer_color = "rgb(${colors.mid})"; # muted maroon at rest; events recolor it
+              outer_color = "rgb(${colors.neutral})"; # muted at rest, events recolor it
               font_family = serifFont;
               font_color = "rgb(${colors.fg0})";
               check_color = "rgb(${colors.warning})"; # pulses while PAM checks
               fail_color = "rgb(${colors.failure})"; # wrong password
-              capslock_color = "rgb(${colors.yellow})"; # Caps Lock is on
+              capslock_color = "rgb(${colors.tertiary})"; # Caps Lock is on
             };
 
             label = [

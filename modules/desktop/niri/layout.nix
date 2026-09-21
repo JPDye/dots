@@ -1,8 +1,9 @@
 {
+  border-style,
   colors,
-  colorsDark,
   config,
   lib,
+  themeLib,
   ...
 }:
 
@@ -26,26 +27,28 @@
       overview = {
         backdrop-color = "#${colors.bg0}";
         zoom = 0.6;
-        # softness 0 + a positive spread draws a hard ring around each
-        # workspace rather than a blur, because the shader punches the view
-        # rect back out. niri then scales spread by `view_size.h / 1080`
-        # (compute_workspace_shadow_config, src/layout/workspace.rs), so the
-        # number here is not pixels. On nix-desktop's 2160-tall output that
-        # doubles it, and spread 1 lands on a 2px ring. The overview zoom
-        # (0.6 above) scales the ring again at render time.
+        # A solid ring, not a depth shadow. softness 0 keeps a hard edge,
+        # because the shader punches the view rect back out, and a zero
+        # offset keeps the ring even on all four sides.
         #
-        # The colour is the same dark seam the tiled layout shadow uses
-        # below, not the red border colour. It is pinned to the *dark* bg0
-        # for the same reason: the seam must stay dark when the light
-        # variant is active.
+        # niri scales spread by `view_size.h / 1080`
+        # (compute_workspace_shadow_config, src/layout/workspace.rs) and the
+        # overview zoom (0.6 above) scales it again at render time. On a
+        # 2160-tall output that is 2 * 0.6 = 1.2, so spread 1.67 lands on
+        # ~2px zoomed out. The 1200-tall laptop panel scales by 1.111 * 0.6
+        # = 0.667 instead, so the ring reads ~1px there. One spread cannot
+        # hit 2px on both.
+        #
+        # The colour stays darker than `backdrop-color`, which is bg0: a
+        # ring cannot read against its own colour.
         workspace-shadow = {
           softness = 0;
-          spread = 1;
+          spread = 1.67;
           offset = {
             x = 0;
             y = 0;
           };
-          color = "#${colorsDark.bg0}";
+          color = "#${themeLib.mix 0.6 colors.bg0 "000000"}";
         };
       };
 
@@ -76,18 +79,14 @@
 
         border = {
           enable = true;
-          width = 2;
+          inherit (border-style) width;
           active.color = "#${colors.border}";
-          inactive.color = "#${colors.mid}";
+          inactive.color = "#${colors.neutral}";
         };
 
         # Spread exceeds half the gap (16/2 = 8) so neighbouring windows'
         # shadows meet across it. softness 0 keeps a hard edge past the
         # overlap.
-        #
-        # The colour is pinned to the *dark* bg0 in both variants. This gap
-        # fill is meant to read as a dark seam between windows, so it must
-        # not follow the theme to cream when the light variant is active.
         shadow = {
           enable = true;
           spread = 2;
@@ -97,8 +96,8 @@
             y = 0;
           };
 
-          color = "#${colorsDark.bg0}";
-          inactive-color = "#${colorsDark.bg0}";
+          color = "#${colors.bg0}";
+          inactive-color = "#${colors.bg0}";
         };
 
         # Pull windows back toward the screen edges so the outer gap stays

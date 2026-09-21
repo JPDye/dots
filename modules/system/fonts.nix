@@ -23,7 +23,10 @@ in
       packages = [
         inputs.myFonts.packages.${system}.ioskeley
         inputs.myFonts.packages.${system}.drafting-mono
+        inputs.myFonts.packages.${system}.luxi-mono
+        pkgs.nerd-fonts._0xproto
         pkgs.nerd-fonts.fira-code
+        pkgs.nerd-fonts.martian-mono
         pkgs.nerd-fonts.droid-sans-mono
         pkgs.nerd-fonts.commit-mono
         pkgs.nerd-fonts.symbols-only
@@ -37,10 +40,10 @@ in
         enable = true;
         # Families come from the palette, which is a plain file so this
         # NixOS-scoped module can read it (theme.nix's monoFont arg lives in
-        # the home-manager scope and is not visible here). Drafting Mono is
-        # patched with Nerd Font icons in the fonts flake; the shared fallback
-        # chain adds Symbols Nerd Font Mono as an icon backup then Libertinus
-        # Math for math glyphs. No serif fallback: all Drafting Mono.
+        # the home-manager scope and is not visible here). IoskeleyMono
+        # carries Nerd Font icons in its own TTFs. The shared fallback chain
+        # adds Symbols Nerd Font Mono as an icon backup, then Libertinus Math
+        # for math glyphs. No serif fallback: all IoskeleyMono.
         defaultFonts =
           let
             palette = import ../theming/palette.nix { inherit lib; };

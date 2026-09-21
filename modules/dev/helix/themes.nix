@@ -1,50 +1,52 @@
 {
-  colorsDark,
-  colorsLight,
+  base16Scheme,
+  colors,
   config,
   lib,
-  themeLib,
+  syntax,
   ...
 }:
 
 let
-  # Self-contained theme based on the stylix-generated helix theme,
-  # with our accent overrides layered on top. Defining both standalone
-  # (rather than inheriting from `stylix`) means each variant renders
-  # correctly regardless of the system polarity.
-  mkTheme = palette: {
+  # Self-contained theme built from the active scheme's palette, with our
+  # accent overrides layered on top. Defined standalone rather than inherited
+  # from `stylix` so the scheme's own base16 mapping is what lands here.
+  theme = {
     attribute = "base09";
     comment = {
-      fg = "#${palette.orangeVivid}";
-      modifiers = [ "italic" ];
+      fg = "#${syntax.comment}";
+      modifiers = syntax.commentModifiers;
     };
     # Tags inside comments (TODO:, FIXME:, …). The scope exists only in our
     # runtime query override (comment-highlights.scm), not in upstream helix.
-    "comment.todo".fg = "#${palette.white}";
+    "comment.todo".fg = "#${syntax.commentTodo}";
     constant = "base09";
-    "constant.character.escape" = "#${palette.yellow}";
-    "constant.numeric" = "#${palette.pink}";
+    "constant.character.escape" = "#${syntax.escape}";
+    "constant.numeric" = "#${syntax.number}";
     constructor = "base0D";
     debug = "base03";
     diagnostic.modifiers = [ "underlined" ];
     "diff.delta" = "base09";
     "diff.minus" = "base08";
     "diff.plus" = "base0B";
-    error = "#${palette.red}";
+    error = "#${colors.urgent}";
     function = "base0D";
-    hint = "#${palette.fg3}";
-    info = "#${palette.blue}";
-    keyword = "base0E";
+    hint = "#${colors.fg3}";
+    info = "#${colors.info}";
+    keyword = {
+      fg = "base0E";
+      modifiers = syntax.keywordModifiers;
+    };
     label = "base0E";
     namespace = "base0E";
     operator = "base05";
     special = "base0D";
-    string = "#${palette.pink}";
+    string = "#${syntax.string}";
     tag = "base08";
-    type = "#${palette.blue}";
+    type = "#${syntax.type}";
     variable = "base08";
     "variable.other.member" = "base0D";
-    warning = "#${palette.orange}";
+    warning = "#${colors.warning}";
 
     "markup.bold" = {
       fg = "base0A";
@@ -89,19 +91,19 @@ let
     "markup.strikethrough".modifiers = [ "crossed_out" ];
 
     "diagnostic.warning".underline = {
-      color = "#${palette.orange}";
+      color = "#${colors.warning}";
       style = "curl";
     };
     "diagnostic.error".underline = {
-      color = "#${palette.red}";
+      color = "#${colors.urgent}";
       style = "curl";
     };
     "diagnostic.info".underline = {
-      color = "#${palette.blue}";
+      color = "#${colors.info}";
       style = "curl";
     };
     "diagnostic.hint".underline = {
-      color = "#${palette.fg3}";
+      color = "#${colors.fg3}";
       style = "curl";
     };
 
@@ -174,16 +176,16 @@ let
       fg = "base03";
     };
     "ui.statusline.normal" = {
-      fg = "#${palette.bg0}";
-      bg = "#${palette.info}";
+      fg = "#${colors.bg0}";
+      bg = "#${colors.info}";
     };
     "ui.statusline.insert" = {
-      fg = "#${palette.bg0}";
-      bg = "#${palette.success}";
+      fg = "#${colors.bg0}";
+      bg = "#${colors.success}";
     };
     "ui.statusline.select" = {
-      fg = "#${palette.bg0}";
-      bg = "#${palette.pink}";
+      fg = "#${colors.bg0}";
+      bg = "#${colors.secondary}";
     };
     "ui.text" = "base05";
     "ui.text.directory" = "base0D";
@@ -192,54 +194,26 @@ let
     "ui.virtual.inlay-hint".fg = "base03";
     "ui.virtual.ruler".bg = "base01";
     "ui.virtual.jump-label" = {
-      fg = "#${palette.yellow}";
+      fg = "#${colors.tertiary}";
       modifiers = [ "bold" ];
     };
     "ui.virtual.whitespace".fg = "base03";
     "ui.window".bg = "base01";
 
-    palette = {
-      base00 = "#${palette.bg0}";
-      base01 = "#${palette.bg1}";
-      base02 = "#${palette.bg2}";
-      base03 = "#${palette.bg3}";
-      base04 = "#${palette.fg3}";
-      base05 = "#${palette.fg1}";
-      base06 = "#${palette.fg1}";
-      base07 = "#${palette.fg0}";
-      base08 = "#${palette.orange}";
-      base09 = "#${palette.yellow}";
-      base0A = "#${palette.pink}";
-      base0B = "#${palette.green}";
-      base0C = "#${palette.orange}";
-      base0D = "#${palette.green}";
-      base0E = "#${palette.red}";
-      base0F = "#${palette.fg2}";
-    };
-  };
-  # Light-variant readability tweaks layered over the shared mkTheme output.
-  # mkTheme maps base03 (comments, line numbers, inlay hints, indent guides,
-  # the active buffer tab) onto bg3, which reads as a mid grey on the dark bg
-  # but as a near-invisible tan on cream — so darken it to a true grey derived
-  # from fg3, and drop bg0 to a slightly deeper cream for more contrast across
-  # the board. Dark needs neither, hence light-only.
-  lightOverrides = {
-    # The Vivid ramp is cut for the dark bg only (light inherits dark's
-    # values), so comments on cream use the light orange accent instead. The
-    # tag color needs no override: `white` is defined per-variant.
-    comment.fg = "#${colorsLight.orange}";
-    palette = {
-      base00 = "#${themeLib.mix 0.3 colorsLight.bg0 colorsLight.bg1}"; # deeper cream bg
-      base03 = "#${themeLib.mix 0.15 colorsLight.fg3 colorsLight.bg0}"; # readable subtle fg
-    };
+    # Taken straight from the active scheme's base16 mapping (colors.nix
+    # `mkScheme`) rather than rebuilt from raw accents. A scheme that ports
+    # an existing editor theme overrides base03/base05 and base08-0F there
+    # with upstream's real scope colours, and this block has to honour that
+    # or every `base0X` reference above silently falls back to this flake's
+    # own accents.
+    palette = lib.mapAttrs (_: v: "#${v}") (
+      lib.filterAttrs (n: _: lib.hasPrefix "base" n) base16Scheme
+    );
   };
 in
 {
   config = lib.mkIf config.dotfiles.dev.helix.enable {
-    programs.helix.themes = {
-      stylix-dark = mkTheme colorsDark;
-      stylix-light = lib.recursiveUpdate (mkTheme colorsLight) lightOverrides;
-    };
+    programs.helix.themes.stylix = theme;
 
     # ~/.config/helix/runtime is helix's highest-priority runtime dir, so this
     # shadows the upstream comment query. See the header of the .scm file.

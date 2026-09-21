@@ -5,236 +5,55 @@
 # tokens on *both* sides (the greeter, fontconfig) import this file directly
 # instead of hardcoding a copy behind a "keep in sync" comment.
 #
-# To change the theme, edit `variant` below. Nothing else needs to change.
+# One switch lives below. `scheme` picks which palette under `palettes/`
+# supplies the hues. There is no light/dark axis: each scheme is a single
+# dark palette.
 { lib }:
 
 let
-  # Hex color math for deriving `*Vivid` accents from the base hues.
-  hexChars = lib.stringToCharacters "0123456789abcdef";
-  hexValues = builtins.listToAttrs (lib.imap0 (i: c: lib.nameValuePair c i) hexChars);
-  toPair =
-    n:
-    let
-      m =
-        if n < 0 then
-          0
-        else if n > 255 then
-          255
-        else
-          n;
-    in
-    (builtins.elemAt hexChars (m / 16)) + (builtins.elemAt hexChars (m - (m / 16) * 16));
-  fromPair = s: 16 * hexValues.${builtins.substring 0 1 s} + hexValues.${builtins.substring 1 1 s};
+  plib = import ./palette-lib.nix { inherit lib; };
 
-  # "rrggbb" -> "R;G;B" (decimal), for truecolor escape sequences such as
-  # fastfetch's `{#38;2;R;G;B}`. Exposed to consumer modules via `themeLib`.
-  rgbDec =
-    hex:
-    let
-      h = lib.toLower hex;
-    in
-    lib.concatMapStringsSep ";" (i: toString (fromPair (builtins.substring (2 * i) 2 h))) [
-      0
-      1
-      2
-    ];
-
-  # "rrggbb" -> "R, G, B", for CSS `rgba(R, G, B, a)`. GTK3 CSS (the greeter)
-  # has no reliable 8-digit-hex support, so alpha has to go through rgba().
-  rgbCss = hex: builtins.replaceStrings [ ";" ] [ ", " ] (rgbDec hex);
-
-  # Push each channel away from the RGB mean by ±k, so muted hues saturate
-  # without changing their identity (red stays red, blue stays blue).
-  saturate =
-    k: hex:
-    let
-      r = fromPair (builtins.substring 0 2 hex);
-      g = fromPair (builtins.substring 2 2 hex);
-      b = fromPair (builtins.substring 4 2 hex);
-      avg = (r + g + b) / 3;
-      shift =
-        ch:
-        ch
-        + (
-          if ch > avg then
-            k
-          else if ch < avg then
-            -k
-          else
-            0
-        );
-    in
-    toPair (shift r) + toPair (shift g) + toPair (shift b);
-
-  # How far the *Vivid ramp pushes each channel from the RGB mean. One knob:
-  # raise toward 60 for neon, lower for calmer accents.
-  vividPush = 15;
-
-  # Per-channel linear blend of two "rrggbb" colors; t=0 -> a, t=1 -> b.
-  # For in-between shades the palette ramps don't have (e.g. the floating
-  # window shadow sits halfway between bg0 and bg1). Exposed via themeLib.
-  mix =
-    t: a: b:
-    let
-      la = lib.toLower a;
-      lb = lib.toLower b;
-      ch =
-        i:
-        let
-          ca = fromPair (builtins.substring (2 * i) 2 la);
-          cb = fromPair (builtins.substring (2 * i) 2 lb);
-        in
-        toPair (ca + builtins.floor (t * (cb - ca) + 0.5));
-    in
-    ch 0 + ch 1 + ch 2;
-
-  # Append an 8-bit alpha channel to an "rrggbb" color -> "rrggbbaa", for the
-  # niri (#rrggbbaa) and hyprlock (rgba(rrggbbaa)) shadow colors. opacity 0..1.
-  alpha = opacity: hex: hex + toPair (builtins.floor (opacity * 255 + 0.5));
-
-  dark = rec {
-    bg0 = "1c1c1c";
-    bg1 = "3c3836";
-    bg2 = "504945";
-    bg3 = "665c54";
-
-    mid = "463030";
-
-    fg3 = "bdae93";
-    fg2 = "d5c4a1";
-    fg1 = "ebdbb2";
-    fg0 = "fbf1c7";
-
-    white = "D0D0BA";
-    grey = "c8c2b8";
-
-    red = "af5f5f";
-    green = "87875f";
-    yellow = "a8a05f";
-    orange = "af875f";
-    blue = "5f8787";
-    pink = "b78f8f";
-
-    # Darker shades — readable on light bg (~AA-normal vs `fbf1c7`).
-    # Saturation pushed up to ~60-70% so they read as colors rather than
-    # tinted greys; lightness ~30% for AA-normal contrast on cream.
-    redDark = "832020";
-    greenDark = "5f5f15";
-    yellowDark = "806715";
-    orangeDark = "8a4513";
-    blueDark = "1a6868";
-    pinkDark = "8a4040";
-
-    # Lighter shades — readable on dark bg (~AA-normal vs `1c1c1c`).
-    # Saturation ~50-65%, lightness ~58-65% for vivid accents on near-black.
-    redLight = "de6c6c";
-    greenLight = "c4c049";
-    yellowLight = "dac142";
-    orangeLight = "de9858";
-    blueLight = "4eb1b1";
-    pinkLight = "de9b9b";
-
-    # Vivid shades — base hues with each channel pushed ±vividPush from the
-    # RGB mean. Same identity as the base accents, just saturated to pop.
-    redVivid = saturate vividPush red;
-    greenVivid = saturate vividPush green;
-    yellowVivid = saturate vividPush yellow;
-    orangeVivid = saturate vividPush orange;
-    blueVivid = saturate vividPush blue;
-    pinkVivid = saturate vividPush pink;
-
-    # Semantic aliases — UI roles mapped onto the base hues. Reach for
-    # these over raw colors in consumer modules so re-skinning means
-    # changing one line here, not every call site.
-    accent = orange; # primary brand: prompts, headers, "active" UI
-    border = red; # focused/active borders
-    urgent = red; # errors, urgent notifications, error symbols
-    success = green; # ok states, passing checks
-    warning = orange; # caution, modified-but-not-broken
-    failure = red; # failed states, error symbols
-    info = blue; # informational accents
+  # Every scheme takes `plib` and returns `{ colors, syntax }`, plus an
+  # optional `base16` override. `colors` is a flat map of hex strings, which
+  # consumers such as `modules/desktop/eww.nix` rely on. Add a file here to
+  # add a scheme.
+  schemes = {
+    gruvbox = import ./palettes/gruvbox.nix { inherit plib; };
+    kintsugi = import ./palettes/kintsugi.nix { inherit plib; };
   };
 
-  # Light variant: the dark theme reflected, not a second theme. Every value
-  # below is derived from `dark`, so the two variants stay one design.
-  #
-  # The semantic roles are re-derived here (in a `rec`) because the dark set
-  # bound them to dark's accents, so `dark // { red = …; }` alone would not
-  # update `border`/`accent`/etc. The `*Light`/`*Vivid` ramps stay inherited
-  # from `dark`: they exist to pop against near-black and nothing on the
-  # light side consumes them.
-  light = dark // rec {
-    # Neutrals: dark's own two ramps with the ends swapped. Dark reads dark
-    # paper / warm ink, so light reads warm paper / dark ink using the same
-    # greys — no new hues enter the theme.
-    bg0 = dark.fg0; # fbf1c7
-    bg1 = dark.fg1; # ebdbb2
-    bg2 = dark.fg2; # d5c4a1
-    bg3 = dark.fg3; # bdae93
+  active = schemes.${scheme};
 
-    fg3 = dark.bg3; # 665c54
-    fg2 = dark.bg2; # 504945
-    fg1 = dark.bg1; # 3c3836
-    fg0 = dark.bg0; # 1c1c1c
-
-    # dark's white/grey sit just under fg1, a slightly dimmed foreground.
-    # Mirror that position on the light fg ramp: `white` lands near fg2 so it
-    # still carries weight, `grey` rides up toward fg3 so it still recedes.
-    white = mix 0.2 fg2 fg3;
-    grey = mix 0.55 fg2 fg3;
-
-    # Accents: the `*Dark` ramp, which is the dark accents re-cut for a light
-    # background — same hue identity, lightness dropped to clear AA-normal on
-    # `bg0`, saturation raised to compensate (a 30%-saturated hue reads as
-    # tinted grey once it is this dark).
-    red = dark.redDark;
-    green = dark.greenDark;
-    yellow = dark.yellowDark;
-    orange = dark.orangeDark;
-    blue = dark.blueDark;
-    pink = dark.pinkDark;
-
-    # Muted at-rest tint (niri inactive borders, walker, the lock ring at
-    # rest). dark's `463030` is its own bg tinted red, so mirror that
-    # construction on cream rather than reusing a dark maroon.
-    mid = mix 0.18 bg2 red;
-
-    accent = orange;
-    border = red;
-    urgent = red;
-    success = green;
-    warning = orange;
-    failure = red;
-    info = blue;
-  };
+  # The active scheme. This is the only theme switch: every surface follows
+  # it, on both the home-manager and the NixOS side.
+  scheme = "kintsugi";
 in
 rec {
-  # The active variant. This is the theme switch: every surface follows it,
-  # on both the home-manager and the NixOS side.
-  variant = "dark";
+  inherit scheme;
 
-  inherit dark light;
+  # Names of every scheme available, so a consumer can enumerate them.
+  schemeNames = builtins.attrNames schemes;
 
-  colors = if variant == "light" then light else dark;
+  inherit (active) colors syntax;
 
-  # The base16 scheme stylix consumes, built straight from a palette. stylix
-  # takes an attrset here, so no upstream yaml sits underneath this theme and
-  # no `stylix.override` is needed to paint over one.
+  # The base16 attrset stylix consumes, built straight from the palette.
+  # stylix takes an attrset here, so no upstream yaml sits underneath this
+  # theme and no `stylix.override` is needed to paint over one.
   #
-  # The base08-0F mapping is a deliberate syntax-highlight choice, not the
-  # base16 default: base08 is the theme's orange (self, fields, variables),
-  # base0D its green (calls, methods), base0E its red (keywords). Helix
-  # repeats this mapping in `modules/dev/helix/themes.nix`.
-  mkScheme =
-    name:
+  # The default base08-0F mapping is a deliberate syntax-highlight choice,
+  # not the base16 default. A scheme that ports an existing editor theme
+  # publishes its own `base16` attrset, merged over these, so the port keeps
+  # upstream's highlighting instead of borrowing a mapping built for a
+  # different palette. `palettes/kintsugi.nix` does this.
+  base16Scheme =
     let
-      c = if name == "light" then light else dark;
+      c = colors;
     in
     {
       scheme = "dotfiles";
       author = "jd";
-      slug = "dotfiles-${name}";
-      variant = name;
+      slug = "dotfiles-${scheme}";
+      variant = "dark";
 
       base00 = c.bg0;
       base01 = c.bg1;
@@ -253,17 +72,22 @@ rec {
       base0D = c.green; # println!, methods
       base0E = c.red; # pub, impl, &, &mut
       base0F = c.fg2;
-    };
+    }
+    // (active.base16 or { });
 
-  # Drafting Mono everywhere. The fonts flake patches it with the Nerd Font
-  # icon set while keeping the plain "Drafting Mono" family name, so icons
-  # come straight from the primary face at its own metrics. `serif`
-  # deliberately holds the same family (a fully monospaced desktop); the
-  # fallback chains in theming/fonts.nix + system/fonts.nix add only an icon
-  # backup and the math glyph coverage Drafting Mono lacks. No serif fallback.
+  # IoskeleyMono everywhere, the Term + Nerd Font Mono build vendored in the
+  # fonts flake (see its comment for why that variant). Its TTFs already
+  # carry the Nerd Font icon set at one cell per icon, so icons come straight
+  # from the primary face. `serif` deliberately holds the same family (a
+  # fully monospaced desktop). The fallback chains in theming/fonts.nix +
+  # system/fonts.nix add only an icon backup and the math glyph coverage
+  # IoskeleyMono lacks. No serif fallback.
+  #
+  # Fonts, borders, shadows and the wallpaper sit outside the scheme on
+  # purpose: they are the same design whichever palette paints it.
   fonts = {
-    mono = "Drafting Mono";
-    serif = "Drafting Mono";
+    mono = "IoskeleyMonoTerm Nerd Font Mono";
+    serif = "IoskeleyMonoTerm Nerd Font Mono";
   };
 
   border-style = {
@@ -271,7 +95,9 @@ rec {
     # (geometry-corner-radius), CSS consumers take the int (greeter, walker).
     radius-float = 4.0;
     radius-int = 4;
-    width = 2;
+    # Every border in the desktop reads this: niri window borders, walker,
+    # the greeter box and the hyprlock rings.
+    width = 1;
   };
 
   # Shared shadow opacity, applied to every shadow color via
@@ -286,7 +112,7 @@ rec {
 
   # Color-format helpers for consumer modules.
   themeLib = {
-    inherit
+    inherit (plib)
       rgbDec
       rgbCss
       mix

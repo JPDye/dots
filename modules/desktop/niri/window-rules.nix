@@ -17,47 +17,9 @@ in
 {
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
     # These ride the extraConfig escape hatch because niri-flake's settings
-    # schema predates them (blur, is-floating matches and per-rule shadows are
-    # all niri 26.04+). `blur` is the master switch: niri renders blur as
-    # `requested && !blur.off` (background_effect.rs), so `on` only permits
-    # blur. Each surface still opts in over ext-background-effect-v1, and the
-    # window-rules below do that opting in on the app's behalf. The
-    # block takes on/off, passes, noise and saturation and nothing else. It
-    # has no radius node. Per-surface control is a separate node, and it is
-    # `background-effect { blur ... }` on a window-rule or layer-rule.
+    # schema predates them (is-floating matches and per-rule shadows are both
+    # niri 26.04+).
     dotfiles.desktop.niri.extraConfig = ''
-      blur {
-          on
-          passes 4
-          noise 0.02
-          saturation 1.0
-      }
-
-      // The master switch only permits blur. A surface still has to ask for
-      // it over ext-background-effect-v1, and almost no app asks, so these
-      // rules ask on the app's behalf. `background-effect` is absent from
-      // niri-flake's typed window-rule schema, so it cannot live in
-      // window-rules below. Order also forces it here: niri applies later
-      // rules last, extraConfig is appended after the rendered settings, and
-      // the firefox opt-out must follow the global opt-in.
-      window-rule {
-          background-effect {
-              blur true
-          }
-      }
-      // `xray` is deliberately unset. niri defaults it to true whenever any
-      // background effect is active (background_effect.rs: "since it's
-      // cheaper"), and xray samples the wallpaper rather than the windows
-      // stacked behind. A blurred wallpaper is the wanted look here, so do
-      // not "fix" this by adding `xray false`.
-
-      window-rule {
-          match app-id="^firefox$"
-          background-effect {
-              blur false
-          }
-      }
-
       // Floating windows hover over other (often dark) windows, so they get
       // the popup treatment: a hard-edged halo lighter than the tiled bg0
       // shadow (which just masks the gaps and would vanish against dark
@@ -75,7 +37,7 @@ in
           }
           shadow {
               on
-              spread 8
+              spread 4
               softness 0
               offset x=0 y=0
               color "#${float-shadow}"
@@ -106,25 +68,12 @@ in
 
           clip-to-geometry = true;
           draw-border-with-background = false;
-          # Near-opaque baseline. niri fades the whole surface, text
-          # included, so this stays close to 1.0. It is also the aperture for
-          # the blur: the effect draws behind the window, so only 1 - opacity
-          # of it shows. A per-app rule can set 1.0 back.
-          opacity = 0.92;
         }
         {
           matches = [ { title = "Firefox"; } ];
           default-column-width = {
             proportion = 1.0;
           };
-        }
-        {
-          # Firefox opts out of the translucent baseline. An opaque window
-          # shows nothing behind it, so this also hides any blur under it.
-          # niri 26.04 has no per-window blur node, so opacity is the only
-          # per-app control available.
-          matches = [ { app-id = "^firefox$"; } ];
-          opacity = 1.0;
         }
         {
           matches = [ { app-id = "Spotify"; } ];
@@ -204,6 +153,20 @@ in
             {
               app-id = "^firefox$";
               title = "(?i)passkey|security key|sign in|authenticat";
+            }
+          ];
+          open-floating = true;
+        }
+        {
+          # File managers are browse-and-go windows, so they float instead of
+          # claiming a column. Nautilus is the one actually installed here
+          # (pacman on laptop-arch, and the xdg default for inode/directory).
+          # The others are listed so a host that gains one needs no edit.
+          # Width, border and shadow come from the is-floating rule in
+          # extraConfig above.
+          matches = [
+            {
+              app-id = "(?i)^(org\\.gnome\\.Nautilus|thunar|org\\.kde\\.dolphin|nemo|pcmanfm(-qt)?|io\\.elementary\\.files)$";
             }
           ];
           open-floating = true;

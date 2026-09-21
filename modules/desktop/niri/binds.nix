@@ -250,7 +250,6 @@ in
       # Ctrl+Q is intentionally left unbound here (and unbound in zellij) so it
       # reaches the focused app — Helix uses it to silence/restore typos-lsp.
 
-      "Mod+Shift+O".action.toggle-window-rule-opacity = [ ];
       "Mod+O".action.toggle-overview = [ ];
 
       # The recent-windows switcher (niri 25.11+) needs no binds: Alt+Tab,

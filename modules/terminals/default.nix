@@ -63,10 +63,11 @@ in
       "alacritty"
       "ghostty"
     ];
-    default = "alacritty";
+    default = "ghostty";
     description = ''
       Which terminal is installed, themed, and launched by Mod+Return, walker,
-      and the work-layout. Flip to "ghostty" to switch back.
+      and the work-layout. Flip to "alacritty" to switch back. ghostty is the
+      default because alacritty renders no ligatures at all, by design.
     '';
   };
 

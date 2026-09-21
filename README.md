@@ -191,10 +191,10 @@ Notes:
 ├── installer/                # bootable ISO (iso.nix) + install-host.sh + host-template/
 ├── pkgs/                     # local packages (zoo-design-studio, from the official AppImage)
 ├── caches.nix                # source of truth for extra binary caches (see flake.nix nixConfig)
-├── fonts/                    # local flake exposing IoskeleyMono
+├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono
 ├── eww/                      # eww widgets, symlinked out-of-store so they are hand-editable
 ├── wallpapers/               # background images (berries.jpg is the default; its blur is derived at build time)
-└── shaders/                  # cursor_warp.glsl (used by ghostty when it's the active terminal)
+└── shaders/                  # rectangle_boom_cursor.glsl (ghostty), niri open/close shaders
 ```
 
 ---
@@ -251,7 +251,7 @@ The modules/system highlights:
 - **Services:** `tailscale`, `tlp` (AC perf / battery powersave 0–20%, charge thresholds 40–80%), `upower` (hibernate at 5%), `pipewire` (with PulseAudio compat + 32-bit ALSA), `blueman`, `niri`, `dbus` with portals (wlr/gtk/gnome), `wireshark` (CLI), `docker` (rootless) and `podman`.
 - **Hardware:** AMD CPU (`kvm-amd`, microcode), OpenGL + 32-bit, Bluetooth on at boot.
 - **Caches:** `cache.nixos.org`, `helix.cachix.org`, `niri.cachix.org` configured system-wide so non-trusted users can use them. Set in `modules/system/nix.nix` from `caches.nix`, not in the host file.
-- **System fonts:** IoskeleyMono Nerd Font (default mono/serif/sans), Fira Code Nerd Font Mono, Lora, Font Awesome, Input Fonts.
+- **System fonts:** IoskeleyMonoTerm Nerd Font Mono (default mono/serif/sans, v2.1.0 vendored in the local `fonts/` flake, single-cell icons baked into its own TTFs), Drafting Mono, 0xProto Nerd Font Mono, Martian Mono Nerd Font, Fira Code Nerd Font Mono, Luxi Mono, Lora, Font Awesome, Input Fonts.
 
 On Arch the equivalent is whatever `pacman` / `systemctl --user` arrangement you already have — this flake does not try to manage system-level services on non-NixOS hosts. The root daemons the shared config expects there come from `pacman`:
 
@@ -321,10 +321,14 @@ Not every file follows it. A module that only publishes `_module.args` or option
 
 | Module | What it does |
 |--------|--------------|
-| `theme.nix` | Shared colour palette + font name + border tokens. Exposed via `_module.args` so siblings can `inherit (specialArgs) colors monoFont border-style`. Gruvbox-dark-ish: `bg0=1c1c1c`, `fg0=fbf1c7`, accents `red af5f5f`, `green 87875f`, `yellow a8a05f`, `orange af875f`, `blue 5f8787`, `pink b78f8f`. |
+| `palette.nix` | **Source of truth for every theme token, and the two switches.** `scheme` picks which palette under `palettes/` supplies the hues (`gruvbox` or `kintsugi`); `variant` picks that scheme's `dark` or `light` cut. A plain function, not a module, so NixOS-scoped surfaces (greeter, fontconfig) can `import` it directly. Also holds the scheme-independent tokens: fonts, `border-style`, `shadow-style`, wallpaper, and `mkScheme` (the base16 attrset stylix consumes). |
+| `palette-lib.nix` | Pure colour maths shared by every scheme: `mix`, `saturate`, `alpha`, `rgbDec`, `rgbCss`, and the `vividPush` knob. Scheme files take it as `plib` and stay plain data. |
+| `palettes/gruvbox.nix` | The original scheme. Gruvbox-dark-ish: `bg0=1c1c1c`, `fg0=fbf1c7`, accents `red af5f5f`, `green 87875f`, `yellow a8a05f`, `orange af875f`, `blue 5f8787`, `pink b78f8f`. Its `light` cut is the dark one reflected. |
+| `palettes/kintsugi.nix` | **Active scheme.** Kintsugi Dark/Light *Flared*, ported from [vscode-kintsugi] by ahatem (who also made IoskeleyMono, this flake's font). `bg0=161618`, `fg0=dddddd`, accents from upstream's own ANSI mapping, plus the signature gold `dbad49` as `orange`/`accent`/`border`. Unlike gruvbox, its `light` cut is upstream's real Light-Flared theme, not a reflection. |
+| `theme.nix` | Publishes the active palette to home-manager via `_module.args`, so siblings can `inherit (specialArgs) colors monoFont border-style`. Also exposes `colorsDark`/`colorsLight` for modules that need both at once, and `base16Scheme` for stylix. |
 | `stylix.nix` | Base16 theming via [stylix]. Scheme: built from `palette.nix` by `mkScheme` and passed to stylix as an attrset, so no upstream base16 yaml sits under the theme and no `stylix.override` is needed. Wallpaper: `dotfiles.theme.wallpaper`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
 | `wallpaper.nix` | `dotfiles.theme.wallpaper` — single source of truth for the wallpaper image (default `wallpapers/berries.jpg`, set in `palette.nix`), consumed by awww, stylix and hyprlock. `dotfiles.theme.wallpaperBlurred` defaults to a build-time ImageMagick gaussian blur (sigma 4) of it, shown by `swaybg` in the niri backdrop; set it to a file for a hand-made blur. |
-| `fonts.nix` | Installs Nerd Fonts (fira-code, droid-sans-mono, symbols-only), Cascadia Code, Siji, plus IoskeleyMono from the local `fonts/` flake. Sets fontconfig fallback chain. |
+| `fonts.nix` | Installs Nerd Fonts (0xproto, martian-mono, fira-code, droid-sans-mono, symbols-only), Cascadia Code, Siji, plus IoskeleyMono — the default family — with Drafting Mono and Luxi Mono from the local `fonts/` flake. Sets fontconfig fallback chain. |
 
 ### Desktop / Wayland (`modules/desktop/`)
 
@@ -349,8 +353,8 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 
 | Module | Notes |
 |--------|-------|
-| `alacritty.nix` | **Active terminal** (`primary` default). Shell `zellij`. Beam cursor, blinking. Custom 16-colour ANSI palette mapped to `theme.nix` (overrides the palette stylix sets via its alacritty target). |
-| `ghostty.nix` | Alternative terminal — select with `dotfiles.terminals.primary = "ghostty"`. Command `zellij`, bar cursor, custom shader `shaders/cursor_warp.glsl`, 16-colour palette mapped to `theme.nix`. On Arch niri spawns it via `nixGL ghostty`. |
+| `alacritty.nix` | Alternative terminal — select with `dotfiles.terminals.primary = "alacritty"`. Shell `zellij`. Beam cursor, blinking. Custom 16-colour ANSI palette mapped to `theme.nix` (overrides the palette stylix sets via its alacritty target). |
+| `ghostty.nix` | **Active terminal** (`primary` default, chosen because alacritty renders no ligatures). Command `zellij`, bar cursor, custom shader `shaders/cursor_warp.glsl`, 16-colour palette mapped to `theme.nix`. On Arch niri spawns it via `nixGL ghostty`. |
 | `zellij.nix` | Default shell `nushell`, compact layout, no frames, no startup tips. Unbinds `Ctrl+h` (so it falls through to nushell's BackspaceWord). Custom theme using palette colours. |
 
 ### Shell (`modules/shell/`)
@@ -712,3 +716,4 @@ nh clean all                                                    # gc, respecting
 The store cannot hold a setuid binary, so the fix is a symlink to Arch's helper, not a copy. `/run` is a tmpfs, so the link is a `/etc/tmpfiles.d` rule that systemd recreates at every boot. The NixOS hosts need none of this: `security.pam.services.hyprlock` in `modules/system/desktop.nix` handles it. Failed attempts also increment `pam_faillock`, so the setup script resets those counters at the end.
 
 **niri rejects an option I added — `programs.niri.settings.<X> does not exist`.** The niri-flake HM module's typed schema is pinned to a niri version that may lag the upstream KDL grammar (e.g. top-level `blur`, `window-rule { background-effect.blur }`, per-output `layout`). Either bump `inputs.niri`, or put the raw KDL in `dotfiles.desktop.niri.extraConfig` — it's appended to the generated config and re-run through `niri validate` (so mistakes fail the build, not the session). See `modules/desktop/niri/default.nix`.
+[vscode-kintsugi]: https://github.com/ahatem/vscode-kintsugi

@@ -38,7 +38,7 @@ in
 
     stylix = {
       enable = true;
-      polarity = config.dotfiles.theme.variant;
+      polarity = "dark";
 
       image = config.dotfiles.theme.wallpaper;
 
@@ -56,7 +56,10 @@ in
           applications = 14;
           desktop = 14;
           popups = 14;
-          terminal = 14;
+          # One point under the rest. This is the only size the terminal
+          # reads, and ghostty's own font-size step is 1pt, so 13 is exactly
+          # one step down from the 14 the other surfaces use.
+          terminal = 13;
         };
       };
 

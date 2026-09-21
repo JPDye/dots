@@ -19,7 +19,7 @@ in
       enableNushellIntegration = true;
       settings = {
         format = ''
-          [┌](#${colors.bg2})[ ](#${colors.bg2})$username [󰅂 ](#${colors.red})$directory[󰅂](#${colors.orange})$git_branch$git_status[󰅂](#${colors.yellow})$time[󰅂](#${colors.green})
+          [┌](#${colors.bg2})[ ](#${colors.bg2})$username [󰅂 ](#${colors.secondary})$directory[󰅂](#${colors.primary})$git_branch$git_status[󰅂](#${colors.tertiary})$time[󰅂](#${colors.success})
           [└ ](#${colors.bg2})$character
         '';
 
@@ -27,14 +27,14 @@ in
 
         username = {
           show_always = true;
-          style_user = "#${colors.red}";
-          style_root = "#${colors.red}";
+          style_user = "#${colors.secondary}";
+          style_root = "#${colors.urgent}";
           format = "[$user]($style)";
           disabled = false;
         };
 
         directory = {
-          style = "#${colors.orange}";
+          style = "#${colors.primary}";
           format = "[$path ]($style)";
           truncation_length = 3;
           truncation_symbol = "󰇘/";
@@ -48,12 +48,12 @@ in
 
         git_branch = {
           symbol = "";
-          style = "#${colors.yellow}";
+          style = "#${colors.tertiary}";
           format = "[ $symbol $branch]($style)";
         };
 
         git_status = {
-          style = "#${colors.yellow}";
+          style = "#${colors.tertiary}";
           format = "[$all_status$ahead_behind ]($style)";
           modified = "!";
           untracked = "?";
@@ -70,7 +70,7 @@ in
         time = {
           disabled = false;
           time_format = "%R";
-          style = "#${colors.green}";
+          style = "#${colors.success}";
           format = "[  $time ]($style)";
         };
 

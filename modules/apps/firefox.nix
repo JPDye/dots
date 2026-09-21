@@ -24,7 +24,7 @@ in
 
         font = {
           family = monoFont;
-          accent = "#${colors.red}";
+          accent = "#${colors.secondary}";
         };
 
         background = {

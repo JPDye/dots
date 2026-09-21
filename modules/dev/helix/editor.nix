@@ -45,10 +45,9 @@
       ];
 
       settings = {
-        # Follows the system polarity. mkForce overrides the theme stylix
-        # injects; both variants are defined standalone in themes.nix, so the
-        # other one stays available at runtime via `:theme`.
-        theme = lib.mkForce "stylix-${config.dotfiles.theme.variant}";
+        # mkForce overrides the theme stylix injects. themes.nix defines
+        # this one standalone from the active scheme's palette.
+        theme = lib.mkForce "stylix";
 
         keys = {
           normal = {

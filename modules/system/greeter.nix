@@ -123,7 +123,7 @@ in
 
         # Adwaita follows the palette polarity, so the box's own widget
         # colours (entry fields, the session dropdown) match the fill above.
-        GTK.application_prefer_dark_theme = palette.variant == "dark";
+        GTK.application_prefer_dark_theme = true;
       };
 
       # niri-window styling for the login box (see loginBoxCss above). Written

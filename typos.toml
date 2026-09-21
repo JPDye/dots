@@ -31,4 +31,7 @@ extend-exclude = [
   # mandates American spelling, so the en-gb prose rule must not touch it.
   "modules/dev/ste-writing/*",
   "modules/dev/claude-user-memory.md",
+  # Verbatim third-party licence text. Its terms forbid modification, and it
+  # is American-spelled, so the en-gb prose rule must not touch it either.
+  "fonts/luxi-mono/LICENSE.txt",
 ]

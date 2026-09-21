@@ -72,9 +72,9 @@ in
         @define-color bright_fg_color #${colors.fg0};
         @define-color dark_fg_color   #${colors.fg2};
         @define-color border_color    #${colors.border};
-        @define-color mid_color       #${colors.mid};
-        @define-color green_color     #${colors.green};
-        @define-color orange_color    #${colors.orange};
+        @define-color neutral_color   #${colors.neutral};
+        @define-color success_color   #${colors.success};
+        @define-color accent_color    #${colors.accent};
         @define-color error_bg_color  #${colors.urgent};
         @define-color error_fg_color  #${colors.fg0};
 
@@ -173,7 +173,7 @@ in
            so the colour reads. */
         .item-subtext {
           font-size: 12px;
-          color: @green_color;
+          color: @success_color;
           opacity: 0.9;
         }
 
@@ -193,7 +193,7 @@ in
         }
 
         .preview {
-          border: 1px solid @mid_color;
+          border: 1px solid @neutral_color;
           border-radius: 0;
           padding: 8px;
           color: @dark_fg_color;
@@ -250,7 +250,7 @@ in
         .keybind-label {
           padding: 2px 4px;
           border-radius: 0;
-          border: 1px solid @orange_color;
+          border: 1px solid @accent_color;
         }
 
         .error {

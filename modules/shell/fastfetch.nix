@@ -18,18 +18,20 @@ let
   # };
 
   # Row of palette dots bracketing the output, derived from the theme so a
-  # re-skin propagates here.
+  # re-skin propagates here. These name semantic roles, not hues: a hue name
+  # means a different colour in each scheme, so `pink` drew a lilac under
+  # kintsugi and a rose under gruvbox.
   paletteDots = {
     type = "custom";
     format = lib.concatMapStringsSep "  " (c: "{#38;2;${themeLib.rgbDec c}}●") (
       with colors;
       [
-        red
-        orange
-        yellow
-        green
-        blue
-        pink
+        primary
+        secondary
+        tertiary
+        info
+        neutral
+        grey
       ]
     );
   };
@@ -54,12 +56,12 @@ in
           };
 
           color = {
-            "1" = "#${colors.red}";
-            "2" = "#${colors.red}";
-            "3" = "#${colors.orange}";
-            "4" = "#${colors.orange}";
-            "5" = "#${colors.green}";
-            "6" = "#${colors.green}";
+            "1" = "#${colors.tertiary}";
+            "2" = "#${colors.tertiary}";
+            "3" = "#${colors.secondary}";
+            "4" = "#${colors.secondary}";
+            "5" = "#${colors.primary}";
+            "6" = "#${colors.primary}";
           };
         };
 
@@ -67,7 +69,7 @@ in
           separator = " · ";
 
           color = {
-            keys = "#${colors.orange}";
+            keys = "#${colors.accent}";
           };
 
           key = {
@@ -76,6 +78,7 @@ in
         };
 
         modules = [
+          "break"
           "break"
           "break"
           "break"
@@ -142,16 +145,8 @@ in
           # }
 
           "break"
-          "break"
 
           paletteDots
-
-          "break"
-          "break"
-          "break"
-          "break"
-          "break"
-          "break"
         ];
       };
     };
