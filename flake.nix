@@ -419,6 +419,82 @@
           h: (hmOptions.${h}.home.packages.type.name or null) != null
         ) (nixosHosts ++ homeHosts)) "hmOptions no longer resolves for every host";
         pkgs.runCommand "hmOptions-check" { } "touch $out";
+
+      # `nix flake init -t .#<lang>` targets. Two other files must name the
+      # same set by hand and cannot import this attrset: the CI pin-bitrot
+      # step in .github/workflows/check.yml and the Nushell scaffolders in
+      # modules/shell/nushell/scaffolds.nu. `templates-in-sync` below fails
+      # `nix flake check` when either drifts, or when a template ships no
+      # .envrc (the scaffolder runs `direnv allow` unconditionally).
+      templates = {
+        rust = {
+          path = ./templates/rust;
+          description = "Rust dev shell (non-flake shell.nix; rust-overlay, mold, common cargo tools)";
+        };
+        python = {
+          path = ./templates/python;
+          description = "Python dev shell (uv, ruff, basedpyright)";
+        };
+        go = {
+          path = ./templates/go;
+          description = "Go dev shell (gopls, delve, golangci-lint)";
+        };
+        typst = {
+          path = ./templates/typst;
+          description = "Typst dev shell (typst, tinymist, typstyle)";
+        };
+        c = {
+          path = ./templates/c;
+          description = "C23 dev shell (clang, clangd, sanitizers, valgrind, gdb)";
+        };
+      };
+
+      # Same shape as caches-in-sync: read the two hand-maintained files,
+      # extract the template names they mention, and assert set equality
+      # with `templates`. Also assert every template ships an .envrc.
+      templates-in-sync =
+        let
+          inherit (nixpkgs) lib;
+          sortStr = lib.sort (a: b: a < b);
+          expected = sortStr (builtins.attrNames templates);
+
+          # Every first capture group of `re` in `text`, deduplicated.
+          # builtins.split yields match groups as singleton lists; keep those
+          # and take the captured string.
+          capture =
+            re: text: lib.unique (map builtins.head (builtins.filter builtins.isList (builtins.split re text)));
+
+          # The CI step names each template as a `templates/<name>` path (one
+          # command per template, no loop, so the literal is visible here).
+          ciNames = sortStr (
+            capture "templates/([a-z0-9]+)" (builtins.readFile ./.github/workflows/check.yml)
+          );
+
+          # Each scaffolder calls `scaffold "<name>"`.
+          nuNames = sortStr (
+            capture ''scaffold "([a-z0-9]+)"'' (builtins.readFile ./modules/shell/nushell/scaffolds.nu)
+          );
+
+          # A template with no .envrc breaks its scaffolder at `direnv allow`.
+          # pathExists sees only git-tracked files, so an untracked .envrc
+          # fails here too, which is the reminder to `git add` it.
+          missingEnvrc = builtins.filter (n: !(builtins.pathExists (templates.${n}.path + "/.envrc"))) (
+            builtins.attrNames templates
+          );
+        in
+        assert lib.assertMsg (ciNames == expected) ''
+          .github/workflows/check.yml template step is out of sync with flake.nix `templates`.
+            named in check.yml:  ${lib.concatStringsSep ", " ciNames}
+            expected (flake.nix): ${lib.concatStringsSep ", " expected}'';
+        assert lib.assertMsg (nuNames == expected) ''
+          modules/shell/nushell/scaffolds.nu is out of sync with flake.nix `templates`.
+            scaffolders present:  ${lib.concatStringsSep ", " nuNames}
+            expected (flake.nix): ${lib.concatStringsSep ", " expected}'';
+        assert lib.assertMsg (missingEnvrc == [ ]) ''
+          These templates ship no .envrc, so their init-<name> scaffolder fails at `direnv allow`:
+            ${lib.concatStringsSep ", " missingEnvrc}
+          Add templates/<name>/.envrc (copy templates/go/.envrc) and `git add` it.'';
+        pkgs.runCommand "templates-in-sync" { } "touch $out";
     in
     {
       nixosConfigurations = nixosConfigs;
@@ -448,7 +524,7 @@
       # lists so a new host gets a check for free.
       checks.${system} = {
         pre-commit = pre-commit-check;
-        inherit caches-in-sync;
+        inherit caches-in-sync templates-in-sync;
         installer-template = installerTemplate.config.system.build.toplevel;
         hm-options = hmOptions-check;
       }
@@ -464,27 +540,6 @@
         buildInputs = pre-commit-check.enabledPackages;
       };
 
-      templates = {
-        rust = {
-          path = ./templates/rust;
-          description = "Rust dev shell (non-flake shell.nix; rust-overlay, mold, common cargo tools)";
-        };
-        python = {
-          path = ./templates/python;
-          description = "Python dev shell (uv, ruff, basedpyright)";
-        };
-        go = {
-          path = ./templates/go;
-          description = "Go dev shell (gopls, delve, golangci-lint)";
-        };
-        typst = {
-          path = ./templates/typst;
-          description = "Typst dev shell (typst, tinymist, typstyle)";
-        };
-        c = {
-          path = ./templates/c;
-          description = "C23 dev shell (clang, clangd, sanitizers, valgrind, gdb)";
-        };
-      };
+      inherit templates;
     };
 }

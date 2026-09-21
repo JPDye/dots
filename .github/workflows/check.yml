@@ -60,16 +60,21 @@ jobs:
       - name: Build lightweight checks
         run: nix build --no-link .#checks.x86_64-linux.pre-commit .#checks.x86_64-linux.caches-in-sync
 
-      # The four project templates are pinned independently of the root
-      # flake (go/python/typst carry their own flake.lock; rust/shell.nix
-      # pins nixpkgs + rust-overlay inline by rev+hash). The root flake
-      # check never evaluates the shells inside them, so a rotten pin
-      # would otherwise surface only on the next `nix flake init` +
-      # direnv reload. Eval-only: instantiates the shell derivations
-      # (fetches pinned source tarballs, builds nothing).
+      # The project templates are pinned independently of the root flake
+      # (go/python/typst carry their own flake.lock; rust and c pin nixpkgs
+      # inline by rev+hash in shell.nix). The root flake check never
+      # evaluates the shells inside them, so a rotten pin would otherwise
+      # surface only on the next `nix flake init` + direnv reload.
+      # Eval-only: instantiates the shell derivations (fetches pinned
+      # source tarballs, builds nothing).
+      #
+      # One command per template, no loop: the `templates-in-sync` flake
+      # check reads this file and asserts every `templates/<name>` path
+      # below matches the `templates` attrset in flake.nix.
       - name: Evaluate templates (pin bitrot guard)
         run: |
-          for t in go python typst; do
-            nix flake check --no-build "path:templates/$t"
-          done
+          nix flake check --no-build path:templates/go
+          nix flake check --no-build path:templates/python
+          nix flake check --no-build path:templates/typst
           nix-instantiate templates/rust/shell.nix
+          nix-instantiate templates/c/shell.nix
