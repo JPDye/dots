@@ -53,24 +53,12 @@ let
     mv "$tmp" "$f"
   '';
 
-  # ASD-STE100 skill (`/asd-ste100`, the `ste100` plugin in the
-  # `byteful-skills` flake input): Simplified Technical English rules for
-  # rewriting ambiguous agent-facing English. SKILL.md points at references/
-  # and examples/, so the whole skill dir is linked as-is below. opencode
-  # scans ~/.claude/skills too, so this one link serves both tools (see
-  # opencode.nix).
-  ste100Skill = "${inputs.byteful-skills}/plugins/ste100/skills/asd-ste100";
-
-  # ste100Skill ships read-only from the flake input. Copy it out and append
-  # our house-rule addendum (em-dash ban, no cataphoric teasers, both
-  # stricter than official STE) to SKILL.md. Same pattern as improveSkill
-  # below.
-  ste100SkillPatched = pkgs.runCommand "ste100-skill" { } ''
-    mkdir -p $out
-    cp -r ${ste100Skill}/. $out/
-    chmod -R u+w $out
-    cat ${./ste-writing/ste100-house-rules-addendum.md} >> $out/SKILL.md
-  '';
+  # ASD-STE100 skill (`/asd-ste100`) with the house-rule addendum, built by
+  # ./ste100-skill.nix and shared with opencode.nix so both agents read one
+  # store path. SKILL.md points at references/ and examples/, so the whole
+  # skill dir is linked as-is below. opencode scans ~/.claude/skills too, so
+  # this one link serves both tools.
+  ste100SkillPatched = import ./ste100-skill.nix { inherit pkgs inputs; };
 
   # The user memory below turns the STE100 ruleset on for every reply, but
   # that memory loads once at session start and fades as a long session fills

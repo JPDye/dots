@@ -32,14 +32,18 @@ let
                      'Executor model: the `improve-executor` opencode subagent (gpt-oss-120b via Groq);'
   '';
 
+  # The patched STE100 skill, one store path shared with claude-code.nix.
+  ste100Skill = import ./ste100-skill.nix { inherit pkgs inputs; };
+
   # Global rules (~/.config/opencode/AGENTS.md): the same "STE100 always on"
   # user memory Claude Code gets via ~/.claude/CLAUDE.md, built from the same
   # source file so the two stay in lockstep. opencode does not parse
   # @-imports in rules files, so the @-reference is swapped for the full
-  # STE100 ruleset (frontmatter stripped) at build time. The skill itself
-  # stays invocable as `asd-ste100`: opencode discovers it from
-  # ~/.claude/skills, where claude-code.nix links it from the same
-  # `byteful-skills` input. Do not link a second copy under
+  # STE100 ruleset (frontmatter stripped) at build time. The inlined text is
+  # the patched copy from ./ste100-skill.nix, house rules included, so it
+  # matches what Claude Code reads. The skill itself stays invocable as
+  # `asd-ste100`: opencode discovers it from ~/.claude/skills, where
+  # claude-code.nix links the same store path. Do not link a second copy under
   # ~/.config/opencode/skills: opencode wants skill names unique across every
   # scanned dir and warns on a duplicate.
   agentsMd = pkgs.runCommand "opencode-agents-md" { } ''
@@ -47,7 +51,7 @@ let
       --replace-fail '@~/.claude/skills/asd-ste100/SKILL.md' \
                      '(inlined below from the asd-ste100 skill)'
     awk '/^---$/ && c < 2 { c++; next } c == 2' \
-      ${inputs.byteful-skills}/plugins/ste100/skills/asd-ste100/SKILL.md >> $out
+      ${ste100Skill}/SKILL.md >> $out
   '';
 
   # Flake-owned slice of opencode's config, deep-merged (`jq '.[0] * .[1]'`, so
