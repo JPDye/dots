@@ -32,6 +32,13 @@ fi
 if [[ -n $boot_disk ]]; then
   boot_disk=$(realpath -- "$boot_disk" 2>/dev/null || echo "$boot_disk")
 fi
+# Detection can fail: /iso not mounted where expected, a parent device
+# lsblk cannot name, a network boot. The refusal below then never fires.
+# Say so, instead of silently running without it.
+if [[ -z $boot_disk ]]; then
+  echo "warning: cannot identify the installer medium (no /iso mount, or no parent device for it)." >&2
+  echo "warning: the check that refuses to wipe the boot medium is off for this run." >&2
+fi
 
 echo "Disks:"
 lsblk --nodeps --paths --output NAME,SIZE,MODEL --exclude 7,11
@@ -126,6 +133,18 @@ read -rp "Type the disk path again to confirm: " confirm
 if [[ $confirm != "$disk" ]]; then
   echo "aborted" >&2
   exit 1
+fi
+# With no known boot medium, $disk may be the stick this installer runs
+# from. The path confirmation above does not catch that, because the user
+# types the path they meant. Ask for a different word, so a reflex retype
+# cannot pass it.
+if [[ -z $boot_disk ]]; then
+  echo "The installer medium is unknown, so $disk may be the medium you booted from." >&2
+  read -rp "Type WIPE in capitals to continue anyway: " confirm_unknown
+  if [[ $confirm_unknown != WIPE ]]; then
+    echo "aborted" >&2
+    exit 1
+  fi
 fi
 
 # ---- Prepare the repo + new host in a temp dir BEFORE touching the disk, so
