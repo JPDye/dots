@@ -5,6 +5,10 @@ result-*
 # Claude Code agent worktrees — local scratch checkouts, never linted/committed
 .claude/worktrees/
 
+# Claude Code per-machine settings for this project. The flake sets the
+# shared defaults in modules/dev/claude-code.nix. Local overrides stay local.
+.claude/settings.local.json
+
 # local-only planning notes — kept on disk, never committed
 plans/
 
