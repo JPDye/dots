@@ -15,6 +15,7 @@ in
       colors
       syntax
       base16Scheme
+      ansi
       ;
 
     monoFont = palette.fonts.mono;

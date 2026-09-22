@@ -194,7 +194,7 @@ Notes:
 ├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono
 ├── eww/                      # eww widgets, symlinked out-of-store so they are hand-editable
 ├── wallpapers/               # background images (berries.jpg is the default; its blur is derived at build time)
-└── shaders/                  # rectangle_boom_cursor.glsl (ghostty), niri open/close shaders
+└── shaders/                  # niri window open/close shaders
 ```
 
 ---

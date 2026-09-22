@@ -1,8 +1,8 @@
 {
+  ansi,
   config,
   lib,
   pkgs,
-  colors,
   ...
 }:
 
@@ -28,28 +28,22 @@ let
     };
   };
 
-  # Canonical 16-slot ANSI palette, mapped to theme colours once here so the
-  # terminal modules render from the same source instead of hand-maintaining
-  # the remap (yellow->orange, cyan->blue, magenta->pink) twice. Standard ANSI
-  # order 0-15 (0-7 normal, 8-15 bright); bare hex, no leading '#'.
-  ansiPalette = [
-    colors.bg0 # 0  black
-    colors.red # 1  red
-    colors.green # 2  green
-    colors.orange # 3  yellow  -> orange
-    colors.blue # 4  blue
-    colors.pink # 5  magenta -> pink
-    colors.blue # 6  cyan    -> blue
-    colors.fg2 # 7  white
-    colors.bg3 # 8  bright black
-    colors.red # 9  bright red
-    colors.green # 10 bright green
-    colors.orange # 11 bright yellow  -> orange
-    colors.blue # 12 bright blue
-    colors.pink # 13 bright magenta -> pink
-    colors.blue # 14 bright cyan    -> blue
-    colors.fg0 # 15 bright white
+  # The active scheme's 16-slot ANSI table (palettes/<scheme>.nix). It lives
+  # there rather than here so each scheme can ship its own terminal colours:
+  # the kintsugi scheme uses its upstream theme's terminal.ansi* values,
+  # which deliberately differ from the hues its UI is styled with.
+  ansiPalette = ansi;
+
+  # Terminfo search path. Absolute paths only: nushell takes this value as a
+  # plain string literal, so `$HOME` would never expand. A directory that
+  # does not exist is skipped, so one list covers both NixOS and Arch.
+  terminfoDirs = lib.concatStringsSep ":" [
+    "${config.home.homeDirectory}/.nix-profile/share/terminfo"
+    "/etc/profiles/per-user/${config.home.username}/share/terminfo"
+    "/run/current-system/sw/share/terminfo"
+    "/usr/share/terminfo"
   ];
+
 in
 {
   imports = [
@@ -71,10 +65,26 @@ in
     '';
   };
 
-  # Derived terminal facts the desktop modules consume so the choice lives in
-  # one place.
-  config._module.args = {
-    terminal = byTerminal.${config.dotfiles.terminals.primary};
-    terminalPalette = ansiPalette;
+  config = {
+    # Derived terminal facts the desktop modules consume so the choice lives
+    # in one place.
+    _module.args = {
+      terminal = byTerminal.${config.dotfiles.terminals.primary};
+      terminalPalette = ansiPalette;
+    };
+
+    # ghostty ships its own `xterm-ghostty` terminfo entry, and it installs
+    # into the nix profile. A program that asks ncurses finds it. A program
+    # that does its own terminfo lookup does not: Rust's `term` crate (which
+    # rustfmt uses to colour a `--check` diff) searches only $TERMINFO,
+    # ~/.terminfo, $TERMINFO_DIRS and /usr/share/terminfo, and neither Arch
+    # nor NixOS puts xterm-ghostty in the last of those. The lookup fails,
+    # the crate reports no colour support, and the tool prints plain text.
+    # Naming the profile in TERMINFO_DIRS fixes every such tool at once.
+    home.sessionVariables.TERMINFO_DIRS = terminfoDirs;
+
+    # hm-session-vars.sh is POSIX, and nushell never sources it (see
+    # dev/nh.nix), so nushell needs its own copy of the variable.
+    programs.nushell.environmentVariables.TERMINFO_DIRS = terminfoDirs;
   };
 }

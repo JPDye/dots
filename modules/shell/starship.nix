@@ -18,8 +18,12 @@ in
       enable = true;
       enableNushellIntegration = true;
       settings = {
+        # Each segment and the separator that closes it share one gradient
+        # step, and the steps advance left to right: username, directory,
+        # git, time. Re-ordering gradient1..gradient6 in the active scheme
+        # re-orders the prompt with it, so the sequence lives in one place.
         format = ''
-          [┌](#${colors.bg2})[ ](#${colors.bg2})$username [󰅂 ](#${colors.secondary})$directory[󰅂](#${colors.primary})$git_branch$git_status[󰅂](#${colors.tertiary})$time[󰅂](#${colors.success})
+          [┌](#${colors.bg2})[ ](#${colors.gradient1})$username[ 󰅂 ](#${colors.gradient1})$directory[󰅂](#${colors.gradient2})$git_branch$git_status[󰅂](#${colors.gradient3})$time[󰅂](#${colors.gradient4})
           [└ ](#${colors.bg2})$character
         '';
 
@@ -27,14 +31,15 @@ in
 
         username = {
           show_always = true;
-          style_user = "#${colors.secondary}";
+          style_user = "#${colors.gradient1}";
+          # Root stays on `urgent`: a warning outranks the gradient.
           style_root = "#${colors.urgent}";
           format = "[$user]($style)";
           disabled = false;
         };
 
         directory = {
-          style = "#${colors.primary}";
+          style = "#${colors.gradient2}";
           format = "[$path ]($style)";
           truncation_length = 3;
           truncation_symbol = "󰇘/";
@@ -48,12 +53,12 @@ in
 
         git_branch = {
           symbol = "";
-          style = "#${colors.tertiary}";
+          style = "#${colors.gradient3}";
           format = "[ $symbol $branch]($style)";
         };
 
         git_status = {
-          style = "#${colors.tertiary}";
+          style = "#${colors.gradient3}";
           format = "[$all_status$ahead_behind ]($style)";
           modified = "!";
           untracked = "?";
@@ -70,7 +75,7 @@ in
         time = {
           disabled = false;
           time_format = "%R";
-          style = "#${colors.success}";
+          style = "#${colors.gradient4}";
           format = "[  $time ]($style)";
         };
 

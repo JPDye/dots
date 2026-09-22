@@ -26,12 +26,12 @@ let
     format = lib.concatMapStringsSep "  " (c: "{#38;2;${themeLib.rgbDec c}}●") (
       with colors;
       [
-        primary
-        secondary
-        tertiary
-        info
-        neutral
-        grey
+        gradient1
+        gradient2
+        gradient3
+        gradient4
+        gradient5
+        gradient6
       ]
     );
   };

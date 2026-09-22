@@ -6,7 +6,7 @@
 { lib }:
 
 rec {
-  # Hex colour math for deriving `*Vivid` accents from the base hues.
+  # Hex colour math. `mix` and `alpha` build on these.
   hexChars = lib.stringToCharacters "0123456789abcdef";
   hexValues = builtins.listToAttrs (lib.imap0 (i: c: lib.nameValuePair c i) hexChars);
   toPair =
@@ -39,34 +39,6 @@ rec {
   # "rrggbb" -> "R, G, B", for CSS `rgba(R, G, B, a)`. GTK3 CSS (the greeter)
   # has no reliable 8-digit-hex support, so alpha has to go through rgba().
   rgbCss = hex: builtins.replaceStrings [ ";" ] [ ", " ] (rgbDec hex);
-
-  # Push each channel away from the RGB mean by ±k, so muted hues saturate
-  # without changing their identity (red stays red, blue stays blue).
-  saturate =
-    k: hex:
-    let
-      r = fromPair (builtins.substring 0 2 hex);
-      g = fromPair (builtins.substring 2 2 hex);
-      b = fromPair (builtins.substring 4 2 hex);
-      avg = (r + g + b) / 3;
-      shift =
-        ch:
-        ch
-        + (
-          if ch > avg then
-            k
-          else if ch < avg then
-            -k
-          else
-            0
-        );
-    in
-    toPair (shift r) + toPair (shift g) + toPair (shift b);
-
-  # How far the *Vivid ramp pushes each channel from the RGB mean. One knob:
-  # raise toward 60 for neon, lower for calmer accents. A scheme may ignore
-  # this and pass its own k to `saturate`.
-  vividPush = 15;
 
   # Per-channel linear blend of two "rrggbb" colors; t=0 -> a, t=1 -> b.
   # For in-between shades the palette ramps don't have (e.g. the floating

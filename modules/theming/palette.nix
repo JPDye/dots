@@ -34,7 +34,7 @@ rec {
   # Names of every scheme available, so a consumer can enumerate them.
   schemeNames = builtins.attrNames schemes;
 
-  inherit (active) colors syntax;
+  inherit (active) colors syntax ansi;
 
   # The base16 attrset stylix consumes, built straight from the palette.
   # stylix takes an attrset here, so no upstream yaml sits underneath this
@@ -93,8 +93,9 @@ rec {
   border-style = {
     # Corner radius, one source of truth. niri window-rules take the float
     # (geometry-corner-radius), CSS consumers take the int (greeter, walker).
-    radius-float = 4.0;
-    radius-int = 4;
+    # Square: the desktop is all hard edges.
+    radius-float = 0.0;
+    radius-int = 0;
     # Every border in the desktop reads this: niri window borders, walker,
     # the greeter box and the hyprlock rings.
     width = 1;

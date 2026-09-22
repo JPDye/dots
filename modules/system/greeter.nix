@@ -45,7 +45,7 @@ let
   loginBoxCss = ''
     overlay > frame.background:nth-child(2) {
       background-color: #${colors.bg0};
-      border: ${toString border-style.width}px solid #${colors.border};
+      border: ${toString border-style.width}px solid #${colors.borderActive};
       border-radius: ${toString border-style.radius-int}px;
       box-shadow: 0 0 0 8px rgba(${themeLib.rgbCss colors.bg0}, ${toString shadow-style.opacity});
     }
@@ -105,12 +105,14 @@ in
     services.displayManager.regreet = {
       enable = true;
 
-      # Drafting Mono everywhere, including the login box. Installed
+      # The palette's mono family, including the login box. Installed
       # system-wide in modules/system/fonts.nix, but pin the package here too
-      # so cage's fontconfig is guaranteed to resolve it.
+      # so cage's fontconfig is guaranteed to resolve it. The package has to
+      # be the one that actually ships `palette.fonts.mono`, or the name
+      # resolves to nothing and cage falls back to a default.
       font = {
         name = palette.fonts.mono;
-        package = inputs.myFonts.packages.${system}.drafting-mono;
+        package = inputs.myFonts.packages.${system}.ioskeley;
         size = 14;
       };
 

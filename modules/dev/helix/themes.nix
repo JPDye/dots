@@ -167,12 +167,15 @@ let
     "ui.popup".bg = "base01";
     "ui.selection".bg = "base02";
     "ui.selection.primary".bg = "base02";
+    # The bar sits well under the editor surface rather than on a tint of
+    # it: base01 was one step off base00 and indistinguishable, and the dim
+    # gold rule read as an orange band.
     "ui.statusline" = {
       fg = "base04";
-      bg = "base01";
+      bg = "#${colors.bgSunken}";
     };
     "ui.statusline.inactive" = {
-      bg = "base01";
+      bg = "#${colors.bgSunken}";
       fg = "base03";
     };
     "ui.statusline.normal" = {
@@ -198,7 +201,10 @@ let
       modifiers = [ "bold" ];
     };
     "ui.virtual.whitespace".fg = "base03";
-    "ui.window".bg = "base01";
+    # The rule between splits. base01 sits one step off base00, which is far
+    # too close to see, so it takes the muted gold outline instead — the same
+    # `borderMid` eww's pills use for their rule.
+    "ui.window".bg = "#${colors.borderMid}";
 
     # Taken straight from the active scheme's base16 mapping (colors.nix
     # `mkScheme`) rather than rebuilt from raw accents. A scheme that ports

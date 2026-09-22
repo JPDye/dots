@@ -1,7 +1,7 @@
 {
   colors,
   border-style,
-  themeLib,
+  monoFont,
   config,
   lib,
   pkgs,
@@ -11,10 +11,10 @@
 
 let
   cfg = config.dotfiles.desktop.walker;
-  # The shadow colour fuzzel used: a quarter-step up the bg0->bg1 ramp, opaque.
-  # Drawn as a hard CSS ring (see .box-wrapper) rather than a niri layer-rule
-  # shadow, which doesn't render around walker's layer-shell surface.
-  shadowColor = themeLib.mix 0.25 colors.bg0 colors.bg1;
+  # The shared seam colour from the palette. Drawn as a hard CSS ring (see
+  # .box-wrapper) rather than a niri layer-rule shadow, which doesn't render
+  # around walker's layer-shell surface.
+  shadowColor = colors.shadow;
 in
 {
   # Walker's home-manager module pulls in elephant's module too, so importing
@@ -64,14 +64,15 @@ in
       # A theme dir overrides only the files it ships; walker builds the rest
       # from Theme::default() (which embeds every layout — src/theme/mod.rs). So
       # we ship CSS plus a couple of layout tweaks, styled to match niri windows:
-      # dark fill, 2px red border, square corners, hard CSS shadow.
+      # dark fill, the shared active/inactive border pair, hard CSS shadow.
       themes.niri.style = ''
         @define-color window_bg_color #${colors.bg0};
         @define-color accent_bg_color #${colors.bg3};
         @define-color theme_fg_color  #${colors.fg1};
         @define-color bright_fg_color #${colors.fg0};
         @define-color dark_fg_color   #${colors.fg2};
-        @define-color border_color    #${colors.border};
+        @define-color border_color    #${colors.borderActive};
+        @define-color border_inactive #${colors.borderInactive};
         @define-color neutral_color   #${colors.neutral};
         @define-color success_color   #${colors.success};
         @define-color accent_color    #${colors.accent};
@@ -193,7 +194,7 @@ in
         }
 
         .preview {
-          border: 1px solid @neutral_color;
+          border: 1px solid @border_inactive;
           border-radius: 0;
           padding: 8px;
           color: @dark_fg_color;
@@ -265,7 +266,7 @@ in
 
         .preview-content.archlinuxpkgs,
         .preview-content.dnfpackages {
-          font-family: monospace;
+          font-family: "${monoFont}";
         }
       '';
 

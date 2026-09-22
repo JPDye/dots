@@ -29,7 +29,10 @@ in
           "accent-active" = "${colors.urgent}";
           "accent-inactive" = "${colors.bg3}";
           "banner" = "${colors.accent}";
-          "border-active" = "${colors.border}";
+          # In-app element outlines follow the niri window border, so a
+          # focused thing reads the same whether it is a window, a pane or
+          # a panel inside an app.
+          "border-active" = "${colors.borderActive}";
           "border-inactive" = "${colors.bg2}";
           "header" = "${colors.accent}";
           "highlight" = "${colors.urgent}";

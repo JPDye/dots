@@ -3,15 +3,13 @@
   colors,
   config,
   lib,
-  themeLib,
   ...
 }:
 
 let
-  # Darker than bg1 but still above the bg0 terminal backgrounds the
-  # floats sit on — the palette has no step in between, so blend one a
-  # quarter of the way up the bg0->bg1 ramp.
-  float-shadow = themeLib.mix 0.25 colors.bg0 colors.bg1;
+  # The shared seam colour from the palette: darker than bg1 but still above
+  # the bg0 terminal backgrounds the floats sit on.
+  float-shadow = colors.shadow;
 in
 
 {
@@ -21,9 +19,9 @@ in
     # niri 26.04+).
     dotfiles.desktop.niri.extraConfig = ''
       // Floating windows hover over other (often dark) windows, so they get
-      // the popup treatment: a hard-edged halo lighter than the tiled bg0
-      // shadow (which just masks the gaps and would vanish against dark
-      // windows). The border thins to 1px, matching fuzzel's.
+      // the popup treatment: the border thins to 1px, matching fuzzel's.
+      // The shadow is the same 2px offset seam the tiled layout draws, so
+      // the desktop has one shadow rather than two.
       window-rule {
           match is-floating=true
           // Floats open a touch wider than their natural size. This is just a
@@ -37,13 +35,12 @@ in
           }
           shadow {
               on
-              spread 4
+              spread 0
               softness 0
-              offset x=0 y=0
+              offset x=2 y=2
               color "#${float-shadow}"
-              // Explicit so unfocused floats don't inherit the layout
-              // shadow's bg0 and vanish; focus is already signalled by the
-              // border colour.
+              // Explicit so an unfocused float keeps the same seam. Focus
+              // is already signalled by the border colour.
               inactive-color "#${float-shadow}"
           }
       }

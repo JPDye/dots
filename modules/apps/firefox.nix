@@ -22,9 +22,13 @@ in
       config = {
         tabs.horizontal.enable = false;
 
+        # textfox paints every focused and hovered border from `--tf-accent`,
+        # which this option sets, so the in-app active outline follows the
+        # niri window border. The same variable also colours accent text and
+        # links in the chrome, because textfox has one knob for both.
         font = {
           family = monoFont;
-          accent = "#${colors.secondary}";
+          accent = "#${colors.borderActive}";
         };
 
         background = {

@@ -175,9 +175,9 @@ in
                 monitor = "";
                 path = "${../../avatar.jpg}";
                 size = 120;
-                rounding = 4; # matches the niri window radius
+                rounding = border-style.radius-int; # matches the niri window radius
                 border_size = border-style.width;
-                border_color = "rgb(${colors.border})";
+                border_color = "rgb(${colors.borderActive})";
                 position = "0, 190";
                 halign = "center";
                 valign = "center";
@@ -201,10 +201,12 @@ in
                 monitor = "";
                 size = "388, 428";
                 color = "rgba(${themeLib.alpha shadow-style.opacity colors.bg0})"; # same as niri's shadow colour, at shadow-style.opacity
-                # 8, not 4: the shadow sits 2px outside the card's 2px border,
-                # so its radius is the card's (4) plus the border (2) plus the
-                # spread (2), which keeps the visible ring an even width.
-                rounding = 8;
+                # The shadow sits outside the card's border, so its radius is
+                # the card's plus the border plus the 2px spread, which keeps
+                # the visible ring an even width. A square card needs no such
+                # compensation, so the zero case stays zero.
+                rounding =
+                  if border-style.radius-int == 0 then 0 else border-style.radius-int + border-style.width + 2;
                 border_size = 0;
                 position = "0, -20";
                 halign = "center";
@@ -216,9 +218,9 @@ in
                 monitor = "";
                 size = "380, 420";
                 color = "rgba(${colors.bg0}cc)"; # ~80% smoked glass (darker)
-                rounding = 4;
+                rounding = border-style.radius-int;
                 border_size = border-style.width;
-                border_color = "rgb(${colors.border})"; # niri's active-border red
+                border_color = "rgb(${colors.borderActive})"; # niri's active-border red
                 position = "0, -20";
                 halign = "center";
                 valign = "center";
@@ -234,7 +236,7 @@ in
               valign = "center";
 
               outline_thickness = border-style.width;
-              rounding = 4; # matches the niri window radius
+              rounding = border-style.radius-int; # matches the niri window radius
               fade_on_empty = false;
               placeholder_text = "<i>Enter password</i>";
 
@@ -244,7 +246,7 @@ in
               dots_center = true;
 
               inner_color = "rgba(${colors.bg0}80)"; # dark glass
-              outer_color = "rgb(${colors.neutral})"; # muted at rest, events recolor it
+              outer_color = "rgb(${colors.borderInactive})"; # muted at rest, events recolor it
               font_family = serifFont;
               font_color = "rgb(${colors.fg0})";
               check_color = "rgb(${colors.warning})"; # pulses while PAM checks

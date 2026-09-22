@@ -15,7 +15,7 @@
     dotfiles.desktop.niri.extraConfig = ''
       recent-windows {
           highlight {
-              active-color "#${colors.border}"
+              active-color "#${colors.borderActive}"
               urgent-color "#${colors.warning}"
               padding 16
               corner-radius 0
@@ -80,33 +80,36 @@
         border = {
           enable = true;
           inherit (border-style) width;
-          active.color = "#${colors.border}";
-          inactive.color = "#${colors.neutral}";
+          active.color = "#${colors.borderActive}";
+          inactive.color = "#${colors.borderInactive}";
         };
 
-        # Spread exceeds half the gap (16/2 = 8) so neighbouring windows'
-        # shadows meet across it. softness 0 keeps a hard edge past the
-        # overlap.
+        # A hard offset seam, the same one eww's boxes draw: softness 0
+        # keeps the edge hard, spread 0 keeps the shadow the window's own
+        # size, and the 2px offset is the only thing that shows it. The
+        # colour is the palette's shared `shadow` token rather than bg0,
+        # because an offset shadow has to read against the wallpaper rather
+        # than mask a gap.
         shadow = {
           enable = true;
-          spread = 2;
+          spread = 0;
           softness = 0;
           offset = {
-            x = 0;
-            y = 0;
+            x = 2;
+            y = 2;
           };
 
-          color = "#${colors.bg0}";
-          inactive-color = "#${colors.bg0}";
+          color = "#${colors.shadow}";
+          inactive-color = "#${colors.shadow}";
         };
 
         # Pull windows back toward the screen edges so the outer gap stays
         # at 4px (gaps + strut) while the inner gaps widen.
         struts = {
-          top = 0;
-          bottom = 0;
-          left = 0;
-          right = 0;
+          top = 4;
+          bottom = 4;
+          left = 4;
+          right = 4;
         };
       };
     };

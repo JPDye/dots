@@ -7,26 +7,37 @@
 # are this theme's editor.background, editor.foreground, activityBar.border
 # and activityBar.activeBorder respectively. Upstream also ships plain Dark,
 # non-Flared cuts and a Light set, none of which are ported here.
+
 #
 # Clay differs from plain Dark Flared only in its neutrals, which carry a
 # warm cast. Its `tokenColors` are identical, so the syntax block below is
 # the same either way.
 #
-# Neutrals come from the theme's UI colours, picked by luminance so the
-# bg0->bg3 and fg3->fg0 ramps land on shades upstream actually uses.
+# The fg3->fg0 ramp comes from the theme's UI colours, picked by luminance
+# so it lands on shades upstream actually uses. The bg0->bg3 ramp does not:
+# it is gruvbox's, from github.com/morhetz/gruvbox.
 { plib }:
 
 let
-  inherit (plib) saturate mix vividPush;
+  inherit (plib) mix;
 
   colors = rec {
-    # editor.background (the site's `--bg`), activityBar.background (the
-    # workhorse chrome surface, used 23 times), activityBar.border (used 30
-    # times, and the site's `--border`), list.dropBackground.
-    bg0 = "0c0c0c";
-    bg1 = "181714";
-    bg2 = "2a2a28";
-    bg3 = "3d3830";
+    # The background ramp is gruvbox's, not Kintsugi's: `dark0_hard`,
+    # `dark0`, `dark1` and `dark2` from github.com/morhetz/gruvbox. bg0 is
+    # the default background for terminals, helix and every other surface.
+    # Kintsugi's own neutrals (editor.foldBackground 1c1b17,
+    # activityBar.border 2a2a28, list.dropBackground 3d3830) are no longer
+    # read here. The foreground ramp below is still Kintsugi's own.
+    bg0 = "1d2021"; # dark0_hard
+    bg1 = "282828"; # dark0
+    bg2 = "3c3836"; # dark1
+    bg3 = "504945"; # dark2
+
+    # A sunken background for bars: helix's and zellij's status lines. The
+    # darkest shade in the theme (Clay's editorCursor.background), well
+    # under bg0, so a bar reads as a separate surface rather than a tint of
+    # the editor.
+    bgSunken = "080807";
 
     # Muted at-rest tint (niri inactive borders, walker, the lock ring at
     # rest). Built the same way the light variants build theirs: the
@@ -47,20 +58,46 @@ let
     white = mix 0.2 fg1 fg2;
     grey = mix 0.55 fg1 fg2;
 
-    # Upstream's own ANSI 1-6. `orange` has no ANSI slot, so it holds the
-    # signature Kintsugi gold (activityBar.activeBorder, editorCursor).
-    red = "b38f8f";
+    # Named for the colour each one actually is, not for an ANSI slot. The
+    # ANSI table lower down keeps upstream's own terminal values, so nothing
+    # here has to compromise between the two: `red` is upstream's `keyword`
+    # colour, `pink` its `string` colour, and `orange` its keyword.operator
+    # colour, a true orange at hue 25.
+    red = "D66848";
     green = "a3be8c";
-    yellow = "ebcb8b";
-    orange = "dbad49";
+    yellow = goldDeep;
+    orange = "E08542";
     blue = "6c7a8a";
-    pink = "b3a3d3";
-    # Upstream's keyword.operator / support.* orange. It has no ANSI slot,
-    # so it lives here as its own hue rather than displacing `orange`, which
-    # holds the signature gold.
-    amber = "E08542";
+    pink = "cc7f66";
 
-    # A deeper gold than `orange`. This theme's activityBar.activeBorder and
+    # The pale gold. Upstream's ANSI yellow, and what it paints
+    # editorWarning.foreground and gitDecoration.modified in. Named rather
+    # than dropped when `yellow` moved down to goldDeep.
+    paleGold = "ebcb8b";
+    # The signature kintsugi gold, hue 41.
+    gold = "dbad49";
+    amber = orange; # alias, for styling that spells it that way
+
+    # Descriptive aliases for the two hues above, kept so styling can spell
+    # them either way. The warm ramp runs
+    # yellow -> gold -> goldDeep -> orange -> salmon -> coral.
+    coral = red;
+    salmon = pink;
+
+    # Warm surface ramp, `--w-1` to `--w-8` on the IoskeleyMono site. These
+    # are site values, not Kintsugi theme values: the theme file has no such
+    # ramp. They are the gold-tinted darks the site's `.os-pill` badge is
+    # built from (background `warm2`, border `warm6`, text `goldDeep`).
+    warm1 = "0e0c08";
+    warm2 = "18150d";
+    warm3 = "1a160d";
+    warm4 = "201b12";
+    warm5 = "2e2518";
+    warm6 = "3d2e10";
+    warm7 = "5a4418";
+    warm8 = "6b5128";
+
+    # A deeper gold than `gold`. This theme's activityBar.activeBorder and
     # focusBorder, and the colour the IoskeleyMono site sets as its
     # `--accent`.
     goldDeep = "b8943a";
@@ -69,33 +106,30 @@ let
     # so it comes from the site's own stylesheet.
     goldDeepHover = "a07d2a";
 
-    # Readable on light bg: the Light-Flared theme's ANSI set, which is
-    # exactly that set of hues re-cut for cream. `orangeDark` takes the
-    # light theme's editorWarning gold.
-    redDark = "8a5050";
-    greenDark = "5a8a40";
-    yellowDark = "9a7820";
-    orangeDark = "8a7830";
-    blueDark = "5a6870";
-    pinkDark = "785898";
+    # The hard seam colour every surface draws its shadow in: darker than
+    # bg0, so a shadow reads as depth below the background rather than a
+    # lighter seam above it. This is Clay's own editor.background, which sits
+    # well clear of the bg ramp. niri's float rule, walker's CSS ring and
+    # eww's boxes all read this, so the desktop has one shadow, not three
+    # near-copies derived in three files.
+    shadow = "0c0c0c";
 
-    # Readable on dark bg: upstream's bright-ANSI set. Gold has no bright
-    # slot, so `orangeLight` is the gold lifted toward fg0.
-    redLight = "d9a6a6";
-    greenLight = "c3de9c";
-    yellowLight = "fbe4a8";
-    orangeLight = mix 0.4 orange fg0;
-    blueLight = "8fa3b3";
-    pinkLight = "d3a3d3";
+    # Outline roles. A muted gold rule and its hover state, sitting well
+    # below `border` in prominence. These are the site's
+    # `--w-6` and `--w-7`, the shades its own bordered boxes use.
+    borderMid = warm6;
+    borderMidHover = warm7;
 
-    # Vivid shades — base hues with each channel pushed ±vividPush from the
-    # RGB mean. Same identity as the base accents, just saturated to pop.
-    redVivid = saturate vividPush red;
-    greenVivid = saturate vividPush green;
-    yellowVivid = saturate vividPush yellow;
-    orangeVivid = saturate vividPush orange;
-    blueVivid = saturate vividPush blue;
-    pinkVivid = saturate vividPush pink;
+    # Gradient ramp. Consumers walk gradient1..gradient6 in order for a
+    # sweep across the palette, without knowing which scheme is active.
+    # The ordering is a deliberate choice per scheme, not a computed one:
+    # tune it here and every consumer follows.
+    gradient1 = red;
+    gradient2 = orange;
+    gradient3 = pink;
+    gradient4 = yellow;
+    gradient5 = green;
+    gradient6 = blue;
 
     # ---- Semantic roles ----------------------------------------------
     # Style with these, never with the hue names above. A hue name means a
@@ -105,23 +139,57 @@ let
     # `modules/terminals/default.nix` genuinely needs 16 named hues.
     #
     # Accent ramp, most to least prominent.
-    primary = orange; # dbad49, the signature kintsugi gold
-    secondary = amber; # E08542, a true orange
-    tertiary = red; # b38f8f, a rose
+    primary = gold; # dbad49, the signature kintsugi gold
+    secondary = orange; # E08542, a true orange
+    tertiary = coral; # D66848, the theme's real red
 
-    # The pale gold sits outside the ramp, as the accent. It is the colour
-    # the IoskeleyMono site leans on, and `border` follows it so focused
-    # windows, panes and the launcher all read the same.
-    accent = yellow; # ebcb8b, pale gold
-    border = accent; # focused/active borders, in every surface
+    # `yellow` is goldDeep, which is what upstream itself outlines focus in
+    # (its focusBorder and activityBar.activeBorder) and what the
+    # IoskeleyMono site sets as its `--accent`.
+    accent = yellow; # b8943a
+
+    # Window, popup and login-screen outlines. Both states are cut from the
+    # warm ramp, so focused and at-rest read as two steps of one colour
+    # rather than two colours.
+    #
+    # At rest a window takes `warm7`, one rung above the `borderMid` rule
+    # eww and helix draw their dividers in. An unfocused window has to stay
+    # visible against bg0, and `warm6` sat too close to it. Focused, it
+    # takes that same `warm7` lifted 40% of the way to the orange: bright
+    # enough to mark focus, still on the ramp.
+    #
+    # eww's boxes deliberately do not follow `borderActive`. They sit a
+    # register quieter, further down the same warm ramp, so a widget never
+    # competes with the focused window. `border` stays as an alias for the
+    # active one because several consumers still spell it that way.
+    borderInactive = warm7; # 5a4418
+    borderActive = mix 0.4 warm7 orange; # 905e29
+    border = borderActive;
     neutral = mid; # at-rest borders and dividers
-    # Deliberately not `tertiary`: that is an orange, and an error needs to
-    # read as an error. `red` is upstream's ANSI red.
-    urgent = red; # errors, urgent notifications
-    failure = red; # failed states, error symbols
+    urgent = coral; # errors, urgent notifications
+    failure = coral; # failed states, error symbols
     success = green; # a3be8c, upstream's editorGutter.addedBackground
     warning = secondary; # caution, modified-but-not-broken
     info = blue; # informational accents
+
+    # Hover steps. Every interactive role gets one, derived the same way in
+    # both schemes so the relationship between a role and its hover is
+    # identical whichever palette is active. Same pattern as
+    # borderInactive -> borderActive above.
+    #
+    # The blend target is white, not fg0: this scheme's fg0 is a tan darker
+    # than its pale gold accent, so mixing toward fg0 would *darken* a hover
+    # rather than lift it.
+    borderActiveHover = mix 0.25 borderActive "ffffff";
+    accentHover = mix 0.25 accent "ffffff";
+    primaryHover = mix 0.25 primary "ffffff";
+    secondaryHover = mix 0.25 secondary "ffffff";
+    tertiaryHover = mix 0.25 tertiary "ffffff";
+    successHover = mix 0.25 success "ffffff";
+    warningHover = mix 0.25 warning "ffffff";
+    urgentHover = mix 0.25 urgent "ffffff";
+    infoHover = mix 0.25 info "ffffff";
+
   };
 
   # Upstream's real syntax colours, lifted from each theme's `tokenColors`
@@ -171,11 +239,38 @@ let
     base0E = syntax.keyword;
     base0F = syntax.punctuation;
   };
+  # The terminal's 16 ANSI slots, taken from this theme's own terminal.ansi*
+  # keys. They sit beside `colors` rather than inside it for the same reason
+  # `syntax` does: consumers such as modules/desktop/eww.nix stringify every
+  # attr of `colors`, so it has to stay a flat map.
+  #
+  # Keeping them here is what lets `red` and `pink` above be the theme's real
+  # red and salmon. The ANSI red stays upstream's dusty rose, where it
+  # belongs, instead of forcing the whole UI to use it.
+  ansi = [
+    "181714" # 0  black
+    "b38f8f" # 1  red
+    "a3be8c" # 2  green
+    "ebcb8b" # 3  yellow
+    "6c7a8a" # 4  blue
+    "b3a3d3" # 5  magenta
+    "6ac6f2" # 6  cyan
+    "bcac8f" # 7  white
+    "514e42" # 8  bright black
+    "d9a6a6" # 9  bright red
+    "c3de9c" # 10 bright green
+    "fbe4a8" # 11 bright yellow
+    "8fa3b3" # 12 bright blue
+    "d3a3d3" # 13 bright magenta
+    "8ac6f2" # 14 bright cyan
+    "ffffff" # 15 bright white
+  ];
 in
 {
   inherit
     colors
     syntax
     base16
+    ansi
     ;
 }
