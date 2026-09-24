@@ -22,13 +22,15 @@ in
 
       config = {
         # Pinned to the LAST system24 commit that still ships the gruvbox-material
-        # flavour — upstream deleted it in 41037eed (2025-04-19), so `blob/main`
+        # flavour. Upstream deleted it in 41037eed (2025-04-19), so a `main` link
         # 404s. The pin both restores a working link and freezes the CSS Vencord
-        # fetches at Discord runtime. Caveat: this CSS is from 2024-10; if Discord
+        # fetches at Discord runtime. Raw host, not a github.com `blob/` page:
+        # Vencord applies themeLinks verbatim, and a blob URL serves HTML, which a
+        # stylesheet loader discards. Caveat: this CSS is from 2024-10. If Discord
         # DOM changes break it, either vendor a patched copy into the flake or
         # switch themeLinks to a surviving flavour (theme/flavors/system24-*).
         themeLinks = [
-          "https://github.com/refact0r/system24/blob/c3c029dd8d6154eede54bceea9e997c721580688/theme/flavors/gruvbox-material.theme.css"
+          "https://raw.githubusercontent.com/refact0r/system24/c3c029dd8d6154eede54bceea9e997c721580688/theme/flavors/gruvbox-material.theme.css"
         ];
       };
     };
