@@ -495,6 +495,73 @@
             ${lib.concatStringsSep ", " missingEnvrc}
           Add templates/<name>/.envrc (copy templates/go/.envrc) and `git add` it.'';
         pkgs.runCommand "templates-in-sync" { } "touch $out";
+
+      # The five templates pin nixpkgs by hand in five files: three flake.lock
+      # files and two shell.nix fetchTarball calls. Nothing else reads them
+      # together, so a partial bump goes unnoticed until `nix flake init`.
+      # Assert every pin names one rev and one hash. flake.lock's narHash and
+      # fetchTarball's sha256 are the same SRI hash of the unpacked tree, so
+      # the two file kinds compare directly.
+      #
+      # To bump all five to the root flake's nixpkgs, from the repo root:
+      #   p=$(jq -c '.nodes.nixpkgs.locked' flake.lock)
+      #   for t in go python typst; do
+      #     jq --argjson p "$p" '.nodes.nixpkgs.locked = $p' templates/$t/flake.lock > /tmp/l && mv /tmp/l templates/$t/flake.lock
+      #   done
+      #   rev=$(jq -r .rev <<<"$p"); hash=$(jq -r .narHash <<<"$p")
+      #   sed -i -E "s|nixos/nixpkgs/archive/[0-9a-f]{40}\.tar\.gz|nixos/nixpkgs/archive/$rev.tar.gz|; 0,/sha256 = \"sha256-[^\"]+\"/s||sha256 = \"$hash\"|" templates/rust/shell.nix templates/c/shell.nix
+      # then evaluate each template (the CI step in check.yml lists the commands).
+      templates-pin-in-sync =
+        let
+          inherit (nixpkgs) lib;
+
+          lockPin =
+            name:
+            let
+              locked =
+                (builtins.fromJSON (builtins.readFile (templates.${name}.path + "/flake.lock")))
+                .nodes.nixpkgs.locked;
+            in
+            {
+              inherit (locked) rev narHash;
+            };
+
+          # The nixpkgs fetchTarball block: the url line, then the sha256 line.
+          # Anchored on `nixos/nixpkgs/archive/` so rust's second fetchTarball
+          # (rust-overlay) does not match. builtins.split yields the two capture
+          # groups as one list per match.
+          shellPin =
+            name:
+            let
+              text = builtins.readFile (templates.${name}.path + "/shell.nix");
+              groups = builtins.filter builtins.isList (
+                builtins.split ''nixos/nixpkgs/archive/([0-9a-f]{40})\.tar\.gz";[[:space:]]*sha256 = "([^"]+)";'' text
+              );
+            in
+            assert lib.assertMsg (builtins.length groups == 1)
+              "templates/${name}/shell.nix: expected exactly one nixpkgs fetchTarball pin, found ${toString (builtins.length groups)}";
+            {
+              rev = builtins.elemAt (builtins.head groups) 0;
+              narHash = builtins.elemAt (builtins.head groups) 1;
+            };
+
+          pinOf =
+            name:
+            {
+              inherit name;
+            }
+            // (
+              if builtins.pathExists (templates.${name}.path + "/flake.lock") then lockPin name else shellPin name
+            );
+          pins = map pinOf (builtins.attrNames templates);
+          revs = lib.unique (map (p: p.rev) pins);
+          hashes = lib.unique (map (p: p.narHash) pins);
+          describe = lib.concatMapStringsSep "\n    " (p: "${p.name}: ${p.rev} ${p.narHash}") pins;
+        in
+        assert lib.assertMsg (builtins.length revs == 1 && builtins.length hashes == 1) ''
+          Template nixpkgs pins disagree. Bump every template to one rev (procedure in the comment above templates-pin-in-sync in flake.nix).
+            ${describe}'';
+        pkgs.runCommand "templates-pin-in-sync" { } "touch $out";
     in
     {
       nixosConfigurations = nixosConfigs;
@@ -524,7 +591,7 @@
       # lists so a new host gets a check for free.
       checks.${system} = {
         pre-commit = pre-commit-check;
-        inherit caches-in-sync templates-in-sync;
+        inherit caches-in-sync templates-in-sync templates-pin-in-sync;
         installer-template = installerTemplate.config.system.build.toplevel;
         hm-options = hmOptions-check;
       }
