@@ -4,8 +4,8 @@
 # inline so the toolchain stays reproducible.
 let
   nixpkgs = builtins.fetchTarball {
-    url = "https://github.com/nixos/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz";
-    sha256 = "sha256-bxrdOn8SCOv8tN4JbTF/TXq7kjo9ag4M+C8yzzIRYbE=";
+    url = "https://github.com/nixos/nixpkgs/archive/643809054d65fdd466a63e3155b8c498cb483c04.tar.gz";
+    sha256 = "sha256-vUfIeBEfpbAfZ5zjgIkYk7eHBeVfCYVjLbWnMkseYnk=";
   };
   pkgs = import nixpkgs { };
 

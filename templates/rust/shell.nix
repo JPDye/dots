@@ -4,8 +4,8 @@
 # revision/hash inline so the toolchain stays fully reproducible.
 let
   nixpkgs = builtins.fetchTarball {
-    url = "https://github.com/nixos/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz";
-    sha256 = "sha256-bxrdOn8SCOv8tN4JbTF/TXq7kjo9ag4M+C8yzzIRYbE=";
+    url = "https://github.com/nixos/nixpkgs/archive/643809054d65fdd466a63e3155b8c498cb483c04.tar.gz";
+    sha256 = "sha256-vUfIeBEfpbAfZ5zjgIkYk7eHBeVfCYVjLbWnMkseYnk=";
   };
   rust-overlay = builtins.fetchTarball {
     url = "https://github.com/oxalica/rust-overlay/archive/09b556f18dacc39e97a46e0a1cba47af7b3af1d8.tar.gz";
