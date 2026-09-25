@@ -6,11 +6,6 @@
   ...
 }:
 
-let
-  # Not in nixpkgs — packaged locally from the official AppImage release.
-  # Bump with pkgs/zoo-design-studio/update.sh.
-  zoo-design-studio = pkgs.callPackage ./pkgs/zoo-design-studio { };
-in
 {
   imports = [
     ./modules/wrap-gl.nix
@@ -73,7 +68,6 @@ in
             lycheeslicer # resin (MSLA) slicer — Anycubic Photon
             openscad # 3D CAD modeller (GL); 2021.01 stable, cached
             freecad-wayland # qt6 + native Wayland build for niri
-            zoo-design-studio # KCL-based CAD (GL) — local pkg, see pkgs/zoo-design-studio
             dune3d # parametric 3D CAD (GL)
             proton-vpn
             qbittorrent

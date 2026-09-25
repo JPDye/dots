@@ -189,7 +189,7 @@ Notes:
 │   └── scripts/              # blur-wallpaper helper
 ├── templates/                # `nix flake init -t` targets: rust, python, go, typst
 ├── installer/                # bootable ISO (iso.nix) + install-host.sh + host-template/
-├── pkgs/                     # local packages (zoo-design-studio, from the official AppImage)
+├── pkgs/                     # local packages (bibata-cursors-themed, the palette-coloured cursor)
 ├── caches.nix                # source of truth for extra binary caches (see flake.nix nixConfig)
 ├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono
 ├── eww/                      # eww widgets, symlinked out-of-store so they are hand-editable
@@ -284,7 +284,7 @@ So rebuilding this host on new hardware leaves the units failing until that scri
 |----------|----------|
 | CLI (unwrapped) | `ffmpeg`, `wireguard-tools`, `pavucontrol`, `brightnessctl`, `libnotify`, `bottom`, `hyperfine`, `unzip`, `tree`, `socat` |
 | GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `steam`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
-| CAD / slicers (also wrapped) | `lycheeslicer` (resin/MSLA), `openscad`, `freecad-wayland` (qt6 native Wayland), `zoo-design-studio` (local pkg, see `pkgs/`), `dune3d` |
+| CAD / slicers (also wrapped) | `lycheeslicer` (resin/MSLA), `openscad`, `freecad-wayland` (qt6 native Wayland), `dune3d` |
 
 GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
 
