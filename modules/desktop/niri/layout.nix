@@ -1,9 +1,9 @@
 {
   border-style,
+  shadow-style,
   colors,
   config,
   lib,
-  themeLib,
   ...
 }:
 
@@ -27,28 +27,34 @@
       overview = {
         backdrop-color = "#${colors.bg0}";
         zoom = 0.6;
-        # A solid ring, not a depth shadow. softness 0 keeps a hard edge,
-        # because the shader punches the view rect back out, and a zero
-        # offset keeps the ring even on all four sides.
+        # The same hard offset seam the window shadow below draws: spread 0
+        # keeps the shadow the workspace's own size, softness 0 keeps the
+        # edge hard, and the offset is the only thing that shows it.
         #
-        # niri scales spread by `view_size.h / 1080`
-        # (compute_workspace_shadow_config, src/layout/workspace.rs) and the
-        # overview zoom (0.6 above) scales it again at render time. On a
-        # 2160-tall output that is 2 * 0.6 = 1.2, so spread 1.67 lands on
-        # ~2px zoomed out. The 1200-tall laptop panel scales by 1.111 * 0.6
-        # = 0.667 instead, so the ring reads ~1px there. One spread cannot
-        # hit 2px on both.
+        # The number is not the window offset. niri multiplies softness, spread AND offset by
+        # `view_size.h / 1080` (compute_workspace_shadow_config,
+        # src/layout/workspace.rs), and the overview then draws the whole
+        # workspace at the zoom above. So what lands on screen is
+        #
+        #     configured * (view_h / 1080) * zoom
+        #
+        # while a window inside the overview shows its own offset at just
+        # `offset * zoom`. Setting configured = offset * 1080 / view_h makes
+        # the two match: half the offset on a 2160-tall output, which is what
+        # this targets, the same output the old spread was tuned against. A
+        # 1200-tall panel would want 0.9 of it, and one value cannot serve
+        # both.
         #
         # The colour stays darker than `backdrop-color`, which is bg0: a
-        # ring cannot read against its own colour.
+        # shadow cannot read against its own colour.
         workspace-shadow = {
           softness = 0;
-          spread = 1.67;
+          spread = 0;
           offset = {
-            x = 0;
-            y = 0;
+            x = shadow-style.offset / 2.0;
+            y = shadow-style.offset / 2.0;
           };
-          color = "#${themeLib.mix 0.6 colors.bg0 "000000"}";
+          color = "#${colors.shadow}";
         };
       };
 
@@ -84,19 +90,21 @@
           inactive.color = "#${colors.borderInactive}";
         };
 
-        # A hard offset seam, the same one eww's boxes draw: softness 0
-        # keeps the edge hard, spread 0 keeps the shadow the window's own
-        # size, and the 2px offset is the only thing that shows it. The
-        # colour is the palette's shared `shadow` token rather than bg0,
-        # because an offset shadow has to read against the wallpaper rather
-        # than mask a gap.
+        # A hard offset seam, the same shape eww's boxes draw 2px shallower:
+        # softness 0 keeps the edge hard, spread 0 keeps the shadow the
+        # window's own size, and the `shadow-style.offset` is the only thing
+        # that shows it. A float, walker and the lock card cast the same. A
+        # window throws the deepest shadow on the desktop, and everything
+        # smaller sits a step under it. The colour is the
+        # palette's shared `shadow` token rather than bg0, because an offset
+        # shadow has to read against the wallpaper rather than mask a gap.
         shadow = {
           enable = true;
           spread = 0;
           softness = 0;
           offset = {
-            x = 2;
-            y = 2;
+            x = shadow-style.offset;
+            y = shadow-style.offset;
           };
 
           color = "#${colors.shadow}";

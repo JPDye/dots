@@ -11,8 +11,15 @@ let
   # Self-contained theme built from the active scheme's palette, with our
   # accent overrides layered on top. Defined standalone rather than inherited
   # from `stylix` so the scheme's own base16 mapping is what lands here.
+  #
+  # Most code scopes read a named role out of `syntax` rather than a base16
+  # slot. The slots are a 16-colour ramp with its own conventions, and the
+  # roles this theme wants do not line up with them: a scheme that paints
+  # operators warm and variables plain cannot say so in base16 terms, because
+  # base05 has to be both. The slots still carry what is genuinely ramp-like
+  # (diffs, markup, UI chrome).
   theme = {
-    attribute = "base09";
+    attribute = "#${syntax.annotation}";
     comment = {
       fg = "#${syntax.comment}";
       modifiers = syntax.commentModifiers;
@@ -20,17 +27,19 @@ let
     # Tags inside comments (TODO:, FIXME:, …). The scope exists only in our
     # runtime query override (comment-highlights.scm), not in upstream helix.
     "comment.todo".fg = "#${syntax.commentTodo}";
-    constant = "base09";
+    constant = "#${syntax.number}";
     "constant.character.escape" = "#${syntax.escape}";
     "constant.numeric" = "#${syntax.number}";
-    constructor = "base0D";
+    constructor = "#${syntax.constructor}";
     debug = "base03";
     diagnostic.modifiers = [ "underlined" ];
     "diff.delta" = "base09";
     "diff.minus" = "base08";
     "diff.plus" = "base0B";
     error = "#${colors.urgent}";
-    function = "base0D";
+    function = "#${syntax.function}";
+    "function.method" = "#${syntax.method}";
+    "function.macro" = "#${syntax.macro}";
     hint = "#${colors.fg3}";
     info = "#${colors.info}";
     keyword = {
@@ -38,14 +47,24 @@ let
       modifiers = syntax.keywordModifiers;
     };
     label = "base0E";
-    namespace = "base0E";
-    operator = "base05";
-    special = "base0D";
+    # `std`, `time` follow the call colour, not the type colour: in
+    # `std::time::Duration` the path and the type it reaches then read as
+    # two things rather than one run of blue.
+    namespace = "#${syntax.function}";
+    operator = "#${syntax.operator}";
+    special = "#${syntax.storage}";
     string = "#${syntax.string}";
     tag = "base08";
-    type = "#${syntax.type}";
-    variable = "base08";
-    "variable.other.member" = "base0D";
+    punctuation = "#${syntax.punctuation}";
+    type = {
+      fg = "#${syntax.type}";
+      modifiers = syntax.typeModifiers;
+    };
+    "type.builtin" = "#${syntax.storage}";
+    "type.parameter" = "#${syntax.generic}";
+    "type.enum.variant" = "#${syntax.constructor}";
+    variable = "#${syntax.variable}";
+    "variable.other.member" = "#${syntax.variable}";
     warning = "#${colors.warning}";
 
     "markup.bold" = {
@@ -219,7 +238,10 @@ let
 in
 {
   config = lib.mkIf config.dotfiles.dev.helix.enable {
-    programs.helix.themes.stylix = theme;
+    # Named `dotfiles`, not `stylix`: stylix's own helix target is switched
+    # off in theming/stylix.nix (see the comment there), so nothing else
+    # writes a theme. `editor.nix` selects it by this name.
+    programs.helix.themes.dotfiles = theme;
 
     # ~/.config/helix/runtime is helix's highest-priority runtime dir, so this
     # shadows the upstream comment query. See the header of the .scm file.

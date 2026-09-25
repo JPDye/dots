@@ -1,5 +1,19 @@
 * { all: unset }
 
+// `all: unset` on `*` has zero specificity, so every rule in the GTK theme
+// that names a widget type outranks it. `button` is the one that bites: the
+// theme paints it with a gradient and its own inset shadow, which land on top
+// of the background-color and box-shadow set below. The eventbox around the
+// duration pill takes the same treatment, so an interactive widget and a
+// plain box dress identically.
+button,
+eventbox {
+  background-image: none;
+  text-shadow: none;
+  -gtk-icon-shadow: none;
+  outline: none;
+}
+
 // Palette ($red, $bg0, $yellow, ...) comes from theme.nix via _theme.scss,
 // which home-manager generates into this dir on switch (gitignored).
 @import "theme";
@@ -17,7 +31,10 @@ $surface-darkgrey: $bg0;
 $surface-lightgrey: $bg3;
 $surface-grey: $bg2;
 
-$pill-bg: $warm2;
+// The fill every pill and button takes. It is `bg0`, the same background a
+// niri window paints, rather than the site's warm `$warm2`: a widget then
+// reads as one more surface on the desktop instead of a separate material.
+$pill-bg: $bg0;
 $pill-border: $warm6;
 $pill-fg: $goldDeep;
 
@@ -27,11 +44,23 @@ $pill-fg: $goldDeep;
 $box-border: $borderMid;
 $box-border-hover: $borderMidHover;
 
-// A hard offset seam: no blur, no spread, 2px down and right, so a widget
-// sits off the wallpaper the way a niri window does. niri's window and float
-// shadows draw the same offset in the same `$shadow` token. walker and the
-// greeter keep their own spread rings.
-$box-shadow: 2px 2px 0 $shadow;
+// A hard offset seam: no blur, no spread, `$shadow-offset` down and right, so
+// a widget sits off the wallpaper the way a niri window does. Same shape and
+// the same `$shadow` token as niri's window and float shadows, two pixels
+// shallower than theirs (eww.nix derives it from `shadow-style.offset`), which
+// the walker panel and the lock card take too: a widget sits a step under a
+// window here, as `$box-border` does above.
+// The greeter keeps its own spread ring.
+$box-shadow: $shadow-offset $shadow-offset 0 $shadow;
+
+// GTK3 clips a widget's box-shadow to its parent's allocation, and a GtkEventBox
+// is sized exactly to its child. So a shadow on a widget inside one lands
+// outside the allocation and is clipped away: that is the play/pause toggle and
+// every power button, the only two widgets here that need an eventbox to take a
+// click. Reserving the offset as margin gives the shadow room inside that
+// allocation. A pill that sits straight in a box needs none, which is why the
+// artist, album and title pills already cast one.
+$box-shadow-room: 0 $shadow-offset $shadow-offset 0;
 
 // Icons take the primary, except the cpu/ram ones, which the severity rules
 // below recolour. That is the signature gold under kintsugi and the orange
@@ -70,6 +99,7 @@ $surface-green: $success;
     border-radius: 0;
     border: 1px solid $box-border;
     box-shadow: $box-shadow;
+    margin: $box-shadow-room;
     background-color: $pill-bg;
     color: $icon-fg;
     transition: 100ms ease-out;
@@ -81,16 +111,26 @@ $surface-green: $success;
       font-size: 0.8em;
     }
 
+    // Hover lifts the surface only: the fill steps up the warm ramp and the
+    // outline steps up with it. The icon keeps whatever colour it has, so
+    // the shutdown red below survives a hover.
     &:hover {
       background-color: $warm4;
       border-color: $box-border-hover;
-      color: $accent;
+    }
+
+    // The shutdown icon carries the destructive colour. Each pbtn also gets
+    // a `pbtn-<name>` class (eww.yuck) so one button can be picked out of
+    // the three.
+    &.pbtn-shutdown {
+      color: $urgent;
     }
 
     // First click on a destructive button arms it; second click executes.
     // The icon takes the backdrop colour so it reads as negative space
-    // punched out of the red block.
-    &.armed {
+    // punched out of the red block. Matched on `.pbtn.armed` rather than
+    // `.armed` so it outranks the `.pbtn-shutdown` rule above.
+    &.pbtn.armed {
       transition: 200ms linear;
       background-color: $urgent;
       border-color: $urgent;
@@ -111,9 +151,11 @@ $surface-green: $success;
     padding: 0.2em 0.45em 0.2em 0.25em;
     min-height: 1.2em;
     border-radius: 0;
-    // Fully opaque. The powermenu window itself draws no background, so a
-    // pill with alpha let the wallpaper through.
-    background-color: $surface-darkgrey;
+    // The same fill the buttons take: a pill and a button are the same
+    // object with different contents, so they share background, border,
+    // shadow and hover. Fully opaque, because the powermenu window draws no
+    // background of its own.
+    background-color: $pill-bg;
   }
 
   .value {
@@ -145,9 +187,22 @@ $surface-green: $success;
 .stats-box .pill.warn .icon { color: rgba($warning, 0.9); }
 .stats-box .pill.crit .icon { color: rgba($urgent, 1.0); }
 
-// The duration pill is clickable (play/pause); brighten like the buttons do.
-.media-toggle .pill:hover {
+// The duration pill is the one pill inside an eventbox, so it is the one that
+// has to reserve room for its own shadow. See `$box-shadow-room`.
+.media-toggle .pill {
+  margin: $box-shadow-room;
+}
+
+// The duration pill is clickable (play/pause), so it hovers exactly as the
+// buttons above do: the fill and the outline step up the warm ramp, and the
+// icon keeps its colour.
+//
+// The `:hover` has to sit on `.media-toggle`, the eventbox, not on the pill.
+// A GtkBox has no input window of its own, so GTK never puts it in the hover
+// state. The eventbox is the widget that tracks the pointer, which is why it
+// wraps the pill at all. A GtkButton tracks its own, so the buttons above can
+// spell theirs `&:hover`.
+.media-toggle:hover .pill {
   background-color: $warm4;
   border-color: $box-border-hover;
-  .icon { color: $accent; }
 }

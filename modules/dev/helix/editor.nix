@@ -45,9 +45,10 @@
       ];
 
       settings = {
-        # mkForce overrides the theme stylix injects. themes.nix defines
-        # this one standalone from the active scheme's palette.
-        theme = lib.mkForce "stylix";
+        # themes.nix writes this one, standalone from the active scheme's
+        # palette. No mkForce: stylix's helix target is off (see
+        # theming/stylix.nix), so nothing else injects a theme name.
+        theme = "dotfiles";
 
         keys = {
           normal = {

@@ -35,8 +35,8 @@ let
       '';
 
   # ReGreet's centred login box, restyled to read like a niri window: bg0
-  # fill, a `border` border, square corners, and a hard 8px shadow with no
-  # blur (see the layout.nix border/shadow rules).
+  # fill, a `border` border, square corners, and a hard ring shadow with no
+  # blur, `shadow-style.offset` plus 4px wide (see the layout.nix border/shadow rules).
   #
   # ReGreet's UI is a GtkOverlay: the background Picture is child 1, the
   # centred login Frame is child 2 (the first add_overlay), and the clock
@@ -47,7 +47,9 @@ let
       background-color: #${colors.bg0};
       border: ${toString border-style.width}px solid #${colors.borderActive};
       border-radius: ${toString border-style.radius-int}px;
-      box-shadow: 0 0 0 8px rgba(${themeLib.rgbCss colors.bg0}, ${toString shadow-style.opacity});
+      box-shadow: 0 0 0 ${
+        toString (shadow-style.offset + 4)
+      }px rgba(${themeLib.rgbCss colors.bg0}, ${toString shadow-style.opacity});
     }
   '';
 

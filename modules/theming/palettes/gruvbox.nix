@@ -142,11 +142,27 @@ let
     comment = colors.green;
     commentTodo = colors.white;
     escape = colors.yellow;
+    # The green base0D used to paint, kept as an explicit hue now that the
+    # helix theme reads `function` from here rather than from a base16 slot.
+    function = colors.green;
     number = colors.pink;
     string = colors.pink;
     type = colors.blue;
     commentModifiers = [ "italic" ];
     keywordModifiers = [ ];
+    typeModifiers = [ ];
+    # The roles the helix theme grew when it stopped reading these scopes off
+    # base16 slots. Each keeps the value its old slot gave it here: base05 for
+    # text and operators, base0F punctuation, base09 storage, base0A markup.
+    storage = colors.yellow;
+    generic = colors.yellow;
+    macro = colors.yellow;
+    method = colors.green;
+    variable = colors.fg1;
+    constructor = colors.fg1;
+    operator = colors.fg1;
+    punctuation = colors.fg2;
+    annotation = colors.pink;
   };
   # The terminal's 16 ANSI slots. These reproduce the mapping that used to
   # live in modules/terminals/default.nix verbatim, including its deliberate

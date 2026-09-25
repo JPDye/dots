@@ -1,6 +1,5 @@
 {
   config,
-  lib,
   pkgs,
   mkNixGLWrap,
   ...
@@ -125,10 +124,6 @@ in
           scale = 1;
         };
       };
-
-      # Tighter than the shared 16 in modules/desktop/niri/layout.nix, which the
-      # small panel needs. mkForce because both sit at normal priority.
-      layout.gaps = lib.mkForce 8;
     };
   };
 }

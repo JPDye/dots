@@ -1,6 +1,6 @@
 # Per-host home-manager overlay: monitor outputs, lib.mkForce bind overrides,
 # and nothing else — packages belong in the shared home.nix (see CLAUDE.md).
-{ lib, ... }:
+_:
 
 {
   programs.niri.settings = {
@@ -39,9 +39,6 @@
     layout = {
       # New key — base doesn't set it, so no mkForce:
       always-center-single-column = true;
-
-      # Override the base border width (base sets 2) down to 1px.
-      border.width = lib.mkForce 1;
 
       preset-column-widths = [
         { proportion = 0.25; }

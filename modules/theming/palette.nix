@@ -41,10 +41,10 @@ rec {
   # theme and no `stylix.override` is needed to paint over one.
   #
   # The default base08-0F mapping is a deliberate syntax-highlight choice,
-  # not the base16 default. A scheme that ports an existing editor theme
-  # publishes its own `base16` attrset, merged over these, so the port keeps
-  # upstream's highlighting instead of borrowing a mapping built for a
-  # different palette. `palettes/kintsugi.nix` does this.
+  # not the base16 default. It is what `palettes/gruvbox.nix` reads. A scheme
+  # that wants its own highlighting publishes a `base16` attrset, merged over
+  # these, rather than bending this one and dragging the other scheme with
+  # it. `palettes/kintsugi.nix` does that.
   base16Scheme =
     let
       c = colors;
@@ -96,20 +96,26 @@ rec {
     # Square: the desktop is all hard edges.
     radius-float = 0.0;
     radius-int = 0;
-    # Every border in the desktop reads this: niri window borders, walker,
-    # the greeter box and the hyprlock rings.
-    width = 1;
+    # Every border in the desktop reads this: niri window and float borders,
+    # walker, the greeter box and the hyprlock rings. The eww widgets keep
+    # their own 1px.
+    width = 2;
   };
 
   # Shared shadow opacity, applied to every shadow color via
   # `themeLib.alpha`. Single knob for how see-through shadows are.
   shadow-style = {
     opacity = 0.92;
+    # The hard offset, in px down and right, that a niri window casts. Every
+    # other shadow derives from it: floats, walker and the lock card cast
+    # the same, the eww widgets cast 2px less, the overview workspace half
+    # (see its comment in niri/layout.nix), and the greeter's ring 4px more.
+    offset = 5;
   };
 
   # Wallpaper — single source of truth, consumed by the home-manager
   # surfaces (awww, stylix, hyprlock) and by the greeter backdrop.
-  wallpaper = ../../wallpapers/rockman.png;
+  wallpaper = ../../wallpapers/berries.jpg;
 
   # Color-format helpers for consumer modules.
   themeLib = {

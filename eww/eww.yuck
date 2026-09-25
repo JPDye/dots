@@ -132,8 +132,8 @@
 ; Destructive buttons (:danger "yes") arm on the first click and only run on
 ; the second; moving the pointer away disarms them.
 (defwidget pbtn [name icon action ?danger]
-  (eventbox :onhoverlost "eww update confirm="
-    (button :class {confirm == name ? "pbtn armed" : "pbtn"}
+  (eventbox :cursor "pointer" :onhoverlost "eww update confirm="
+    (button :class {confirm == name ? "pbtn pbtn-${name} armed" : "pbtn pbtn-${name}"}
             :onclick {danger == "yes" && confirm != name ?
                       "eww update confirm=${name}" :
                       "eww update confirm= ; ${action}"}

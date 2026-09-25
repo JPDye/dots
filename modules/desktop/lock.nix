@@ -187,28 +187,36 @@ in
             # Frosted card behind the whole stack; the avatar straddles its
             # top edge. A translucent panel fakes a pane of smoked glass
             # without real blur (hyprlock can't blur behind a shape). Styled
-            # like a niri window: 4px corners, red border, hard 2px shadow.
+            # like a niri window: the shared corner radius, the active
+            # border, and the same hard offset shadow a niri window,
+            # a float and the overview draw.
             # hyprlock's own shadow_passes always feathers, so the shadow is
-            # a solid bg0 shape one layer down, oversized by border + spread
-            # on every side (shape borders draw outside `size`). zindex (not
-            # file order) enforces cross-widget layering: wallpaper (-3) <
-            # shadow (-2) < card (-1) < every label/image/input (0), so the
-            # text reads on top. home-manager emits blocks alphabetically, so
-            # `shape` would otherwise land last (on top) and hide everything.
+            # a solid shape one layer down instead. zindex (not file order)
+            # enforces cross-widget layering: wallpaper (-3) < shadow (-2) <
+            # card (-1) < every label/image/input (0), so the text reads on
+            # top. home-manager emits blocks alphabetically, so `shape` would
+            # otherwise land last (on top) and hide everything.
             shape = [
-              # The hard shadow: card 380x420 + 2 * (2px border + 2px spread).
+              # The hard shadow: the card's own bordered footprint (380x420
+              # plus the border on each side, because a shape's border draws
+              # outside `size`), moved `shadow-style.offset` down and right.
+              # It is an offset seam, not the even ring this used to be, so it
+              # matches niri's window shadow exactly. `shadow` is the token that shadow
+              # draws in, so the lock screen and the desktop cast one shadow.
+              #
+              # hyprlock's y axis points up, which is why the labels below
+              # descend from 190 to -90. The card sits at y -20, so down by the
+              # offset is -20 minus the offset, not -20 plus it.
               {
                 monitor = "";
-                size = "388, 428";
-                color = "rgba(${themeLib.alpha shadow-style.opacity colors.bg0})"; # same as niri's shadow colour, at shadow-style.opacity
-                # The shadow sits outside the card's border, so its radius is
-                # the card's plus the border plus the 2px spread, which keeps
-                # the visible ring an even width. A square card needs no such
-                # compensation, so the zero case stays zero.
-                rounding =
-                  if border-style.radius-int == 0 then 0 else border-style.radius-int + border-style.width + 2;
+                size = "${toString (380 + 2 * border-style.width)}, ${toString (420 + 2 * border-style.width)}";
+                color = "rgba(${themeLib.alpha shadow-style.opacity colors.shadow})"; # niri's shadow colour, at shadow-style.opacity
+                # The shadow covers the card's outer edge, border included,
+                # so its radius is the card's plus the border. A square card
+                # needs no such compensation, so the zero case stays zero.
+                rounding = if border-style.radius-int == 0 then 0 else border-style.radius-int + border-style.width;
                 border_size = 0;
-                position = "0, -20";
+                position = "${toString shadow-style.offset}, ${toString (-20 - shadow-style.offset)}";
                 halign = "center";
                 valign = "center";
                 zindex = -2;

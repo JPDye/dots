@@ -1,6 +1,7 @@
 {
   colors,
   border-style,
+  shadow-style,
   monoFont,
   config,
   lib,
@@ -11,7 +12,7 @@
 
 let
   cfg = config.dotfiles.desktop.walker;
-  # The shared seam colour from the palette. Drawn as a hard CSS ring (see
+  # The shared seam colour from the palette. Drawn as a hard CSS offset (see
   # .box-wrapper) rather than a niri layer-rule shadow, which doesn't render
   # around walker's layer-shell surface.
   shadowColor = colors.shadow;
@@ -58,6 +59,14 @@ in
               input = "search clipboard";
               list = "No Results";
             };
+            # Mod+Equal opens `-m calc`, and without an entry of its own the
+            # input kept whatever placeholder the previous session set (the
+            # clipboard one, after a Mod+V). It did not fall back to
+            # `placeholders.default`, which the generated config does carry.
+            calc = {
+              input = "calculate";
+              list = "No Results";
+            };
           };
         };
 
@@ -74,7 +83,7 @@ in
         @define-color border_color    #${colors.borderActive};
         @define-color border_inactive #${colors.borderInactive};
         @define-color neutral_color   #${colors.neutral};
-        @define-color success_color   #${colors.success};
+        @define-color primary_color   #${colors.primary};
         @define-color accent_color    #${colors.accent};
         @define-color error_bg_color  #${colors.urgent};
         @define-color error_fg_color  #${colors.fg0};
@@ -102,15 +111,15 @@ in
           opacity: 0;
         }
 
-        /* The window chrome: matches a niri window — dark fill, 2px red border,
-           the shared corner radius, and a hard shadow ring (no blur/softening)
-           in the fuzzel colour. The shadow is CSS, not a niri layer-rule,
-           because niri won't render a shadow that hugs walker's layer-shell
-           surface. The ring is 4px, half the niri float rule's spread 8: a
-           layer-shell surface has no gap to fill, so it only needs enough to
-           separate the box from whatever sits behind it. */
+        /* The window chrome: matches a niri window. Dark fill, the active
+           border, the shared corner radius, and the desktop's hard offset
+           shadow: no blur, no spread, `shadow-style.offset` down and right,
+           in the shared `shadow` token. Walker is a launcher panel, so it
+           casts a window's offset rather than the shallower eww one.
+           The shadow is CSS, not a niri layer-rule, because niri won't
+           render a shadow that hugs walker's layer-shell surface. */
         .box-wrapper {
-          box-shadow: 0 0 0 4px #${shadowColor};
+          box-shadow: ${toString shadow-style.offset}px ${toString shadow-style.offset}px 0 #${shadowColor};
           background: @window_bg_color;
           padding: 20px;
           border-radius: ${toString border-style.radius-int}px;
@@ -170,11 +179,11 @@ in
         }
 
         /* Item subtext — the clipboard entry's timestamp and app descriptions
-           in the Mod+R list. Green, and a touch brighter than the default 0.5
-           so the colour reads. */
+           in the Mod+R list. The signature gold, and a touch brighter than
+           the default 0.5 opacity so the colour reads. */
         .item-subtext {
           font-size: 12px;
-          color: @success_color;
+          color: @primary_color;
           opacity: 0.9;
         }
 
@@ -194,7 +203,7 @@ in
         }
 
         .preview {
-          border: 1px solid @border_inactive;
+          border: ${toString border-style.width}px solid @border_inactive;
           border-radius: 0;
           padding: 8px;
           color: @dark_fg_color;
@@ -230,7 +239,7 @@ in
 
         .keybinds {
           padding-top: 10px;
-          border-top: 1px solid lighter(@window_bg_color);
+          border-top: ${toString border-style.width}px solid lighter(@window_bg_color);
           font-size: 12px;
           color: @theme_fg_color;
         }
@@ -251,7 +260,7 @@ in
         .keybind-label {
           padding: 2px 4px;
           border-radius: 0;
-          border: 1px solid @accent_color;
+          border: ${toString border-style.width}px solid @accent_color;
         }
 
         .error {

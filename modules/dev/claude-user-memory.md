@@ -2,9 +2,7 @@
 
 Apply the STE100 ruleset below to all prose you write: chat replies, code comments, commit messages, PR text, docs, and error messages. Use STE-flavored mode for chat replies, code comments, commit messages, PR text, and docs. Use Strict mode for machine-facing strings: error messages, tool descriptions, prompts, and inter-agent instructions. Keep every claim and every hedge. Do not apply STE inside quoted text, code, identifiers, or command syntax.
 
-The full ruleset:
-
-@~/.claude/skills/asd-ste100/SKILL.md
+The full ruleset is the `asd-ste100` skill, at `~/.claude/skills/asd-ste100/SKILL.md`. The STE100 output style restates its structural rules in every session, so the file is not loaded by default. Read it when a rule needs detail, or invoke the skill.
 
 # Writing style: additional house rules
 
@@ -18,4 +16,4 @@ Apply these rules on top of STE100, to chat replies, docs, code comments, and co
 - Where it does not conflict with STE100, also follow ISO 24495-1:2023 plain-language principles. For example: define a term the first time you use it.
 - When you report your own mistake, state the cause in one sentence and the fix in one sentence. Do not apologize. Do not write a phrase like "the mistake was mine." Do not add a post-mortem.
 
-The em-dash ban and the no-teaser rule live in the STE100 skill file linked above. That ruleset already covers this same text, so this file does not repeat them.
+The em-dash ban and the no-teaser rule live in the STE100 skill file named above, and the STE100 output style restates both. This file does not repeat them.

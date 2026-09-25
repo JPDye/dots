@@ -37,9 +37,10 @@ let
 
   # Global rules (~/.config/opencode/AGENTS.md): the same "STE100 always on"
   # user memory Claude Code gets via ~/.claude/CLAUDE.md, built from the same
-  # source file so the two stay in lockstep. opencode does not parse
-  # @-imports in rules files, so the @-reference is swapped for the full
-  # STE100 ruleset (frontmatter stripped) at build time. The inlined text is
+  # source file so the two stay in lockstep. Claude Code reads the ruleset
+  # from the skill on demand, so that file only names it. opencode has no
+  # such lookup, so the sentence that names it is swapped for the full STE100
+  # ruleset (frontmatter stripped) at build time. The inlined text is
   # the patched copy from ./ste100-skill.nix, house rules included, so it
   # matches what Claude Code reads. The skill itself stays invocable as
   # `asd-ste100`: opencode discovers it from ~/.claude/skills, where
@@ -48,8 +49,9 @@ let
   # scanned dir and warns on a duplicate.
   agentsMd = pkgs.runCommand "opencode-agents-md" { } ''
     substitute ${./claude-user-memory.md} $out \
-      --replace-fail '@~/.claude/skills/asd-ste100/SKILL.md' \
-                     '(inlined below from the asd-ste100 skill)'
+      --replace-fail \
+        'The full ruleset is the `asd-ste100` skill, at `~/.claude/skills/asd-ste100/SKILL.md`. The STE100 output style restates its structural rules in every session, so the file is not loaded by default. Read it when a rule needs detail, or invoke the skill.' \
+        'The full ruleset follows, inlined from the `asd-ste100` skill.'
     awk '/^---$/ && c < 2 { c++; next } c == 2' \
       ${ste100Skill}/SKILL.md >> $out
   '';

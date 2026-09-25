@@ -10,34 +10,38 @@
 
 #
 # Clay differs from plain Dark Flared only in its neutrals, which carry a
-# warm cast. Its `tokenColors` are identical, so the syntax block below is
-# the same either way.
+# warm cast. Upstream's own `tokenColors` are not ported: the syntax block
+# below follows this flake's shared mapping instead (see its comment).
 #
 # The fg3->fg0 ramp comes from the theme's UI colours, picked by luminance
-# so it lands on shades upstream actually uses. The bg0->bg3 ramp does not:
-# it is gruvbox's, from github.com/morhetz/gruvbox.
+# so it lands on shades upstream actually uses. The background ramp does not:
+# bg0 to bg3 are gruvbox's, from github.com/morhetz/gruvbox.
 { plib }:
 
 let
   inherit (plib) mix;
 
   colors = rec {
-    # The background ramp is gruvbox's, not Kintsugi's: `dark0_hard`,
-    # `dark0`, `dark1` and `dark2` from github.com/morhetz/gruvbox. bg0 is
-    # the default background for terminals, helix and every other surface.
-    # Kintsugi's own neutrals (editor.foldBackground 1c1b17,
-    # activityBar.border 2a2a28, list.dropBackground 3d3830) are no longer
-    # read here. The foreground ramp below is still Kintsugi's own.
+    # The whole background ramp is gruvbox's, from `dark0_hard` down to
+    # `dark2` (github.com/morhetz/gruvbox). bg0 is the default background
+    # for terminals, helix and every other surface. It is a cool near-black:
+    # bgSunken below is the neutral one, and the pair is what separates a
+    # bar from the editor. Kintsugi's own neutrals (editor.foldBackground
+    # 1c1b17, activityBar.border 2a2a28, list.dropBackground 3d3830) are no
+    # longer read here. The foreground ramp below is still Kintsugi's own.
     bg0 = "1d2021"; # dark0_hard
     bg1 = "282828"; # dark0
     bg2 = "3c3836"; # dark1
     bg3 = "504945"; # dark2
 
-    # A sunken background for bars: helix's and zellij's status lines. The
-    # darkest shade in the theme (Clay's editorCursor.background), well
-    # under bg0, so a bar reads as a separate surface rather than a tint of
-    # the editor.
-    bgSunken = "080807";
+    # The fill for bars: helix's and zellij's status lines. Hand-picked, not
+    # an upstream shade. It is a neutral near-black, and it sits close enough
+    # to bg0 in lightness that a bar separates from the editor by hue rather
+    # than by depth. WCAG relative luminance 0.0116 against bg0's 0.0140, a
+    # contrast ratio of 1.04 to 1. The gruvbox scheme still derives a
+    # genuinely darker shade for the same token, which is why the name says
+    # sunken.
+    bgSunken = "1c1c1c";
 
     # Muted at-rest tint (niri inactive borders, walker, the lock ring at
     # rest). Built the same way the light variants build theirs: the
@@ -59,8 +63,8 @@ let
     grey = mix 0.55 fg1 fg2;
 
     # Named for the colour each one actually is, not for an ANSI slot. The
-    # ANSI table lower down keeps upstream's own terminal values, so nothing
-    # here has to compromise between the two: `red` is upstream's `keyword`
+    # ANSI table lower down keeps upstream's own terminal values (red and
+    # green excepted, see there), so nothing here has to compromise between the two: `red` is upstream's `keyword`
     # colour, `pink` its `string` colour, and `orange` its keyword.operator
     # colour, a true orange at hue 25.
     red = "D66848";
@@ -192,73 +196,102 @@ let
 
   };
 
-  # Upstream's real syntax colours, lifted from each theme's `tokenColors`
-  # and named by the scope each one actually paints. These drive `base16`
-  # below and the helix theme, so an editor themed from this palette gets
-  # Kintsugi's own highlighting rather than this flake's accents run through
-  # a mapping built for gruvbox.
+  # Syntax roles, this scheme's own, built from the hue tokens above. They
+  # pair with the `base16` block below: together those two decide what an
+  # editor themed from this palette looks like, and neither touches
+  # `palettes/gruvbox.nix`.
   #
-  # They sit beside `dark`/`light` rather than inside them because consumers
-  # such as `modules/desktop/eww.nix` stringify every attr of a variant, so a
-  # variant has to stay a flat map of hex strings.
+  # The shape of it: the warm hues carry what you read most, and gold carries
+  # the busiest scopes of all. Blue and green are kept to the scopes that
+  # repeat least. An earlier cut of this file ported upstream Kintsugi's own
+  # `tokenColors` instead, which put a blue-grey on every type, function and
+  # member and a teal on every attribute, so most of an editor read blue.
+  #
+  # It sits beside `colors` rather than inside it because consumers such as
+  # `modules/desktop/eww.nix` stringify every attr of `colors`, so that has
+  # to stay a flat map of hex strings.
   syntax = {
-    comment = "636363"; # comment
-    variable = "BCAC8F"; # text, source, variable
-    punctuation = "85806b"; # punctuation, delimiter, bracket, brace
-    type = "798283"; # storage.type, entity.name.function/class
-    keyword = "D66848"; # keyword
-    storage = "DBAD49"; # storage, entity.name.tag, this/self, new
-    string = "cc7f66"; # string
-    operator = "E08542"; # keyword.operator, support.type/class/function
-    number = "DB9833"; # constant.numeric
-    annotation = "678E87"; # annotations, lifetimes, rust attributes
-    pointer = "EBA96C"; # meta.ptr, meta.pointer, meta.array
-    invalid = "b38f8f"; # invalid
-
-    # Roles helix needs that upstream gives no direct scope. TODO tags
-    # take the gold. Escapes take upstream's constant.character.escape.
-    commentTodo = "DBAD49";
-    escape = "798283";
-    # Upstream font styles: comments plain, keywords and storage bold.
+    # A foreground shade, not a hue: a comment should recede, and fg3 is the
+    # most muted rung of the ramp. It is what `hint` already reads.
+    comment = colors.fg3;
+    commentTodo = colors.gold;
+    # Named types: `Vec`, `String`, `Duration`, `Status`.
+    type = colors.blue;
+    # `\n`, `\t`, `\u{1f}`. The plain foreground, so an escape stands out
+    # of the green string it sits inside.
+    escape = colors.fg0;
+    # A call splits three ways. A free function and the path that reaches it
+    # take orange (`process`, `std::time`), a method takes red (`iter`,
+    # `from_secs`), and a macro takes pink (`println!`, `format!`).
+    function = colors.orange;
+    method = colors.red;
+    macro = colors.pink;
+    # `&`, `->`, `=`, `*`, `>`, `|`.
+    operator = colors.orange;
+    # Builtins and `special`: `i32`, `str`. Upstream calls this `storage`.
+    storage = colors.blue;
+    # Generic parameters: the `T` in `fn identity<T>`. The mid yellow, with
+    # the keywords. `yellow` is goldDeep (b8943a), a rung under `gold`.
+    generic = colors.yellow;
+    number = colors.green;
+    string = colors.green;
+    # Plain text: bindings, parameters, fields.
+    variable = colors.fg0;
+    # Enum variants and struct expressions: `Status::Active`, `Foo { .. }`.
+    # Helix tags the declaration `type.enum.variant` and every use
+    # `constructor`, so both read this.
+    constructor = colors.orange;
+    punctuation = colors.fg2;
+    # Rust attributes and lifetimes: `#[derive(Debug)]`.
+    annotation = colors.green;
     commentModifiers = [ ];
-    keywordModifiers = [ "bold" ];
+    keywordModifiers = [ ];
+    typeModifiers = [ ];
   };
 
-  # Merged over the shared mapping in palette.nix. Comments, strings,
-  # keywords, functions, numbers and punctuation land on upstream's exact
-  # values. The rest take the nearest upstream role.
+  # Merged over the shared mapping in palette.nix, which stays as
+  # `palettes/gruvbox.nix` wants it. Only the accent slots are overridden:
+  # base00-07 keep coming from this scheme's own bg and fg ramps.
+  #
+  # `gold` is spelled out rather than `yellow` on purpose. This scheme has
+  # both, and they differ: `gold` is dbad49, `yellow` is goldDeep at b8943a.
+  # gruvbox aliases `gold` to its orange, which is exactly why this block is
+  # here rather than in the shared mapping.
   base16 = {
-    base03 = syntax.comment;
-    base05 = syntax.variable;
-    base08 = syntax.operator;
-    base09 = syntax.number;
-    base0A = syntax.annotation;
-    base0B = syntax.string;
-    base0C = syntax.pointer;
-    base0D = syntax.type;
-    base0E = syntax.keyword;
-    base0F = syntax.punctuation;
+    base03 = colors.fg3; # comments, invisibles, indent guides
+    base05 = colors.fg0; # plain text
+    base08 = colors.orange; # tags, diff.minus
+    base09 = colors.gold; # constants, diff.delta
+    base0A = colors.green; # markup.bold
+    base0B = colors.green; # diff.plus
+    base0C = colors.paleGold; # markup.raw, markup.quote
+    base0D = colors.blue; # markup.heading.1
+    base0E = colors.pink; # pub, impl, fn, let, enum, match
+    base0F = colors.fg2; # punctuation
   };
+
   # The terminal's 16 ANSI slots, taken from this theme's own terminal.ansi*
   # keys. They sit beside `colors` rather than inside it for the same reason
   # `syntax` does: consumers such as modules/desktop/eww.nix stringify every
   # attr of `colors`, so it has to stay a flat map.
   #
-  # Keeping them here is what lets `red` and `pink` above be the theme's real
-  # red and salmon. The ANSI red stays upstream's dusty rose, where it
-  # belongs, instead of forcing the whole UI to use it.
+  # Two pairs are not upstream's. Red (1, 9) takes the theme's real red,
+  # because upstream's dusty rose (b38f8f, d9a6a6) reads as purple in cargo
+  # and rustc errors, which use bright red. Green (2, 10) is darker and less
+  # saturated than upstream's a3be8c and c3de9c, which glared in cargo's
+  # bright-green "Compiling" lines.
   ansi = [
     "181714" # 0  black
-    "b38f8f" # 1  red
-    "a3be8c" # 2  green
+    "d66848" # 1  red
+    "879570" # 2  green
     "ebcb8b" # 3  yellow
     "6c7a8a" # 4  blue
     "b3a3d3" # 5  magenta
     "6ac6f2" # 6  cyan
     "bcac8f" # 7  white
     "514e42" # 8  bright black
-    "d9a6a6" # 9  bright red
-    "c3de9c" # 10 bright green
+    "e27d5e" # 9  bright red
+    "9dab84" # 10 bright green
     "fbe4a8" # 11 bright yellow
     "8fa3b3" # 12 bright blue
     "d3a3d3" # 13 bright magenta

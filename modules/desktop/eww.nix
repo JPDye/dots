@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  shadow-style,
   colors,
   monoFont,
   ...
@@ -43,11 +44,16 @@ in
         # into the repo's eww dir (gitignored) rather than a store-only path
         # so the whole-dir symlink above — and eww's hot reload on it — keeps
         # working. Every `colors` entry becomes an scss `$name: #hex;`, plus
-        # `$mono-font` so the stylesheet tracks the theme's font too.
+        # `$mono-font` and `$shadow-offset` so the stylesheet tracks the
+        # theme's font and shadow too. The widgets keep a 1px border of their
+        # own rather than `border-style.width`.
         home.file.".config/nix/eww/_theme.scss".text =
           lib.concatStringsSep "\n" (
             lib.mapAttrsToList (name: value: "\$${name}: #${value};") colors
-            ++ [ ''$mono-font: "${monoFont}";'' ]
+            ++ [
+              ''$mono-font: "${monoFont}";''
+              "\$shadow-offset: ${toString (shadow-style.offset - 2)}px;"
+            ]
           )
           + "\n";
 

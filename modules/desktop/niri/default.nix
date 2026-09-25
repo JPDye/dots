@@ -51,6 +51,13 @@ in
       prefer-no-csd = true;
       screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
       gestures.hot-corners.enable = false;
+
+      # Read off stylix rather than repeated, so niri's own pointer cannot
+      # drift from the one GTK draws. niri defaults this to 24, which left
+      # the pointer changing size between niri's chrome and every GTK app.
+      # The theme name stays "default": home-manager writes
+      # ~/.icons/default/index.theme with `Inherits=<the stylix theme>`.
+      cursor.size = config.stylix.cursor.size;
     };
 
     # niri-flake writes xdg.configFile.niri-config from finalConfig (the

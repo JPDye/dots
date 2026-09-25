@@ -1,4 +1,5 @@
 {
+  colors,
   config,
   lib,
   pkgs,
@@ -10,6 +11,7 @@
 
 let
   cfg = config.dotfiles.theming.stylix;
+
 in
 {
   options.dotfiles.theming.stylix.enable = lib.mkEnableOption "system-wide stylix theming" // {
@@ -63,17 +65,29 @@ in
         };
       };
 
-      cursor = {
-        package = pkgs.bibata-cursors;
-        name = "Bibata-Original-Amber";
-        size = 16;
-      };
+      # Bibata Original, re-rendered in the palette (see
+      # pkgs/bibata-cursors-themed). The body is the signature gold, so it
+      # reads against every dark surface here. The outline is the shared
+      # `shadow` seam, so the cursor keeps an edge over light content too.
+      cursor =
+        let
+          package = pkgs.callPackage ../../pkgs/bibata-cursors-themed {
+            baseColor = "#${colors.primary}";
+            outlineColor = "#${colors.shadow}";
+            watchBackgroundColor = "#${colors.bg0}";
+          };
+        in
+        {
+          inherit package;
+          name = package.themeName;
+          size = 16;
+        };
 
       # Per-target overrides: stylix only configures a target when its module
-      # is enabled. firefox/spicetify/zellij/mako are disabled so other modules
-      # (textfox, spicetify customColorScheme, etc.) can own that theming; the
-      # active terminal defers to stylix (its module forces a custom palette on
-      # top).
+      # is enabled. firefox/spicetify/zellij/mako/helix are disabled so other
+      # modules (textfox, spicetify customColorScheme, etc.) can own that
+      # theming; the active terminal defers to stylix (its module forces a
+      # custom palette on top).
       targets = lib.mkMerge [
         (lib.mkIf config.dotfiles.apps.firefox.enable {
           firefox.enable = false;
@@ -86,6 +100,14 @@ in
           zellij.enable = false;
         })
         (lib.mkIf config.dotfiles.desktop.mako.enable { mako.enable = false; })
+        (lib.mkIf config.dotfiles.dev.helix.enable {
+          # dev/helix/themes.nix owns the helix theme. Both modules write
+          # `programs.helix.themes.<name>`, but stylix writes a rendered TOML
+          # *file* while ours writes an attrset, and the two do not merge:
+          # stylix's file won silently and this flake's theme never reached
+          # helix. Turning the target off leaves one writer.
+          helix.enable = false;
+        })
         (lib.mkIf config.dotfiles.desktop.lock.enable {
           # lock.nix owns hyprlock theming: this target would force the
           # static wallpaper as the lock background instead of the live

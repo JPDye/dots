@@ -35,9 +35,41 @@ in
           color = "#${colors.bg0}";
         };
 
+        # A resting panel border is a dark grey, one step above the chrome
+        # background. On hover or focus textfox swaps it to `--tf-accent`,
+        # the niri active-border colour.
         border = {
           color = "#${colors.bg1}";
         };
+
+        # The panel titles ("navbar", "tabs", "main" and the rest) are
+        # `::before` labels. At rest they inherit the chrome text colour, and
+        # on hover textfox paints them `--tf-accent`. This paints them gold at
+        # rest and restates the hover rule after it. textfox imports
+        # config.css last, so these rules win at equal specificity.
+        extraConfig = ''
+          #nav-bar::before,
+          #PersonalToolbar::before,
+          box#vertical-tabs::before,
+          #TabsToolbar::before,
+          #tabbrowser-tabbox::before,
+          findbar::before,
+          #sidebar-box::before,
+          .buttons-wrapper::before {
+            color: #${colors.gold} !important;
+          }
+
+          #nav-bar:hover::before,
+          #PersonalToolbar:hover::before,
+          box#vertical-tabs:hover::before,
+          #TabsToolbar:hover::before,
+          #tabbrowser-tabbox:hover::before,
+          findbar:hover::before,
+          #sidebar-box:hover::before,
+          .buttons-wrapper:hover::before {
+            color: var(--tf-accent) !important;
+          }
+        '';
       };
     };
 

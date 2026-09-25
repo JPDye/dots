@@ -1,5 +1,6 @@
 {
   border-style,
+  shadow-style,
   colors,
   config,
   lib,
@@ -18,10 +19,9 @@ in
     # schema predates them (is-floating matches and per-rule shadows are both
     # niri 26.04+).
     dotfiles.desktop.niri.extraConfig = ''
-      // Floating windows hover over other (often dark) windows, so they get
-      // the popup treatment: the border thins to 1px, matching fuzzel's.
-      // The shadow is the same 2px offset seam the tiled layout draws, so
-      // the desktop has one shadow rather than two.
+      // Floating windows hover over other (often dark) windows. They keep
+      // the shared border width. The shadow is the same offset seam the
+      // tiled layout draws, so the desktop has one shadow rather than two.
       window-rule {
           match is-floating=true
           // Floats open a touch wider than their natural size. This is just a
@@ -31,13 +31,13 @@ in
               fixed 900
           }
           border {
-              width 1
+              width ${toString border-style.width}
           }
           shadow {
               on
               spread 0
               softness 0
-              offset x=2 y=2
+              offset x=${toString shadow-style.offset} y=${toString shadow-style.offset}
               color "#${float-shadow}"
               // Explicit so an unfocused float keeps the same seam. Focus
               // is already signalled by the border colour.
