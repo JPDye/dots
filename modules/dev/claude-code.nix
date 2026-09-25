@@ -167,14 +167,15 @@ in
         ".claude/skills/asd-ste100".source = ste100SkillPatched;
 
         # STE100 as an output style. Installing the file only makes it appear
-        # in the picker. Select it with /config -> Output style. The choice
-        # lands in the shared settings.json under a key the flake does not
-        # own, so it stays interactively editable.
+        # in the picker. The managed `outputStyle` key below selects it, and
+        # that key is flake-owned, so a /config choice reverts on the next
+        # switch. A project's own .claude/settings.local.json still wins.
         ".claude/output-styles/ste100.md".source = ./ste-writing/ste100-output-style.md;
 
         # User memory (~/.claude/CLAUDE.md): turns the STE100 ruleset on
-        # for all prose. It imports the skill file above with an @-reference,
-        # so the two entries must stay installed together. Store-managed, so edit
+        # for all prose. It names the skill file above by path rather than
+        # importing it, so keep the two entries installed together or the
+        # pointer dangles. Store-managed, so edit
         # modules/dev/claude-user-memory.md and rebuild. The `#` memory
         # shortcut cannot write to it. claude2 gets its own copy because its
         # config dir does not inherit CLAUDE.md through a symlink.
