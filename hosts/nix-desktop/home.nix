@@ -1,6 +1,6 @@
 # Per-host home-manager overlay: monitor outputs, lib.mkForce bind overrides,
 # and nothing else — packages belong in the shared home.nix (see CLAUDE.md).
-_:
+{ lib, ... }:
 
 {
   programs.niri.settings = {
@@ -34,13 +34,16 @@ _:
     # Per-host layout. Unlike window-rules (a list that concatenates), layout is
     # an attrset that deep-merges with the shared base in
     # modules/desktop/niri/layout.nix. A key the base doesn't set merges in
-    # cleanly; overriding a key the base already sets (gaps, default-column-width,
-    # border.*, shadow.*, struts.*) needs lib.mkForce to win the conflict.
+    # cleanly. A scalar key the base already sets (gaps, default-column-width,
+    # border.*, shadow.*, struts.*) needs lib.mkForce to win the conflict. A
+    # list key the base already sets (preset-column-widths) never conflicts:
+    # home-manager appends the two lists, so it needs lib.mkForce to replace
+    # the base list rather than extend it.
     layout = {
       # New key — base doesn't set it, so no mkForce:
       always-center-single-column = true;
 
-      preset-column-widths = [
+      preset-column-widths = lib.mkForce [
         { proportion = 0.25; }
         { proportion = 0.3333; }
         { proportion = 0.5; }
