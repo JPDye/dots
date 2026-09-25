@@ -296,7 +296,13 @@ if [[ $swap_gib -gt 0 ]]; then
   fi
   # The offset is relative to the filesystem, so resumeDevice is the root
   # filesystem's UUID, which is the mapper device when LUKS is in use.
-  resume_uuid=$(blkid -s UUID -o value "$root_dev")
+  # -c /dev/null bypasses blkid's cache for the same reason as the LUKS read
+  # above: a re-run after a failed attempt must see the filesystem just made.
+  resume_uuid=$(blkid -c /dev/null -s UUID -o value "$root_dev")
+  if [[ -z $resume_uuid ]]; then
+    echo "failed to read the filesystem UUID of $root_dev for hibernate resume" >&2
+    exit 1
+  fi
   cat >"$tmp/swap.nix" <<'SWAPDOC'
   # Hibernate from /swapfile on the root partition.
   # If /swapfile gets fragmented, defrag and re-derive resume_offset:
@@ -317,7 +323,8 @@ SWAPDOC
 SWAPCFG
   sed -i -e "/# installer:swap/r $tmp/swap.nix" -e "/# installer:swap/d" \
     "$hostdir/configuration.nix"
-  if ! grep -qF 'device = "/swapfile";' "$hostdir/configuration.nix"; then
+  if ! grep -qF 'device = "/swapfile";' "$hostdir/configuration.nix" ||
+    ! grep -qF "by-uuid/$resume_uuid" "$hostdir/configuration.nix"; then
     echo "failed to stamp swap config into $hostdir_rel/configuration.nix" >&2
     exit 1
   fi
