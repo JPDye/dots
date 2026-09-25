@@ -104,8 +104,8 @@ nix run nixpkgs#home-manager -- init --switch  # or skip if already installed
 mkdir hosts/<name>
 $EDITOR hosts/<name>/home.nix
 
-# Wire up the flake (edit flake.nix):
-#   homeConfigurations.<name> = mkHome "<name>";
+# Wire up the flake (edit flake.nix): add "<name>" to the homeHosts list.
+# Never add a NixOS host there — see "A new host" below.
 
 # Apply:
 home-manager switch -b backup --flake ".#<name>"
@@ -676,7 +676,7 @@ The 9 *feature* system modules (`dotfiles.system.<name>.enable`) are the knobs; 
 3. Add the new file to that domain's `default.nix` `imports = [ ... ]`.
 4. Take `colors`, `monoFont`, etc. via function args (they come from `theme.nix` via `_module.args`).
 5. Run `nix flake check`. The pre-commit step runs `nixfmt-rfc-style`, `deadnix`, `statix`, `shellcheck`, `typos`, and `nu-check`. (For a faster loop: `pre-commit run --all-files` for the hooks alone, then `nix flake check --no-build` for eval only.)
-6. `home-manager switch --flake .#<host> -n` to dry-run, then drop `-n`.
+6. Dry-run before applying. NixOS host: `nixos-rebuild build --flake .#<host>`. Standalone HM host: `home-manager switch --flake .#<host> -n`, then drop `-n`.
 
 ### A new GUI app on Arch
 

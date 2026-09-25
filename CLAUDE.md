@@ -131,8 +131,11 @@ changed.
    toplevel + HM activation. This is the gate before a `switch`.
 
 The pre-commit git hook auto-installs on entering the dev shell via direnv
-(`.envrc` = `use flake`). Dry-run an apply with
-`home-manager switch --flake .#<host> -n`.
+(`.envrc` = `use flake`). Dry-run an apply before a `switch`. On a NixOS host:
+`nixos-rebuild build --flake .#<host>` (builds the toplevel, activates
+nothing, needs no root). On `laptop-arch`, the standalone home-manager host:
+`home-manager switch --flake .#<host> -n`. The NixOS hosts have no
+`homeConfigurations` entry, so the `-n` form fails there.
 
 The interactive shell here is **Nushell** — commands you hand the user to run
 must be valid Nushell (command substitution is `(cmd)`, not `$(cmd)`; env is
