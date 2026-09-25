@@ -40,9 +40,10 @@ in
   # Bits that don't fit any of the per-domain children.
   config = lib.mkIf cfg.enable {
     # niri-flake defaults this to its own niri-stable build (v25.08), but the
-    # binary that actually runs is nixpkgs' niri (system programs.niri on
-    # laptop-nix, wrapGL'd pkgs.niri on laptop-arch). Validate against the
-    # same version, or post-25.08 config options get rejected at build time.
+    # binary that actually runs is pkgs.niri, which the flake overlays with the
+    # niri-fork input (system programs.niri on NixOS, wrapGL'd pkgs.niri on
+    # laptop-arch). Validate against the same version, or post-25.08 config
+    # options get rejected at build time.
     programs.niri.package = lib.mkDefault pkgs.niri;
 
     programs.niri.settings = {

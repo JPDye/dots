@@ -412,6 +412,27 @@
         "type": "github"
       }
     },
+    "niri-fork": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790362533,
+        "narHash": "sha256-Bq93Kjtc3xZchvQw/YXKkjwS9EuIsJq9WcrUORzHEnE=",
+        "owner": "JPDye",
+        "repo": "niri",
+        "rev": "8c728ade7e8777270e833100759639556960265b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "JPDye",
+        "ref": "overview-border",
+        "repo": "niri",
+        "type": "github"
+      }
+    },
     "niri-stable": {
       "flake": false,
       "locked": {
@@ -660,6 +681,7 @@
         "improve-skill": "improve-skill",
         "myFonts": "myFonts",
         "niri": "niri",
+        "niri-fork": "niri-fork",
         "nix-index-database": "nix-index-database",
         "nixcord": "nixcord",
         "nixgl": "nixgl",

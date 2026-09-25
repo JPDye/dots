@@ -21,43 +21,52 @@
               corner-radius 0
           }
       }
+
+      // The whole overview section is raw KDL: the niri-fork input adds
+      // `workspace-border`, which niri-flake's schema does not know, and niri
+      // rejects a second `overview` node in one file. So the typed settings
+      // cannot carry any part of it.
+      //
+      // The workspace shadow is the same hard offset seam the window shadow
+      // draws: spread 0 keeps the shadow the workspace's own size, softness
+      // 0 keeps the edge hard, and the offset is the only thing that shows
+      // it. niri multiplies softness, spread AND offset by `view_size.h /
+      // 1080` (compute_workspace_shadow_config, src/layout/workspace.rs), and
+      // the overview then draws the whole workspace at the zoom. So what
+      // lands on screen is
+      //
+      //     configured * (view_h / 1080) * zoom
+      //
+      // while a window inside the overview shows its own offset at just
+      // `offset * zoom`. Half the offset would match the two on a 2160-tall
+      // output. The full offset below makes the workspace cast twice the
+      // window's seam there, and 1.8 times on a 1200-tall panel, so a
+      // workspace reads apart from the windows in it. The colour stays
+      // darker than `backdrop-color`, which is bg0: a shadow cannot read
+      // against its own colour.
+      //
+      // The workspace border copies the window border. The fork draws it in
+      // workspace space and applies the overview zoom, so the same width
+      // gives the same on-screen line as a window border.
+      overview {
+          backdrop-color "#${colors.bg0}"
+          zoom 0.6
+          workspace-shadow {
+              softness 0
+              spread 0
+              offset x=${toString shadow-style.offset} y=${toString shadow-style.offset}
+              color "#${colors.shadow}"
+          }
+          workspace-border {
+              on
+              width ${toString border-style.width}
+              active-color "#${colors.borderActive}"
+              inactive-color "#${colors.borderInactive}"
+          }
+      }
     '';
 
     programs.niri.settings = {
-      overview = {
-        backdrop-color = "#${colors.bg0}";
-        zoom = 0.6;
-        # The same hard offset seam the window shadow below draws: spread 0
-        # keeps the shadow the workspace's own size, softness 0 keeps the
-        # edge hard, and the offset is the only thing that shows it.
-        #
-        # The number is not the window offset. niri multiplies softness, spread AND offset by
-        # `view_size.h / 1080` (compute_workspace_shadow_config,
-        # src/layout/workspace.rs), and the overview then draws the whole
-        # workspace at the zoom above. So what lands on screen is
-        #
-        #     configured * (view_h / 1080) * zoom
-        #
-        # while a window inside the overview shows its own offset at just
-        # `offset * zoom`. Setting configured = offset * 1080 / view_h makes
-        # the two match: half the offset on a 2160-tall output, which is what
-        # this targets, the same output the old spread was tuned against. A
-        # 1200-tall panel would want 0.9 of it, and one value cannot serve
-        # both.
-        #
-        # The colour stays darker than `backdrop-color`, which is bg0: a
-        # shadow cannot read against its own colour.
-        workspace-shadow = {
-          softness = 0;
-          spread = 0;
-          offset = {
-            x = shadow-style.offset / 2.0;
-            y = shadow-style.offset / 2.0;
-          };
-          color = "#${colors.shadow}";
-        };
-      };
-
       input = {
         keyboard.xkb.layout = "gb";
         focus-follows-mouse = {

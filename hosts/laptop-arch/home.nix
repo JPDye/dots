@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   mkNixGLWrap,
   ...
@@ -35,59 +36,73 @@ in
     (pkgs.callPackage ./pam-setup.nix { })
   ];
 
-  # dbus-broker-launch reads XDG_DATA_DIRS once, when it starts, to build the
-  # list of <dir>/dbus-1/services it scans. The user bus starts from the systemd
-  # user manager, and that manager gets its environment from
-  # environment.d/10-home-manager.conf. The only XDG_DATA_DIRS line in that file
-  # is the gsettings-schema pair from xdg.systemDirs.data
-  # (modules/theming/stylix.nix), and the `${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}`
-  # tail contributes nothing, because no login shell has run that early. So the
-  # bus scans two schema dirs and no service dir at all. Every name under
-  # /usr/share or ~/.nix-profile/share then answers "not activatable":
-  # ca.desrt.dconf (which aborts `home-manager switch` in dconfSettings), the
-  # xdg-desktop-portal names, and the gcr prompter below. niri-session runs
-  # `systemctl --user import-environment` later and repairs the manager, but the
-  # bus has already read its service dirs by then.
-  #
-  # These entries land in the same environment.d file, which systemd reads
-  # before it starts any unit, so the bus starts with a complete list. The nix
-  # profile comes first, because the GUI stack on this host is the nix one. This
-  # takes effect at the next login.
-  xdg.systemDirs.data = [
-    "${config.home.profileDirectory}/share"
-    "/nix/var/nix/profiles/default/share"
-    "/usr/local/share"
-    "/usr/share"
-  ];
+  xdg = {
+    # dbus-broker-launch reads XDG_DATA_DIRS once, when it starts, to build the
+    # list of <dir>/dbus-1/services it scans. The user bus starts from the systemd
+    # user manager, and that manager gets its environment from
+    # environment.d/10-home-manager.conf. The only XDG_DATA_DIRS line in that file
+    # is the gsettings-schema pair from xdg.systemDirs.data
+    # (modules/theming/stylix.nix), and the `${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}`
+    # tail contributes nothing, because no login shell has run that early. So the
+    # bus scans two schema dirs and no service dir at all. Every name under
+    # /usr/share or ~/.nix-profile/share then answers "not activatable":
+    # ca.desrt.dconf (which aborts `home-manager switch` in dconfSettings), the
+    # xdg-desktop-portal names, and the gcr prompter below. niri-session runs
+    # `systemctl --user import-environment` later and repairs the manager, but the
+    # bus has already read its service dirs by then.
+    #
+    # These entries land in the same environment.d file, which systemd reads
+    # before it starts any unit, so the bus starts with a complete list. The nix
+    # profile comes first, because the GUI stack on this host is the nix one. This
+    # takes effect at the next login.
+    systemDirs.data = [
+      "${config.home.profileDirectory}/share"
+      "/nix/var/nix/profiles/default/share"
+      "/usr/local/share"
+      "/usr/share"
+    ];
 
-  # gnome-keyring draws no dialog itself. To unlock a locked keyring it calls a
-  # second D-Bus service, org.gnome.keyring.SystemPrompter, and gcr provides it.
-  # With no prompter, gnome-keyring logs "couldn't create system prompt:
-  # ServiceUnknown" and the app that asked for the secret waits forever. Termius
-  # is the app that hurts: it reads its database key through libsecret before it
-  # draws a window, so it sits on the blue splash (modules/apps/termius.nix).
-  #
-  # Two separate gaps make the name unactivatable on this host. Arch ships
-  # /usr/lib/gcr-prompter, but it needs gtk3 and libgcr-ui-3, and neither is
-  # installed here, because the GUI stack comes from nix. The session bus also
-  # never sees /usr/share/dbus-1/services: dbus-broker-launch reads
-  # XDG_DATA_DIRS once, when it starts, and the value it gets is the one from
-  # environment.d/10-home-manager.conf. That value is only the two
-  # gsettings-schema dirs from xdg.systemDirs.data (modules/theming/stylix.nix),
-  # because the `${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}` tail collapses to nothing
-  # when no login shell has run yet.
-  #
-  # ~/.local/share/dbus-1/services is the one service dir the bus always reads,
-  # because it comes from XDG_DATA_HOME and not from XDG_DATA_DIRS. So put the
-  # unit there and point it at nix's gcr. The `Exec=` in that file is already an
-  # absolute store path, which is why this reuses the file instead of writing a
-  # new one. XDG_DATA_HOME wins over XDG_DATA_DIRS, so this entry also beats
-  # Arch's broken copy if /usr/share ever becomes visible to the bus.
-  #
-  # The NixOS hosts need none of this: services.gnome.gnome-keyring pulls in a
-  # working gcr, and modules/system/desktop.nix seeds XDG_DATA_DIRS system-wide.
-  xdg.dataFile."dbus-1/services/org.gnome.keyring.SystemPrompter.service".source =
-    "${pkgs.gcr}/share/dbus-1/services/org.gnome.keyring.SystemPrompter.service";
+    # gnome-keyring draws no dialog itself. To unlock a locked keyring it calls a
+    # second D-Bus service, org.gnome.keyring.SystemPrompter, and gcr provides it.
+    # With no prompter, gnome-keyring logs "couldn't create system prompt:
+    # ServiceUnknown" and the app that asked for the secret waits forever. Termius
+    # is the app that hurts: it reads its database key through libsecret before it
+    # draws a window, so it sits on the blue splash (modules/apps/termius.nix).
+    #
+    # Two separate gaps make the name unactivatable on this host. Arch ships
+    # /usr/lib/gcr-prompter, but it needs gtk3 and libgcr-ui-3, and neither is
+    # installed here, because the GUI stack comes from nix. The session bus also
+    # never sees /usr/share/dbus-1/services: dbus-broker-launch reads
+    # XDG_DATA_DIRS once, when it starts, and the value it gets is the one from
+    # environment.d/10-home-manager.conf. That value is only the two
+    # gsettings-schema dirs from xdg.systemDirs.data (modules/theming/stylix.nix),
+    # because the `${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}` tail collapses to nothing
+    # when no login shell has run yet.
+    #
+    # ~/.local/share/dbus-1/services is the one service dir the bus always reads,
+    # because it comes from XDG_DATA_HOME and not from XDG_DATA_DIRS. So put the
+    # unit there and point it at nix's gcr. The `Exec=` in that file is already an
+    # absolute store path, which is why this reuses the file instead of writing a
+    # new one. XDG_DATA_HOME wins over XDG_DATA_DIRS, so this entry also beats
+    # Arch's broken copy if /usr/share ever becomes visible to the bus.
+    #
+    # The NixOS hosts need none of this: services.gnome.gnome-keyring pulls in a
+    # working gcr, and modules/system/desktop.nix seeds XDG_DATA_DIRS system-wide.
+    dataFile."dbus-1/services/org.gnome.keyring.SystemPrompter.service".source =
+      "${pkgs.gcr}/share/dbus-1/services/org.gnome.keyring.SystemPrompter.service";
+
+    # niri-session only starts niri.service, and systemd resolves that unit to
+    # the pacman package's /usr/lib/systemd/user/niri.service, whose
+    # `ExecStart=niri` finds /usr/bin/niri. The unit in the Nix package is no
+    # fix either: it names the unwrapped binary, without nixGL. This drop-in
+    # points the pacman unit at the wrapped package, so the session runs the
+    # same niri that validates the config.
+    configFile."systemd/user/niri.service.d/nix-niri.conf".text = ''
+      [Service]
+      ExecStart=
+      ExecStart=${lib.getExe config.programs.niri.package} --session
+    '';
+  };
 
   # Install niri into the user profile — on Arch there's no system-level
   # `programs.niri.enable` to do it. nixGL-wrapped so its GL/Vulkan calls find
@@ -95,9 +110,10 @@ in
   # systemd unit is auto-enabled).
   programs.niri = {
     enable = true;
-    # nixpkgs' niri (26.04), not niri-flake's niri-stable build (25.08). The
-    # shared config uses post-25.08 features (recent-windows switcher), and
-    # laptop-nix runs the nixpkgs build too, so versions stay in step.
+    # pkgs.niri (the niri-fork overlay), not niri-flake's niri-stable build
+    # (25.08). The shared config uses post-25.08 features (recent-windows
+    # switcher), and the NixOS hosts run the same pkgs.niri, so versions stay
+    # in step.
     package = wrapGL pkgs.niri;
 
     settings = {

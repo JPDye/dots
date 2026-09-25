@@ -87,6 +87,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # The niri binary itself: my fork (local checkout ~/Code/oss/niri), not
+    # nixpkgs' release. niri-flake above still supplies the HM module and the
+    # settings schema. Push the branch, then `nix flake update niri-fork`.
+    niri-fork = {
+      url = "github:JPDye/niri/overview-border";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixgl = {
       url = "github:nix-community/nixGL";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -159,6 +167,13 @@
 
       sharedOverlays = [
         inputs.niri.overlays.niri
+        # Every consumer (HM programs.niri.package, NixOS programs.niri, the
+        # greeter, the portal config) reads pkgs.niri, so this one line moves
+        # all three hosts onto the fork. niri.cachix.org does not carry it, so
+        # it builds locally.
+        (final: _: {
+          niri = inputs.niri-fork.packages.${final.stdenv.hostPlatform.system}.niri;
+        })
         # nixGL's own overlay derives an `isIntelX86Platform` flag from the
         # deprecated `final.system` alias (nixGL flake.nix:36), which prints a
         # "'system' has been renamed to 'stdenv.hostPlatform.system'" warning
