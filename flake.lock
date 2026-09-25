@@ -419,11 +419,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790362533,
-        "narHash": "sha256-Bq93Kjtc3xZchvQw/YXKkjwS9EuIsJq9WcrUORzHEnE=",
+        "lastModified": 1790368838,
+        "narHash": "sha256-4a88j4jVlSp2QpiccTFdNHQdL2B1os7UKJflRXpklBE=",
         "owner": "JPDye",
         "repo": "niri",
-        "rev": "8c728ade7e8777270e833100759639556960265b",
+        "rev": "c01273d175cd3adab5d78a08fe63122de6ff0e6e",
         "type": "github"
       },
       "original": {

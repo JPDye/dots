@@ -23,8 +23,8 @@ let
     ;
 
   # Login backdrop: the theme wallpaper, heavily gaussian-blurred at build
-  # time (sigma 20 — matches the blur-wallpaper script default; the lighter
-  # sigma-4 backdrop in theming/wallpaper.nix is a different surface).
+  # time (sigma 20). It matches the blur-wallpaper script default and the
+  # niri backdrop in theming/wallpaper.nix.
   wallpaperBlurred =
     pkgs.runCommand "greeter-wallpaper-blur.png"
       {

@@ -91,7 +91,7 @@
     ; The duration pill doubles as a play/pause toggle (boxes can't take
     ; onclick, hence the eventbox). The icon flips on its own: playerctl
     ; changes the status, which comes back around through media.nu.
-    (eventbox :class "media-toggle" :cursor "pointer"
+    (eventbox :class "pill-btn" :cursor "pointer"
               :onclick "playerctl play-pause"
       (media-pill :icon {media.status == "Playing" ? "󰏤" : "󰐊"} :limit 16
                   :text {media.duration != "" ? "${position}/${media.duration}" : ""}))))
@@ -102,10 +102,14 @@
        :hexpand true :valign "end" :halign "end"
     (bat :cap {EWW_BATTERY?.BAT0?.capacity ?: -1}
          :status {EWW_BATTERY?.BAT0?.status ?: ""})
-    (pill :icon "󰻠" :text "${round(EWW_CPU.avg, 0)}%"
-          :level {EWW_CPU.avg >= 70 ? "crit" : EWW_CPU.avg >= 40 ? "warn" : ""})
-    (pill :icon "󰍛" :text "${round(EWW_RAM.used_mem_perc, 0)}%"
-          :level {EWW_RAM.used_mem_perc >= 70 ? "crit" : EWW_RAM.used_mem_perc >= 40 ? "warn" : ""})))
+    ; The cpu and ram pills open btm in a terminal. eww-open-btm comes from
+    ; modules/desktop/eww.nix, on the daemon's PATH.
+    (eventbox :class "pill-btn" :cursor "pointer" :onclick "eww-open-btm"
+      (pill :icon "󰻠" :text "${round(EWW_CPU.avg, 0)}%"
+            :level {EWW_CPU.avg >= 70 ? "crit" : EWW_CPU.avg >= 40 ? "warn" : ""}))
+    (eventbox :class "pill-btn" :cursor "pointer" :onclick "eww-open-btm"
+      (pill :icon "󰍛" :text "${round(EWW_RAM.used_mem_perc, 0)}%"
+            :level {EWW_RAM.used_mem_perc >= 70 ? "crit" : EWW_RAM.used_mem_perc >= 40 ? "warn" : ""}))))
 
 (defwidget bat [cap status]
   (box :visible {cap >= 0}

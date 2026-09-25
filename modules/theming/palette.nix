@@ -108,15 +108,15 @@ rec {
     opacity = 0.92;
     # The hard offset, in px down and right, that a niri window casts. Every
     # other shadow derives from it: floats, walker and the lock card cast
-    # the same, the eww widgets cast 2px less, the overview workspace the
-    # full offset before its output scaling (see the overview KDL in
+    # the same, the eww widgets cast 2px less, the overview workspace 6px
+    # more before its output scaling (see the overview KDL in
     # niri/layout.nix), and the greeter's ring 4px more.
-    offset = 5;
+    offset = 6;
   };
 
   # Wallpaper — single source of truth, consumed by the home-manager
   # surfaces (awww, stylix, hyprlock) and by the greeter backdrop.
-  wallpaper = ../../wallpapers/berries.jpg;
+  wallpaper = ../../wallpapers/market.jpg;
 
   # Color-format helpers for consumer modules.
   themeLib = {

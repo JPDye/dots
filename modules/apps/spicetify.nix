@@ -88,7 +88,10 @@ in
           "main" = "${colors.bg0}";
           "notification" = "${colors.info}";
           "notification-error" = "${colors.urgent}";
-          "subtext" = "${colors.accent}";
+          # Secondary lines (artist, "Playlist • owner", the track-list
+          # header) take the cool blue, so they read apart from the gold
+          # accents.
+          "subtext" = "${colors.blue}";
           "text" = "${colors.fg0}";
         };
       };

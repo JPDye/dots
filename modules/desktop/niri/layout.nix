@@ -39,27 +39,27 @@
       //
       // while a window inside the overview shows its own offset at just
       // `offset * zoom`. Half the offset would match the two on a 2160-tall
-      // output. The full offset below makes the workspace cast twice the
-      // window's seam there, and 1.8 times on a 1200-tall panel, so a
-      // workspace reads apart from the windows in it. The colour stays
+      // output. The offset plus 6px (12px) below makes the workspace cast
+      // 4 times the window's seam there, and about 2.2 times on a
+      // 1200-tall panel, so a workspace reads apart from the windows in it. The colour stays
       // darker than `backdrop-color`, which is bg0: a shadow cannot read
       // against its own colour.
       //
-      // The workspace border copies the window border. The fork draws it in
-      // workspace space and applies the overview zoom, so the same width
-      // gives the same on-screen line as a window border.
+      // The workspace border is the window border plus 2px. The fork draws
+      // it in workspace space and applies the overview zoom, so the extra
+      // 2px gives a line 2px thicker than a window border at zoom 1.
       overview {
           backdrop-color "#${colors.bg0}"
           zoom 0.6
           workspace-shadow {
               softness 0
               spread 0
-              offset x=${toString shadow-style.offset} y=${toString shadow-style.offset}
+              offset x=${toString (shadow-style.offset + 6)} y=${toString (shadow-style.offset + 6)}
               color "#${colors.shadow}"
           }
           workspace-border {
               on
-              width ${toString border-style.width}
+              width ${toString (border-style.width + 2)}
               active-color "#${colors.borderActive}"
               inactive-color "#${colors.borderInactive}"
           }

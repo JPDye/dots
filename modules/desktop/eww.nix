@@ -4,12 +4,27 @@
   pkgs,
   shadow-style,
   colors,
+  terminal,
   monoFont,
   ...
 }:
 
 let
   cfg = config.dotfiles.desktop.eww;
+
+  # The cpu and ram pills run this on click (eww.yuck). It spawns through
+  # `niri msg` so the terminal is parented to the compositor rather than to
+  # eww.service, and a daemon restart does not kill it. Then it closes the
+  # overview, which also closes the powermenu, so btm comes up in focus.
+  # The terminal is the absolute wrapGL'd path, as in niri/binds.nix.
+  open-btm = pkgs.writeShellApplication {
+    name = "eww-open-btm";
+    runtimeInputs = [ pkgs.niri ];
+    text = ''
+      niri msg action spawn -- ${lib.getExe (config.dotfiles.wrapGL terminal.package)} -e ${lib.getExe pkgs.bottom}
+      niri msg action close-overview
+    '';
+  };
 in
 {
   options.dotfiles.desktop.eww.enable = lib.mkEnableOption "eww powermenu" // {
@@ -70,7 +85,8 @@ in
             RestartSec = 1;
             # eww.yuck shells out to awk (uptime), `nu ~/.config/eww/media.nu` (media),
             # and playerctl (position/onclick); the powermenu button actions run
-            # reboot/poweroff/loginctl (see (pbtn) in eww.yuck). Declare them rather
+            # reboot/poweroff/loginctl (see (pbtn) in eww.yuck), and the cpu/ram pills
+            # run eww-open-btm (above). Declare them rather
             # than relying on the inherited user-profile PATH, which is reliable on
             # NixOS but not on Arch. bash is load-bearing: eww spawns deflisten
             # commands through PATH-resolved `sh` (defpoll uses /bin/sh outright),
@@ -85,6 +101,7 @@ in
                   pkgs.gawk
                   pkgs.coreutils
                   pkgs.systemd
+                  open-btm
                 ]
               }"
             ];

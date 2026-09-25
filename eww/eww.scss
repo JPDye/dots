@@ -3,8 +3,8 @@
 // `all: unset` on `*` has zero specificity, so every rule in the GTK theme
 // that names a widget type outranks it. `button` is the one that bites: the
 // theme paints it with a gradient and its own inset shadow, which land on top
-// of the background-color and box-shadow set below. The eventbox around the
-// duration pill takes the same treatment, so an interactive widget and a
+// of the background-color and box-shadow set below. The eventbox around each
+// clickable pill takes the same treatment, so an interactive widget and a
 // plain box dress identically.
 button,
 eventbox {
@@ -55,9 +55,9 @@ $box-shadow: $shadow-offset $shadow-offset 0 $shadow;
 
 // GTK3 clips a widget's box-shadow to its parent's allocation, and a GtkEventBox
 // is sized exactly to its child. So a shadow on a widget inside one lands
-// outside the allocation and is clipped away: that is the play/pause toggle and
-// every power button, the only two widgets here that need an eventbox to take a
-// click. Reserving the offset as margin gives the shadow room inside that
+// outside the allocation and is clipped away: that is every clickable pill
+// (play/pause, cpu, ram) and every power button, the only widgets here that
+// need an eventbox to take a click. Reserving the offset as margin gives the shadow room inside that
 // allocation. A pill that sits straight in a box needs none, which is why the
 // artist, album and title pills already cast one.
 $box-shadow-room: 0 $shadow-offset $shadow-offset 0;
@@ -187,22 +187,23 @@ $surface-green: $success;
 .stats-box .pill.warn .icon { color: rgba($warning, 0.9); }
 .stats-box .pill.crit .icon { color: rgba($urgent, 1.0); }
 
-// The duration pill is the one pill inside an eventbox, so it is the one that
-// has to reserve room for its own shadow. See `$box-shadow-room`.
-.media-toggle .pill {
+// A clickable pill (the duration pill's play/pause, the cpu and ram pills'
+// btm) sits inside an eventbox, so it has to reserve room for its own shadow.
+// See `$box-shadow-room`.
+.pill-btn .pill {
   margin: $box-shadow-room;
 }
 
-// The duration pill is clickable (play/pause), so it hovers exactly as the
-// buttons above do: the fill and the outline step up the warm ramp, and the
-// icon keeps its colour.
+// A clickable pill hovers exactly as the buttons above do: the fill and the
+// outline step up the warm ramp, and the icon keeps its colour, so a cpu or
+// ram severity tint survives a hover.
 //
-// The `:hover` has to sit on `.media-toggle`, the eventbox, not on the pill.
+// The `:hover` has to sit on `.pill-btn`, the eventbox, not on the pill.
 // A GtkBox has no input window of its own, so GTK never puts it in the hover
 // state. The eventbox is the widget that tracks the pointer, which is why it
 // wraps the pill at all. A GtkButton tracks its own, so the buttons above can
 // spell theirs `&:hover`.
-.media-toggle:hover .pill {
+.pill-btn:hover .pill {
   background-color: $warm4;
   border-color: $box-border-hover;
 }

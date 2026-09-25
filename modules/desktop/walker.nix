@@ -85,6 +85,7 @@ in
         @define-color neutral_color   #${colors.neutral};
         @define-color primary_color   #${colors.primary};
         @define-color accent_color    #${colors.accent};
+        @define-color blue_color      #${colors.blue};
         @define-color error_bg_color  #${colors.urgent};
         @define-color error_fg_color  #${colors.fg0};
 
@@ -179,11 +180,11 @@ in
         }
 
         /* Item subtext — the clipboard entry's timestamp and app descriptions
-           in the Mod+R list. The signature gold, and a touch brighter than
+           in the Mod+R list. The palette blue, and a touch brighter than
            the default 0.5 opacity so the colour reads. */
         .item-subtext {
           font-size: 12px;
-          color: @primary_color;
+          color: @blue_color;
           opacity: 0.9;
         }
 
