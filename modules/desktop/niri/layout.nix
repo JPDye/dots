@@ -79,6 +79,9 @@
         background-color = "transparent";
         gaps = 16;
         center-focused-column = "never";
+        # Keep the empty workspace above the first one as well as below the
+        # last, so a new workspace can open on either side.
+        empty-workspace-above-first = true;
 
         preset-column-widths = [
           { proportion = 0.333; }

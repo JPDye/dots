@@ -24,17 +24,17 @@ in
 
     wallpaperBlurred = lib.mkOption {
       type = lib.types.path;
-      # Sigma 20, a heavy backdrop blur. It matches the greeter backdrop and
-      # the blur-wallpaper script default.
+      # Sigma 15, a medium-heavy backdrop blur. The greeter backdrop and the
+      # blur-wallpaper script default use a heavier sigma 20.
       default =
         pkgs.runCommand "wallpaper-blur.png"
           {
             nativeBuildInputs = [ pkgs.imagemagick ];
           }
           ''
-            magick ${cfg.wallpaper} -blur 0x20 PNG:$out
+            magick ${cfg.wallpaper} -blur 0x15 PNG:$out
           '';
-      defaultText = lib.literalMD "`dotfiles.theme.wallpaper` gaussian-blurred at build time (sigma 20)";
+      defaultText = lib.literalMD "`dotfiles.theme.wallpaper` gaussian-blurred at build time (sigma 15)";
       description = ''
         Blurred companion to `wallpaper`, shown by swaybg in the niri
         backdrop layer. Derived from `wallpaper` at build time; set this to
