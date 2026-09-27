@@ -75,10 +75,6 @@
             slack
             vlc
 
-            # niri plumbing — niri spawns these at startup; both need GL
-            xwayland-satellite-stable
-            swaybg
-
             # color picker bound to Mod+I in niri
             hyprpicker
           ]

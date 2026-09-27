@@ -34,24 +34,29 @@ let
         magick ${palette.wallpaper} -blur 0x20 PNG:$out
       '';
 
-  # ReGreet's centred login box, restyled to read like a niri window: bg0
-  # fill, a `border` border, square corners, and a hard ring shadow with no
-  # blur, `shadow-style.offset` plus 4px wide (see the layout.nix border/shadow rules).
-  #
-  # ReGreet's UI is a GtkOverlay: the background Picture is child 1, the
-  # centred login Frame is child 2 (the first add_overlay), and the clock
-  # Frame is child 3. Scoping to nth-child(2) styles the login box only and
-  # leaves the clock with its default flush-to-top look.
-  loginBoxCss = ''
-    overlay > frame.background:nth-child(2) {
-      background-color: #${colors.bg0};
-      border: ${toString border-style.width}px solid #${colors.borderActive};
-      border-radius: ${toString border-style.radius-int}px;
-      box-shadow: 0 0 0 ${
-        toString (shadow-style.offset + 4)
-      }px rgba(${themeLib.rgbCss colors.bg0}, ${toString shadow-style.opacity});
-    }
-  '';
+  # One ReGreet stylesheet per scheme, under greeter-styles/, so each
+  # palette gets its own login screen, not one layout in new colours.
+  # Every scheme in palette.nix must have a file here. The assert below
+  # fails the eval for a scheme that has none.
+  greeterStyles = {
+    gruvbox = ./greeter-styles/gruvbox.nix;
+    kintsugi = ./greeter-styles/kintsugi.nix;
+  };
+
+  greeterCss =
+    let
+      missing = lib.filter (name: !(greeterStyles ? ${name})) palette.schemeNames;
+    in
+    assert lib.assertMsg (missing == [ ])
+      "modules/system/greeter.nix: No greeter stylesheet exists for scheme(s) ${lib.concatStringsSep ", " missing}. Add a file to modules/system/greeter-styles/. Add the file to greeterStyles.";
+    import greeterStyles.${palette.scheme} {
+      inherit
+        colors
+        border-style
+        shadow-style
+        themeLib
+        ;
+    };
 
   # "Shell (TTY)" session: hand the authenticated user straight to a bare
   # login shell on the VT instead of launching a compositor. greetd has
@@ -130,9 +135,9 @@ in
         GTK.application_prefer_dark_theme = true;
       };
 
-      # niri-window styling for the login box (see loginBoxCss above). Written
-      # by the module to /etc/greetd/regreet.css.
-      extraCss = loginBoxCss;
+      # The active scheme's stylesheet (see greeterCss above). The module
+      # writes it to /etc/greetd/regreet.css.
+      extraCss = greeterCss;
     };
 
     # ReGreet populates its session picker from wayland-sessions desktop files

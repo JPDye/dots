@@ -58,8 +58,10 @@ $box-shadow: $shadow-offset $shadow-offset 0 $shadow;
 // outside the allocation and is clipped away: that is every clickable pill
 // (play/pause, cpu, ram) and every power button, the only widgets here that
 // need an eventbox to take a click. Reserving the offset as margin gives the shadow room inside that
-// allocation. A pill that sits straight in a box needs none, which is why the
-// artist, album and title pills already cast one.
+// allocation. A pill that sits straight in a box does not need the room, but
+// it takes the same margin anyway. Without it, the plain pills stretch to
+// the taller row that a clickable pill's margin makes, so they come out 4px
+// taller and their text sits lower.
 $box-shadow-room: 0 $shadow-offset $shadow-offset 0;
 
 // Icons take the primary, except the cpu/ram ones, which the severity rules
@@ -161,6 +163,9 @@ $surface-green: $success;
   .value {
     font-size: 0.65em;
     color: $text-fg;
+    // Without this, the text sits high in the pill. The padding moves it
+    // down, nearer the vertical centre.
+    padding-top: 2px;
   }
 
   .icon {
@@ -178,6 +183,9 @@ $surface-green: $success;
 .stats-box .pill {
   border: 1px solid $box-border;
   box-shadow: $box-shadow;
+  // Every pill reserves its shadow room, clickable or not, so all pills in
+  // a row come out the same height. See `$box-shadow-room`.
+  margin: $box-shadow-room;
   .icon { color: $icon-fg; }
 }
 
@@ -186,13 +194,6 @@ $surface-green: $success;
 // exist for exactly this and do not follow a re-themed accent.
 .stats-box .pill.warn .icon { color: rgba($warning, 0.9); }
 .stats-box .pill.crit .icon { color: rgba($urgent, 1.0); }
-
-// A clickable pill (the duration pill's play/pause, the cpu and ram pills'
-// btm) sits inside an eventbox, so it has to reserve room for its own shadow.
-// See `$box-shadow-room`.
-.pill-btn .pill {
-  margin: $box-shadow-room;
-}
 
 // A clickable pill hovers exactly as the buttons above do: the fill and the
 // outline step up the warm ramp, and the icon keeps its colour, so a cpu or

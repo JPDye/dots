@@ -39,8 +39,8 @@
       //
       // while a window inside the overview shows its own offset at just
       // `offset * zoom`. Half the offset would match the two on a 2160-tall
-      // output. The offset plus 6px (12px) below makes the workspace cast
-      // 4 times the window's seam there, and about 2.2 times on a
+      // output. The offset plus 4px (10px) below makes the workspace cast
+      // about 3.3 times the window's seam there, and about 1.9 times on a
       // 1200-tall panel, so a workspace reads apart from the windows in it. The colour stays
       // darker than `backdrop-color`, which is bg0: a shadow cannot read
       // against its own colour.
@@ -54,7 +54,7 @@
           workspace-shadow {
               softness 0
               spread 0
-              offset x=${toString (shadow-style.offset + 6)} y=${toString (shadow-style.offset + 6)}
+              offset x=${toString (shadow-style.offset + 4)} y=${toString (shadow-style.offset + 4)}
               color "#${colors.shadow}"
           }
           workspace-border {
@@ -120,7 +120,9 @@
           };
 
           color = "#${colors.shadow}";
-          inactive-color = "#${colors.shadow}";
+          # An unfocused window casts a slightly lighter seam than the
+          # focused one, so focus shows in the shadow as well as the border.
+          inactive-color = "#${colors.shadowInactive}";
         };
 
         # Pull windows back toward the screen edges so the outer gap stays

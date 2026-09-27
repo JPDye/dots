@@ -83,7 +83,9 @@ in
           # grey.
           "border-active" = "${colors.borderActive}";
           "border-inactive" = "${colors.bg2}";
-          "header" = "${colors.accent}";
+          # Panel labels at rest take the cool blue, the same as Firefox's
+          # panel titles (modules/apps/firefox.nix).
+          "header" = "${colors.blue}";
           "highlight" = "${colors.urgent}";
           "main" = "${colors.bg0}";
           "notification" = "${colors.info}";

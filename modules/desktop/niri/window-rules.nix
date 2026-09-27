@@ -39,9 +39,9 @@ in
               softness 0
               offset x=${toString shadow-style.offset} y=${toString shadow-style.offset}
               color "#${float-shadow}"
-              // Explicit so an unfocused float keeps the same seam. Focus
-              // is already signalled by the border colour.
-              inactive-color "#${float-shadow}"
+              // An unfocused float casts the same lighter seam as an
+              // unfocused tiled window (niri/layout.nix).
+              inactive-color "#${colors.shadowInactive}"
           }
       }
 

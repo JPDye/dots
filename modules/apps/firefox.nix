@@ -44,8 +44,9 @@ in
 
         # The panel titles ("navbar", "tabs", "main" and the rest) are
         # `::before` labels. At rest they inherit the chrome text colour, and
-        # on hover textfox paints them `--tf-accent`. This paints them gold at
-        # rest and restates the hover rule after it. textfox imports
+        # on hover textfox paints them `--tf-accent`. This paints them the cool
+        # blue at rest, as Spotify's panel labels are, and restates the hover
+        # rule after it. textfox imports
         # config.css last, so these rules win at equal specificity.
         extraConfig = ''
           #nav-bar::before,
@@ -56,7 +57,7 @@ in
           findbar::before,
           #sidebar-box::before,
           .buttons-wrapper::before {
-            color: #${colors.gold} !important;
+            color: #${colors.blue} !important;
           }
 
           #nav-bar:hover::before,

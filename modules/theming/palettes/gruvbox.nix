@@ -65,6 +65,10 @@ let
     # eww's boxes all read this, so the desktop has one shadow, not three
     # near-copies derived in three files.
     shadow = mix 0.25 bg0 bg1;
+    # An unfocused window casts its seam a step lighter, so the focused
+    # window sits deepest. niri reads this for inactive-color on tiled
+    # windows and floats (niri/layout.nix, niri/window-rules.nix).
+    shadowInactive = mix 0.30 bg0 bg1;
 
     # Outline roles. A muted rule and its hover state, sitting well below
     # `border` in prominence. Same two steps of the warm ramp the kintsugi

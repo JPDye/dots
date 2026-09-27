@@ -108,9 +108,11 @@ rec {
     opacity = 0.92;
     # The hard offset, in px down and right, that a niri window casts. Every
     # other shadow derives from it: floats, walker and the lock card cast
-    # the same, the eww widgets cast 2px less, the overview workspace 6px
+    # the same, the eww widgets cast 2px less, the overview workspace 4px
     # more before its output scaling (see the overview KDL in
-    # niri/layout.nix), and the greeter's ring 4px more.
+    # niri/layout.nix). The greeter follows its scheme stylesheet in
+    # system/greeter-styles/: kintsugi casts the window offset, gruvbox a
+    # ring 4px wider.
     offset = 6;
   };
 

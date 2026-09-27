@@ -3,7 +3,6 @@
 {
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
     programs.niri.settings.spawn-at-startup = [
-      { command = [ "xwayland-satellite" ]; }
       { command = [ "mako" ]; }
       {
         command = [

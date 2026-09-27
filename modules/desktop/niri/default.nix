@@ -48,7 +48,15 @@ in
 
     programs.niri.settings = {
       hotkey-overlay.skip-at-startup = true;
-      environment.DISPLAY = ":0";
+      # niri starts xwayland-satellite itself on the first X11 connection
+      # and exports DISPLAY to what it spawns, so nothing spawns the
+      # satellite by hand and nothing pins the display number. The path is
+      # absolute and wrapGL'd: on Arch the satellite's Xwayland needs the
+      # nixGL wrapper for GL, and niri's own PATH is not a login shell's.
+      xwayland-satellite = {
+        enable = true;
+        path = lib.getExe (config.dotfiles.wrapGL pkgs.xwayland-satellite);
+      };
       prefer-no-csd = true;
       screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
       gestures.hot-corners.enable = false;

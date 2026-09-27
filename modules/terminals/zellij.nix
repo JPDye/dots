@@ -67,10 +67,12 @@ in
             emphasis_2 = "#${colors.tertiary}";
           };
 
-          # Pane mode (Ctrl+p) draws the focused frame in `tertiary`, the
-          # red, and the compact bar's mode name ("PANE") in a frame style's
-          # `emphasis_2`. Both tiers take that same red, so the border and
-          # the label read as one state. This was the theme's only green.
+          # Every mode other than Normal and Locked (Pane, Tab, Resize, ...)
+          # draws the focused frame in `frame_highlight`, here `tertiary`.
+          # The compact bar's mode name for those modes comes from
+          # `text_unselected.emphasis_0` (see `text_unselected` below), which
+          # takes the same colour, so the border and the label read as one
+          # state.
           frame_highlight = emphasis // {
             base = "#${colors.tertiary}";
             emphasis_2 = "#${colors.tertiary}";
@@ -82,15 +84,15 @@ in
           # muted text on the raised bar rather than loose text floating on
           # the background. See `ui.statusline*` in dev/helix/themes.nix.
           #
-          # The fill stays `secondary`, the bright orange, rather than
-          # following `frame_selected` down to `borderActive`. A ribbon
-          # carries text, and bg0 on borderActive (905e29) measures 2.7:1,
-          # which is not readable. On secondary it measures 5.4:1. zellij
-          # has no separate token for the mode indicator, so the active tab
-          # takes the same orange.
+          # The fill is `borderActive`, the niri active window border, so the
+          # active tab reads as the focused pane frame does. The trade-off:
+          # bg0 text on borderActive (905e29 under kintsugi) measures about
+          # 3:1, where `secondary` measured 5.4:1. The tab name is short and
+          # bold, so it stays legible, but a dimmer scheme could fall below
+          # that.
           ribbon_selected = emphasis // {
             base = "#${colors.bg0}";
-            background = "#${colors.secondary}";
+            background = "#${colors.borderActive}";
           };
 
           ribbon_unselected = emphasis // {
@@ -100,9 +102,18 @@ in
 
           # The bar itself, on helix's terms: it shares helix's statusline
           # fill (the sunken background) and drops inactive text to bg3.
+          # The compact bar paints the mode name from this style: Normal in
+          # `emphasis_2`, Locked in `emphasis_3`, and every other mode in
+          # `emphasis_0` (create_mode_part in
+          # default-plugins/compact-bar/src/line.rs, zellij 0.44).
+          # `emphasis_0` takes `frame_highlight`'s colour, so "PANE" matches
+          # the border it appears with. `emphasis_2` takes `borderActive`, so
+          # "NORMAL" matches the active tab fill and the focused pane frame.
           text_unselected = emphasis // {
             base = "#${colors.bg3}";
             background = "#${colors.bgSunken}";
+            emphasis_0 = "#${colors.tertiary}";
+            emphasis_2 = "#${colors.borderActive}";
           };
 
           text_selected = emphasis // {

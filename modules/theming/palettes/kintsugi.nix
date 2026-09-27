@@ -117,6 +117,10 @@ let
     # eww's boxes all read this, so the desktop has one shadow, not three
     # near-copies derived in three files.
     shadow = "0c0c0c";
+    # An unfocused window casts its seam a step lighter, so the focused
+    # window sits deepest. niri reads this for inactive-color on tiled
+    # windows and floats (niri/layout.nix, niri/window-rules.nix).
+    shadowInactive = "0e0e0e";
 
     # Outline roles. A muted gold rule and its hover state, sitting well
     # below `border` in prominence. These are the site's
