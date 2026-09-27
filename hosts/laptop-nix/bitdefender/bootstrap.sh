@@ -40,7 +40,11 @@ SELF_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SELF_PATH="$SELF_DIR/$(basename -- "${BASH_SOURCE[0]}")"
 
 SRC_DIR="$SELF_DIR"
-WORK_DIR="/var/tmp/bdst-nixos-install"
+# Empty until ensure_work_dir runs: a fresh mktemp dir under /var/tmp by
+# default, or the --work path after validation.
+WORK_DIR=""
+WORK_DIR_IS_TEMP=0
+MIRROR_SED_PID=""
 INSTALL_DIR="/opt/bitdefender-security-tools"
 LD_ENV_FILE="/etc/bitdefender/ld-env"
 ACTION=1
@@ -61,7 +65,7 @@ usage ()
 	  --src DIR      directory holding installer, installer.xml, bdconfigure
 	                 (default: $SELF_DIR)
 	  --work DIR     staging directory for the patched installer
-	                 (default: $WORK_DIR)
+	                 (default: a fresh mktemp dir under /var/tmp, kept for later product runs)
 	  --action N     1=install (default) 2=reconfigure 3=repair 4=uninstall
 	  --trace        run the installer under 'sh -x'
 	  --dry-run      preflight and patch only; do not run the installer
@@ -227,12 +231,55 @@ patch_line ()
     log "patched $label ($want site(s))"
 }
 
+# Resolves the staging directory. Root runs the patched installer and the
+# dpkg-install.sh helper from it, so it must be a directory root made or
+# owns, never a name another user could have created first under
+# world-writable /var/tmp. With no --work, mktemp makes a fresh 0700 dir
+# atomically. With --work, the path must be absent (then made 0700, no -p)
+# or an existing root-owned directory. stage_and_patch clears its contents.
+# patch_line splices the path into sed replacements, where '%' is the
+# delimiter and '&' and '\' are special, so those characters are refused.
+ensure_work_dir ()
+{
+    if [ -z "$WORK_DIR" ]; then
+        WORK_DIR=$(mktemp -d /var/tmp/bdst-nixos-install.XXXXXX)
+        WORK_DIR_IS_TEMP=1
+    else
+        case "$WORK_DIR" in
+            *[[:space:]%\&\\]*) die "--work path must not contain whitespace, '%', '&' or '\\': $WORK_DIR" ;;
+        esac
+        [ "$WORK_DIR" != "/" ] || die "--work / is not a staging directory"
+        if [ -e "$WORK_DIR" ]; then
+            [ -d "$WORK_DIR" ] || die "--work $WORK_DIR exists and is not a directory"
+            [ "$(stat -c %u -- "$WORK_DIR")" -eq 0 ] \
+                || die "--work $WORK_DIR is not owned by root; refusing to stage there"
+            chmod 0700 -- "$WORK_DIR"
+        else
+            mkdir -m 0700 -- "$WORK_DIR" || die "cannot create --work $WORK_DIR (is its parent missing?)"
+        fi
+    fi
+    trap cleanup_work_dir EXIT
+}
+
+# The staging dir is never removed. The patched installer calls
+# $WORK_DIR/dpkg-install.sh, and sync_patched_installer copies that installer
+# into $INSTALL_DIR for the product's later reconfigure and repair runs, so
+# the helper must outlive this run. The mktemp name is fresh each run, so a
+# kept dir cannot be taken over by another user. Remove an old one by hand
+# once a newer run has synced its own installer.
+cleanup_work_dir ()
+{
+    if [ "$WORK_DIR_IS_TEMP" -eq 1 ] && [ -d "$WORK_DIR" ]; then
+        log "staging kept: $WORK_DIR (the synced installer calls its dpkg-install.sh)"
+    fi
+}
+
 stage_and_patch ()
 {
     log "staging into $WORK_DIR"
-    rm -rf "$WORK_DIR"
-    mkdir -p "$WORK_DIR"
-    chmod 0700 "$WORK_DIR"
+    # ensure_work_dir made or validated the directory. Clear its contents
+    # only, so its identity and ownership stay what was checked.
+    find "$WORK_DIR" -mindepth 1 -delete
 
     # bdconfigure mktemp's into its own directory, so the whole set must be
     # staged together and the directory must be writable.
@@ -348,17 +395,35 @@ verify_patch ()
     fi
 }
 
+# Mirrors new lines of the installer log to stdout, indented, until
+# stop_log_mirror. $! of a background pipeline is the last command's PID
+# (sed), so tail is ended by parent in stop_log_mirror. --pid=$$ is the
+# backstop: tail exits on its own once this script is gone.
+start_log_mirror ()
+{
+    : >>"$1"
+    tail -n 0 -F --pid=$$ "$1" 2>/dev/null | sed 's/^/    | /' &
+    MIRROR_SED_PID=$!
+}
+
+stop_log_mirror ()
+{
+    # Let the mirror drain the last lines before tearing it down.
+    sleep 1
+    kill "$MIRROR_SED_PID" 2>/dev/null || true
+    wait "$MIRROR_SED_PID" 2>/dev/null || true
+    pkill -P $$ -x tail 2>/dev/null || true
+}
+
 run_installer ()
 {
     local log_file="$INSTALL_DIR/var/log/installer.log"
-    local tail_pid="" rc=0
+    local rc=0
 
     # The installer redirects itself into the log file, so mirror it here to
     # keep the run observable rather than apparently hung.
     mkdir -p "$INSTALL_DIR/var/log"
-    : >>"$log_file"
-    tail -n 0 -F "$log_file" 2>/dev/null | sed 's/^/    | /' &
-    tail_pid=$!
+    start_log_mirror "$log_file"
 
     log "running the patched installer (action $ACTION); mirroring $log_file"
     printf '\n'
@@ -371,10 +436,7 @@ run_installer ()
 
     LC_ALL=C DEBIAN_FRONTEND=noninteractive "${cmd[@]}" || rc=$?
 
-    # Let the mirror drain the last lines before tearing it down.
-    sleep 1
-    kill "$tail_pid" 2>/dev/null || true
-    wait "$tail_pid" 2>/dev/null || true
+    stop_log_mirror
 
     if [ "$rc" -ne 0 ]; then
         printf '\n'
@@ -613,7 +675,7 @@ report ()
 
     printf '\n'
     echo "  install log:       $INSTALL_DIR/var/log/installer.log"
-    echo "  patched installer: $WORK_DIR/installer"
+    echo "  staging dir:       $WORK_DIR (kept: the synced installer calls its dpkg-install.sh)"
     echo
     echo "  Patch Management stays off. Its Ixp libraries need OpenSSL 1.0/1.1"
     echo "  and libxml2.so.2, and nixpkgs has none of them. If GravityZone policy"
@@ -642,7 +704,7 @@ main ()
     # revision produced a given run.
     log "script:  $SELF_PATH (md5 $(md5sum < "$SELF_PATH" | cut -c1-8))"
     log "source:  $SRC_DIR"
-    log "staging: $WORK_DIR"
+    log "staging: ${WORK_DIR:-(fresh mktemp dir under /var/tmp)}"
     log "action:  $ACTION"
     printf '\n'
 
@@ -653,6 +715,7 @@ main ()
         exit 0
     fi
 
+    ensure_work_dir
     stage_and_patch
 
     if [ "$DRY_RUN" -eq 1 ]; then
@@ -672,4 +735,7 @@ main ()
     report
 }
 
-main "$@"
+# Run main only when executed, so a test shell can source the functions.
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    main "$@"
+fi
