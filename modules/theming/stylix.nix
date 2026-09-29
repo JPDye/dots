@@ -83,6 +83,22 @@ in
           size = 16;
         };
 
+      # Gruvbox Plus, the flat icon pack cut for the gruvbox palette that
+      # kintsugi builds on. `gold` is the pack's nearest named folder colour
+      # to the signature `primary` gold. The pack ships no colour by hex.
+      # Stylix's stylix/hm/icons.nix sets `gtk.iconTheme` from this, so GTK
+      # and Qt get the same theme with no second definition here.
+      icons =
+        let
+          package = pkgs.gruvbox-plus-icons.override { folder-color = "gold"; };
+        in
+        {
+          enable = true;
+          inherit package;
+          dark = "Gruvbox-Plus-Dark";
+          light = "Gruvbox-Plus-Light";
+        };
+
       # Per-target overrides: stylix only configures a target when its module
       # is enabled. firefox/spicetify/zellij/mako/helix are disabled so other
       # modules (textfox, spicetify customColorScheme, etc.) can own that
