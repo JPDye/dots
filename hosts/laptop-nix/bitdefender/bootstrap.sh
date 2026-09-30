@@ -40,16 +40,21 @@ SELF_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SELF_PATH="$SELF_DIR/$(basename -- "${BASH_SOURCE[0]}")"
 
 SRC_DIR="$SELF_DIR"
-# Empty until ensure_work_dir runs: a fresh mktemp dir under /var/tmp by
-# default, or the --work path after validation.
+# The default staging directory. It is fixed so that the installer copies
+# synced into $INSTALL_DIR keep a valid helper path across runs, and it is
+# under /var/lib, which only root can write and systemd-tmpfiles does not age.
+DEFAULT_WORK_DIR="/var/lib/bdst-nixos-install"
+# Empty until ensure_work_dir runs: DEFAULT_WORK_DIR by default, or the
+# --work path after validation.
 WORK_DIR=""
-WORK_DIR_IS_TEMP=0
+WORK_DIR_IS_DEFAULT=0
 MIRROR_SED_PID=""
 INSTALL_DIR="/opt/bitdefender-security-tools"
 LD_ENV_FILE="/etc/bitdefender/ld-env"
 ACTION=1
 TRACE=0
 DRY_RUN=0
+RESYNC=0
 RESET=0
 ASSUME_YES=0
 INTERNAL_DPKG=0
@@ -65,10 +70,12 @@ usage ()
 	  --src DIR      directory holding installer, installer.xml, bdconfigure
 	                 (default: $SELF_DIR)
 	  --work DIR     staging directory for the patched installer
-	                 (default: a fresh mktemp dir under /var/tmp, kept for later product runs)
+	                 (default: /var/lib/bdst-nixos-install, kept for later product runs)
 	  --action N     1=install (default) 2=reconfigure 3=repair 4=uninstall
 	  --trace        run the installer under 'sh -x'
 	  --dry-run      preflight and patch only; do not run the installer
+	  --resync       stage and patch, then point the installed installer
+	                 copies at the new helper; do not run the installer
 	  --reset        purge a failed install and exit, so the next run is a
 	                 fresh install rather than an upgrade. Keeps the
 	                 downloaded components and makes removal fstab-safe first
@@ -99,6 +106,7 @@ parse_args ()
             --action)  ACTION="$2"; shift 2 ;;
             --trace)   TRACE=1; shift ;;
             --dry-run) DRY_RUN=1; shift ;;
+            --resync)  RESYNC=1; shift ;;
             --reset)   RESET=1; shift ;;
             # Not for humans. The staged helper re-enters the script with this
             # so the installer's package step becomes unpack, patch, configure.
@@ -232,18 +240,28 @@ patch_line ()
 }
 
 # Resolves the staging directory. Root runs the patched installer and the
-# dpkg-install.sh helper from it, so it must be a directory root made or
-# owns, never a name another user could have created first under
-# world-writable /var/tmp. With no --work, mktemp makes a fresh 0700 dir
-# atomically. With --work, the path must be absent (then made 0700, no -p)
-# or an existing root-owned directory. stage_and_patch clears its contents.
+# dpkg-install.sh helper from it, so it must be a directory that only root
+# can write. With no --work, the directory is the fixed DEFAULT_WORK_DIR
+# under /var/lib, which only root can write. It is refused if it is a
+# symlink or is not owned by root, else it is made 0700. With --work, the
+# path must be absent (then made 0700, no -p) or an existing root-owned
+# directory. stage_and_patch clears its contents.
 # patch_line splices the path into sed replacements, where '%' is the
 # delimiter and '&' and '\' are special, so those characters are refused.
 ensure_work_dir ()
 {
     if [ -z "$WORK_DIR" ]; then
-        WORK_DIR=$(mktemp -d /var/tmp/bdst-nixos-install.XXXXXX)
-        WORK_DIR_IS_TEMP=1
+        WORK_DIR="$DEFAULT_WORK_DIR"
+        WORK_DIR_IS_DEFAULT=1
+        [ ! -L "$WORK_DIR" ] || die "$WORK_DIR is a symlink; refusing to stage there"
+        if [ -e "$WORK_DIR" ]; then
+            [ -d "$WORK_DIR" ] || die "$WORK_DIR exists and is not a directory"
+            [ "$(stat -c %u -- "$WORK_DIR")" -eq 0 ] \
+                || die "$WORK_DIR is not owned by root; refusing to stage there"
+        else
+            mkdir -m 0700 -- "$WORK_DIR" || die "cannot create $WORK_DIR"
+        fi
+        chmod 0700 -- "$WORK_DIR"
     else
         case "$WORK_DIR" in
             *[[:space:]%\&\\]*) die "--work path must not contain whitespace, '%', '&' or '\\': $WORK_DIR" ;;
@@ -261,15 +279,13 @@ ensure_work_dir ()
     trap cleanup_work_dir EXIT
 }
 
-# The staging dir is never removed. The patched installer calls
-# $WORK_DIR/dpkg-install.sh, and sync_patched_installer copies that installer
-# into $INSTALL_DIR for the product's later reconfigure and repair runs, so
-# the helper must outlive this run. The mktemp name is fresh each run, so a
-# kept dir cannot be taken over by another user. Remove an old one by hand
-# once a newer run has synced its own installer.
+# The staging dir is kept. The synced installer in $INSTALL_DIR calls its
+# dpkg-install.sh on the product's later reconfigure and repair runs, so the
+# helper must outlive this run. The path is fixed, so each run replaces the
+# previous contents and no old directories pile up.
 cleanup_work_dir ()
 {
-    if [ "$WORK_DIR_IS_TEMP" -eq 1 ] && [ -d "$WORK_DIR" ]; then
+    if [ "$WORK_DIR_IS_DEFAULT" -eq 1 ] && [ -d "$WORK_DIR" ]; then
         log "staging kept: $WORK_DIR (the synced installer calls its dpkg-install.sh)"
     fi
 }
@@ -302,13 +318,7 @@ stage_and_patch ()
         warn "reusing $SRC_DIR/linux-amd64; the installer will not verify its signature"
     fi
 
-    # The installer calls this in place of `dpkg -i`. It re-enters this script,
-    # so the unpack, patch and configure steps stay in one file.
-    cat >"$WORK_DIR/dpkg-install.sh" <<-EOF
-	#!/bin/sh
-	exec "$SELF_PATH" --internal-dpkg-install "\$1"
-	EOF
-    chmod 0700 "$WORK_DIR/dpkg-install.sh"
+    write_dpkg_helper
 
     # 1. Hardcode the package manager and format bdconfigure cannot detect.
     patch_line '^([[:space:]]*)pkgmgr=\$\("\$BDCONFIGURE" --distro-pkgmgr 2>/dev/null\)$' \
@@ -364,6 +374,23 @@ stage_and_patch ()
         '\1: # nixos: unit state is owned by nix' 1 'disable_arrakis -> no-op'
 
     verify_patch
+}
+
+# The installer calls this helper in place of `dpkg -i`. It re-enters this
+# script, so the unpack, patch and configure steps stay in one file. The
+# product's installer runs the helper as root on later reconfigure and repair
+# runs. So the helper must run a root-owned copy of this script, never
+# $SELF_PATH in the user-owned repo checkout. A plain cp (no -p) makes the
+# copy belong to the user who runs this script, which is root.
+write_dpkg_helper ()
+{
+    cp -- "$SELF_PATH" "$WORK_DIR/bootstrap.sh"
+    chmod 0700 "$WORK_DIR/bootstrap.sh"
+    cat >"$WORK_DIR/dpkg-install.sh" <<-EOF
+	#!/bin/sh
+	exec "$WORK_DIR/bootstrap.sh" --internal-dpkg-install "\$1"
+	EOF
+    chmod 0700 "$WORK_DIR/dpkg-install.sh"
 }
 
 verify_patch ()
@@ -628,7 +655,8 @@ sync_patched_installer ()
             log "already patched: $d"
             continue
         fi
-        cp -p -- "$d" "$d.orig-unpatched"
+        # Keep the vendor original from the first sync, not an older patch.
+        [ -f "$d.orig-unpatched" ] || cp -p -- "$d" "$d.orig-unpatched"
         cp -f -- "$WORK_DIR/installer" "$d"
         chmod 0700 "$d"
         log "synced patched installer to $d (original kept as $d.orig-unpatched)"
@@ -704,7 +732,7 @@ main ()
     # revision produced a given run.
     log "script:  $SELF_PATH (md5 $(md5sum < "$SELF_PATH" | cut -c1-8))"
     log "source:  $SRC_DIR"
-    log "staging: ${WORK_DIR:-(fresh mktemp dir under /var/tmp)}"
+    log "staging: ${WORK_DIR:-$DEFAULT_WORK_DIR}"
     log "action:  $ACTION"
     printf '\n'
 
@@ -720,6 +748,14 @@ main ()
 
     if [ "$DRY_RUN" -eq 1 ]; then
         log "--dry-run: stopping before running the installer"
+        exit 0
+    fi
+
+    if [ "$RESYNC" -eq 1 ]; then
+        confirm "replace the installed installer copies under $INSTALL_DIR?" \
+            || { log "aborted"; exit 0; }
+        sync_patched_installer
+        log "resync done: the installed installer now calls $WORK_DIR/dpkg-install.sh"
         exit 0
     fi
 
