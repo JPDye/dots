@@ -27,20 +27,20 @@
       // rejects a second `overview` node in one file. So the typed settings
       // cannot carry any part of it.
       //
-      // The workspace shadow is the same hard offset seam the window shadow
-      // draws: spread 0 keeps the shadow the workspace's own size, softness
-      // 0 keeps the edge hard, and the offset is the only thing that shows
-      // it. niri multiplies softness, spread AND offset by `view_size.h /
-      // 1080` (compute_workspace_shadow_config, src/layout/workspace.rs), and
-      // the overview then draws the whole workspace at the zoom. So what
-      // lands on screen is
+      // The workspace shadow is the same hard even ring the window shadow
+      // draws: offset 0 centres it, softness 0 keeps the edge hard, and the
+      // spread is the only thing that shows it, on all four sides. niri
+      // multiplies softness, spread AND offset by `view_size.h / 1080`
+      // (compute_workspace_shadow_config, src/layout/workspace.rs), and the
+      // overview then draws the whole workspace at the zoom. So what lands
+      // on screen is
       //
       //     configured * (view_h / 1080) * zoom
       //
-      // while a window inside the overview shows its own offset at just
-      // `offset * zoom`. Half the offset would match the two on a 2160-tall
-      // output. The offset plus 2px (6px) below makes the workspace cast
-      // about 3 times the window's seam there, and about 1.7 times on a
+      // while a window inside the overview shows its own ring at just
+      // `spread * zoom`. Half the spread would match the two on a 2160-tall
+      // output. The window spread plus 2px (6px) below makes the workspace
+      // cast about 3 times the window's ring there, and about 1.7 times on a
       // 1200-tall panel, so a workspace reads apart from the windows in it. The colour stays
       // darker than `backdrop-color`, which is bg0: a shadow cannot read
       // against its own colour.
@@ -53,8 +53,8 @@
           zoom 0.6
           workspace-shadow {
               softness 0
-              spread 0
-              offset x=${toString (shadow-style.offset + 2)} y=${toString (shadow-style.offset + 2)}
+              spread ${toString (shadow-style.offset + 2)}
+              offset x=0 y=0
               color "#${colors.shadow}"
           }
           workspace-border {
@@ -102,21 +102,21 @@
           inactive.color = "#${colors.borderInactive}";
         };
 
-        # A hard offset seam, the same shape eww's boxes draw 1px shallower:
-        # softness 0 keeps the edge hard, spread 0 keeps the shadow the
-        # window's own size, and the `shadow-style.offset` is the only thing
-        # that shows it. A float, walker and the lock card cast the same. A
+        # A hard even ring, the same shape eww's boxes draw 1px thinner:
+        # softness 0 keeps the edge hard, offset 0 centres the shadow on the
+        # window, and a spread of `shadow-style.offset` is the only thing
+        # that shows it, on all four sides. A float casts the same. A
         # window throws the deepest shadow on the desktop, and everything
         # smaller sits a step under it. The colour is the
         # palette's shared `shadow` token rather than bg0, because an offset
         # shadow has to read against the wallpaper rather than mask a gap.
         shadow = {
           enable = true;
-          spread = 0;
+          spread = shadow-style.offset;
           softness = 0;
           offset = {
-            x = shadow-style.offset;
-            y = shadow-style.offset;
+            x = 0;
+            y = 0;
           };
 
           color = "#${colors.shadow}";

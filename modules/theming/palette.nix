@@ -106,11 +106,12 @@ rec {
   # `themeLib.alpha`. Single knob for how see-through shadows are.
   shadow-style = {
     opacity = 0.92;
-    # The hard offset, in px down and right, that a niri window casts. Every
-    # other shadow derives from it: floats, walker and the lock card cast
-    # the same, the eww widgets cast 1px less, the overview workspace 2px
-    # more before its output scaling (see the overview KDL in
-    # niri/layout.nix). The greeter follows its scheme stylesheet in
+    # The hard shadow size, in px, that a niri window casts as an even ring
+    # (spread, no offset). Every other shadow derives from it: floats cast
+    # the same ring, the eww widgets a ring 1px thinner, the overview
+    # workspace a ring 2px wider before its output scaling (see the overview
+    # KDL in niri/layout.nix). Walker and the lock card still cast it as an
+    # offset down and right. The greeter follows its scheme stylesheet in
     # system/greeter-styles/: kintsugi casts the window offset, gruvbox a
     # ring 4px wider.
     offset = 4;

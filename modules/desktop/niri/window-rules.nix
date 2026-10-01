@@ -20,7 +20,7 @@ in
     # niri 26.04+).
     dotfiles.desktop.niri.extraConfig = ''
       // Floating windows hover over other (often dark) windows. They keep
-      // the shared border width. The shadow is the same offset seam the
+      // the shared border width. The shadow is the same even ring the
       // tiled layout draws, so the desktop has one shadow rather than two.
       window-rule {
           match is-floating=true
@@ -35,9 +35,9 @@ in
           }
           shadow {
               on
-              spread 0
+              spread ${toString shadow-style.offset}
               softness 0
-              offset x=${toString shadow-style.offset} y=${toString shadow-style.offset}
+              offset x=0 y=0
               color "#${float-shadow}"
               // An unfocused float casts the same lighter seam as an
               // unfocused tiled window (niri/layout.nix).

@@ -112,15 +112,14 @@ let
 
     # The hard seam colour every surface draws its shadow in: darker than
     # bg0, so a shadow reads as depth below the background rather than a
-    # lighter seam above it. This is Clay's own editor.background, which sits
-    # well clear of the bg ramp. niri's float rule, walker's CSS ring and
+    # lighter seam above it. niri's float rule, walker's CSS ring and
     # eww's boxes all read this, so the desktop has one shadow, not three
     # near-copies derived in three files.
-    shadow = "0c0c0c";
+    shadow = "101010";
     # An unfocused window casts its seam a step lighter, so the focused
     # window sits deepest. niri reads this for inactive-color on tiled
     # windows and floats (niri/layout.nix, niri/window-rules.nix).
-    shadowInactive = "0e0e0e";
+    shadowInactive = "1c1c1c";
 
     # Outline roles. A muted gold rule and its hover state, sitting well
     # below `border` in prominence. These are the site's

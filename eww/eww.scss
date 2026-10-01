@@ -44,24 +44,23 @@ $pill-fg: $goldDeep;
 $box-border: $borderMid;
 $box-border-hover: $borderMidHover;
 
-// A hard offset seam: no blur, no spread, `$shadow-offset` down and right, so
-// a widget sits off the wallpaper the way a niri window does. Same shape and
-// the same `$shadow` token as niri's window and float shadows, the walker
-// panel and the lock card, one pixel shallower than theirs (eww.nix derives
-// it from `shadow-style.offset`): a widget sits a step under a window.
-// The greeter keeps its own spread ring.
-$box-shadow: $shadow-offset $shadow-offset 0 $shadow;
+// A hard even ring: no blur, no offset, a `$shadow-offset` spread on all four
+// sides, so a widget sits off the wallpaper the way a niri window does. Same
+// shape and the same `$shadow` token as niri's window and float shadows, one
+// pixel thinner than theirs (eww.nix derives it from `shadow-style.offset`):
+// a widget sits a step under a window.
+$box-shadow: 0 0 0 $shadow-offset $shadow;
 
 // GTK3 clips a widget's box-shadow to its parent's allocation, and a GtkEventBox
 // is sized exactly to its child. So a shadow on a widget inside one lands
 // outside the allocation and is clipped away: that is every clickable pill
 // (play/pause, cpu, ram) and every power button, the only widgets here that
-// need an eventbox to take a click. Reserving the offset as margin gives the shadow room inside that
+// need an eventbox to take a click. Reserving the ring as margin gives the shadow room inside that
 // allocation. A pill that sits straight in a box does not need the room, but
 // it takes the same margin anyway. Without it, the plain pills stretch to
-// the taller row that a clickable pill's margin makes, so they come out 4px
-// taller and their text sits lower.
-$box-shadow-room: 0 $shadow-offset $shadow-offset 0;
+// the taller row that a clickable pill's margin makes, so they come out
+// taller and their text sits off-centre.
+$box-shadow-room: $shadow-offset;
 
 // Icons take the primary, except the cpu/ram ones, which the severity rules
 // below recolour. That is the signature gold under kintsugi and the orange
