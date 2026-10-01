@@ -82,19 +82,23 @@ let
     recentWindowsClose = "spring damping-ratio=1.0 stiffness=680 epsilon=0.001";
   };
 
-  bounce = {
-    workspace-switch = spring 0.65 500 0.0001;
-    window-open = spring 0.55 600 0.0001;
+  # `damp` maps each of bounce's damping ratios, so a preset can reuse
+  # the bounce motion with less overshoot.
+  bounceWith = damp: {
+    workspace-switch = spring (damp 0.65) 500 0.0001;
+    window-open = spring (damp 0.55) 600 0.0001;
     window-close = easing 150 "ease-out-quad";
-    horizontal-view-movement = spring 0.65 500 0.0001;
-    window-movement = spring 0.65 500 0.0001;
-    window-resize = spring 0.65 500 0.0001 // {
+    horizontal-view-movement = spring (damp 0.65) 500 0.0001;
+    window-movement = spring (damp 0.65) 500 0.0001;
+    window-resize = spring (damp 0.65) 500 0.0001 // {
       custom-shader = shader "bounce-window-resize";
     };
-    config-notification-open-close = spring 0.65 700 0.001;
+    config-notification-open-close = spring (damp 0.65) 700 0.001;
     screenshot-ui-open = easing 200 "ease-out-quad";
-    overview-open-close = spring 0.75 400 0.0003;
+    overview-open-close = spring (damp 0.75) 400 0.0003;
   };
+
+  bounce = bounceWith lib.id;
 
   # Every preset except grid comes from
   # github.com/stephin-develops/linux-ricing ("New niri animations").
@@ -102,9 +106,10 @@ let
   # recent-windows-close animation yet.
   presets = {
     # grid keeps its own open/close shaders and takes every other
-    # animation from bounce, slowed down 1.1x. slowdown is global, so the
+    # animation from bounce, slowed down 1.1x and with 0.15 more damping
+    # (capped at 0.9) for a smaller overshoot. slowdown is global, so the
     # open/close durations are set to play at about 600 ms after it.
-    grid.settings = bounce // {
+    grid.settings = bounceWith (d: lib.min 0.9 (d + 0.15)) // {
       slowdown = 1.1;
       window-open = easing 545 "linear" // {
         custom-shader = shader "grid-window-open";

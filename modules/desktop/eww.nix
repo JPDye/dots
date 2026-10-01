@@ -67,7 +67,7 @@ in
             lib.mapAttrsToList (name: value: "\$${name}: #${value};") colors
             ++ [
               ''$mono-font: "${monoFont}";''
-              "\$shadow-offset: ${toString (shadow-style.offset - 2)}px;"
+              "\$shadow-offset: ${toString (shadow-style.offset - 1)}px;"
             ]
           )
           + "\n";

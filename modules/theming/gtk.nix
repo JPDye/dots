@@ -20,8 +20,12 @@ let
   # second frame inside the launcher. Walker's layout gives its GtkWindow the
   # `window` class (resources/themes/default/layout.xml upstream), and no
   # standard GTK toplevel carries it, so this leaves walker to its own theme
-  # (desktop/walker.nix).
-  scope = "window:not(.window)";
+  # (desktop/walker.nix). eww is a GTK3 app with the same problem: its
+  # stylesheet loads below USER priority, so the button rule removed the
+  # power buttons' shadow and border. eww adds each window's name as a class
+  # on its GtkWindow (crates/eww/src/app.rs upstream), so `.powermenu`, the
+  # only eww window (eww/eww.yuck), leaves eww to eww/eww.scss.
+  scope = "window:not(.window):not(.powermenu)";
 in
 {
   options.dotfiles.theming.gtk.enable = lib.mkEnableOption "TUI-style GTK3 and GTK4 widget CSS" // {

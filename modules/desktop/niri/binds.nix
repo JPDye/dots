@@ -201,7 +201,7 @@ in
       "Mod+Shift+Return".action.spawn = lib.getExe work-layout;
       # Walker is one window with prefix-activated providers (= calc, : clipboard,
       # / files); these binds open it straight into a provider via -m. The
-      # apps/calc/websearch providers also show in the bare launcher below.
+      # apps/calc providers also show in the bare launcher below.
       "Mod+R".action.spawn = [
         "walker"
         "-p"

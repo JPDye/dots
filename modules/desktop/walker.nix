@@ -49,6 +49,14 @@ in
         base
         // {
           theme = "niri";
+          # The bundled list also has websearch, which puts a "Google" row
+          # under every query in the bare launcher.
+          providers = base.providers // {
+            default = [
+              "desktopapplications"
+              "calc"
+            ];
+          };
           # Per-provider input placeholders, key = provider name.
           placeholders = base.placeholders // {
             desktopapplications = {
@@ -116,7 +124,7 @@ in
            border, the shared corner radius, and the desktop's hard offset
            shadow: no blur, no spread, `shadow-style.offset` down and right,
            in the shared `shadow` token. Walker is a launcher panel, so it
-           casts a window's offset rather than the shallower eww one.
+           casts a window's offset.
            The shadow is CSS, not a niri layer-rule, because niri won't
            render a shadow that hugs walker's layer-shell surface. */
         .box-wrapper {

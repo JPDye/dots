@@ -46,10 +46,9 @@ $box-border-hover: $borderMidHover;
 
 // A hard offset seam: no blur, no spread, `$shadow-offset` down and right, so
 // a widget sits off the wallpaper the way a niri window does. Same shape and
-// the same `$shadow` token as niri's window and float shadows, two pixels
-// shallower than theirs (eww.nix derives it from `shadow-style.offset`), which
-// the walker panel and the lock card take too: a widget sits a step under a
-// window here, as `$box-border` does above.
+// the same `$shadow` token as niri's window and float shadows, the walker
+// panel and the lock card, one pixel shallower than theirs (eww.nix derives
+// it from `shadow-style.offset`): a widget sits a step under a window.
 // The greeter keeps its own spread ring.
 $box-shadow: $shadow-offset $shadow-offset 0 $shadow;
 
