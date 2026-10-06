@@ -1,7 +1,7 @@
 # ReGreet stylesheet for the gruvbox scheme.
 #
 # The login box reads like a focused niri window under gruvbox: a bg0 fill,
-# the red `borderActive` outline, square corners, and a hard bg0 ring with
+# the red `borderActive` outline, the shared 1px corner radius, and a hard bg0 ring with
 # no blur, `shadow-style.offset` plus 4px wide. Inside it, the fields sit on
 # the bg1 / bg2 neutrals, and the Login button is solid orange.
 #

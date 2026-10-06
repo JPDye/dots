@@ -100,8 +100,10 @@
   (box :class "stats-box"
        :space-evenly false :spacing 8
        :hexpand true :valign "end" :halign "end"
-    (bat :cap {EWW_BATTERY?.BAT0?.capacity ?: -1}
-         :status {EWW_BATTERY?.BAT0?.status ?: ""})
+    ; The kernel names the battery BAT0 or BAT1, depending on the laptop.
+    ; A host with no battery gets -1, and the pill hides.
+    (bat :cap {EWW_BATTERY?.BAT0?.capacity ?: (EWW_BATTERY?.BAT1?.capacity ?: -1)}
+         :status {EWW_BATTERY?.BAT0?.status ?: (EWW_BATTERY?.BAT1?.status ?: "")})
     ; The cpu and ram pills open btm in a terminal. eww-open-btm comes from
     ; modules/desktop/eww.nix, on the daemon's PATH.
     (eventbox :class "pill-btn" :cursor "pointer" :onclick "eww-open-btm"

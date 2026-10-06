@@ -11,14 +11,14 @@
   config = lib.mkIf config.dotfiles.desktop.niri.enable {
     # Alt-Tab switcher theming (niri 25.11+). Not in niri-flake's settings
     # schema yet, so it goes in as raw KDL via the extraConfig escape hatch.
-    # Padding matches the layout gaps; square corners match the window rules.
+    # Padding matches the layout gaps. The corners take the shared window radius.
     dotfiles.desktop.niri.extraConfig = ''
       recent-windows {
           highlight {
               active-color "#${colors.borderActive}"
               urgent-color "#${colors.warning}"
               padding 16
-              corner-radius 0
+              corner-radius ${toString border-style.radius-int}
           }
       }
 
@@ -102,7 +102,7 @@
           inactive.color = "#${colors.borderInactive}";
         };
 
-        # A hard even ring, the same shape eww's boxes draw 1px thinner:
+        # A hard even ring, the same shape eww's boxes draw 2px thinner:
         # softness 0 keeps the edge hard, offset 0 centres the shadow on the
         # window, and a spread of `shadow-style.offset` is the only thing
         # that shows it, on all four sides. A float casts the same. A

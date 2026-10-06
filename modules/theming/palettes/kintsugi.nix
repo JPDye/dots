@@ -115,11 +115,11 @@ let
     # lighter seam above it. niri's float rule, walker's CSS ring and
     # eww's boxes all read this, so the desktop has one shadow, not three
     # near-copies derived in three files.
-    shadow = "101010";
+    shadow = "161616";
     # An unfocused window casts its seam a step lighter, so the focused
     # window sits deepest. niri reads this for inactive-color on tiled
     # windows and floats (niri/layout.nix, niri/window-rules.nix).
-    shadowInactive = "1c1c1c";
+    shadowInactive = "1a1a1a";
 
     # Outline roles. A muted gold rule and its hover state, sitting well
     # below `border` in prominence. These are the site's

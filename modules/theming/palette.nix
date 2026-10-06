@@ -93,9 +93,9 @@ rec {
   border-style = {
     # Corner radius, one source of truth. niri window-rules take the float
     # (geometry-corner-radius), CSS consumers take the int (greeter, walker).
-    # Square: the desktop is all hard edges.
-    radius-float = 0.0;
-    radius-int = 0;
+    # 1px: hard edges with the corner pixel taken off.
+    radius-float = 1.0;
+    radius-int = 1;
     # Every border in the desktop reads this: niri window and float borders,
     # walker, the greeter box and the hyprlock rings. The eww widgets keep
     # their own 1px.
@@ -108,7 +108,7 @@ rec {
     opacity = 0.92;
     # The hard shadow size, in px, that a niri window casts as an even ring
     # (spread, no offset). Every other shadow derives from it: floats cast
-    # the same ring, the eww widgets a ring 1px thinner, the overview
+    # the same ring, the eww widgets a ring 2px thinner, the overview
     # workspace a ring 2px wider before its output scaling (see the overview
     # KDL in niri/layout.nix). Walker and the lock card still cast it as an
     # offset down and right. The greeter follows its scheme stylesheet in

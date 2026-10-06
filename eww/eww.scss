@@ -46,8 +46,8 @@ $box-border-hover: $borderMidHover;
 
 // A hard even ring: no blur, no offset, a `$shadow-offset` spread on all four
 // sides, so a widget sits off the wallpaper the way a niri window does. Same
-// shape and the same `$shadow` token as niri's window and float shadows, one
-// pixel thinner than theirs (eww.nix derives it from `shadow-style.offset`):
+// shape and the same `$shadow` token as niri's window and float shadows, two
+// pixels thinner than theirs (eww.nix derives it from `shadow-style.offset`):
 // a widget sits a step under a window.
 $box-shadow: 0 0 0 $shadow-offset $shadow;
 
@@ -96,7 +96,7 @@ $surface-green: $success;
     padding: 0.2em;
     min-width: 1.2em;
     min-height: 1.2em;
-    border-radius: 0;
+    border-radius: $radius;
     border: 1px solid $box-border;
     box-shadow: $box-shadow;
     margin: $box-shadow-room;
@@ -150,7 +150,7 @@ $surface-green: $success;
   .pill {
     padding: 0.2em 0.45em 0.2em 0.25em;
     min-height: 1.2em;
-    border-radius: 0;
+    border-radius: $radius;
     // The same fill the buttons take: a pill and a button are the same
     // object with different contents, so they share background, border,
     // shadow and hover. Fully opaque, because the powermenu window draws no

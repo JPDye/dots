@@ -1,7 +1,7 @@
 # ReGreet stylesheet for the kintsugi scheme.
 #
 # The login box copies the hyprlock card and a focused niri window: a bg0
-# fill, the warm `borderActive` outline, square corners, and the hard seam
+# fill, the warm `borderActive` outline, the shared 1px corner radius, and the hard seam
 # shadow in `shadow`, moved `shadow-style.offset` down and right. Inside it,
 # the fields sit on the warm surface ramp, the Login button is solid gold,
 # and every at-rest outline is a rung of the same warm ramp.
