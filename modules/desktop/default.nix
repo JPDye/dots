@@ -8,6 +8,7 @@
     ./niri
     ./oomd.nix
     ./polkit.nix
+    ./poweralertd.nix
     ./swayosd.nix
     ./swww.nix
     ./udiskie.nix

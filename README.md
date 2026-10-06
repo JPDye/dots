@@ -118,7 +118,7 @@ home-manager owns the user profile only, so `modules/system/` never runs here. T
 - **`polkit`** (the `polkitd` daemon). `modules/desktop/polkit.nix` runs the polkit-gnome *agent* as a user service, and an agent with no daemon authorises nothing.
 - **The audio server**: `pipewire` + `wireplumber`, plus `pipewire-pulse` for `pavucontrol`. The volume binds and swayosd have nothing to talk to otherwise.
 - **`xdg-desktop-portal`** with the `wlr` and `gtk` backends, for screencast, screenshots, and the file picker that GTK and sandboxed apps open. On NixOS `modules/system/desktop.nix` declares these. Here the distro must.
-- **`tailscale`** and **`udisks2`** — see [the pacman block in the laptop-nix section](#hostslaptop-nixconfigurationnix). `tailscaled` needs root and a TUN device, and udiskie is only the per-user client of the system `udisks2`.
+- **`tailscale`**, **`udisks2`** and **`upower`** — see [the pacman block in the laptop-nix section](#hostslaptop-nixconfigurationnix). `tailscaled` needs root and a TUN device, udiskie is only the per-user client of the system `udisks2`, and poweralertd (`modules/desktop/poweralertd.nix`) only listens to the system `upower` daemon. Battery thresholds live in `/etc/UPower/UPower.conf`, which this flake does not manage.
 - **PAM files** for hyprlock and the keyring: `nix run .#arch-pam-setup`, described just below.
 
 Start the session with `niri-session` from a TTY. Nothing in this flake installs a display manager or enables a session unit on a non-NixOS host.
@@ -256,7 +256,7 @@ The modules/system highlights:
 On Arch the equivalent is whatever `pacman` / `systemctl --user` arrangement you already have — this flake does not try to manage system-level services on non-NixOS hosts. The root daemons the shared config expects there come from `pacman`:
 
 ```sh
-sudo pacman -S --needed tailscale udisks2
+sudo pacman -S --needed tailscale udisks2 upower
 sudo systemctl enable --now tailscaled
 sudo tailscale up
 ```
@@ -344,6 +344,7 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `wlsunset.nix` | Night-light (`services.wlsunset`); colour temperature shifts with sunrise/sunset from rough London coordinates. |
 | `polkit.nix` | `polkit-gnome-authentication-agent-1` as a systemd user service. |
 | `udiskie.nix` | Removable-media automounter (USB drives mount on plug-in, notifications via mako, no tray). Talks to the system `udisks2` daemon — enabled in `modules/system/desktop.nix` on NixOS, `pacman -S udisks2` on Arch. |
+| `poweralertd.nix` | Battery and power-supply notifications via mako (`services.poweralertd`). It reads UPower over D-Bus, so the kernel's battery name (BAT0 or BAT1) does not matter. The thresholds are UPower's: `modules/system/power.nix` on NixOS, `/etc/UPower/UPower.conf` on Arch. Started with `-s`, so a login does not replay the current state as notifications. Off on `nix-desktop`, which runs no upower. |
 
 ### Terminals (`modules/terminals/`)
 
@@ -659,7 +660,7 @@ The 9 *feature* system modules (`dotfiles.system.<name>.enable`) are the knobs; 
     desktop.enable = false;   # dbus/portals, gnome-keyring, udisks2, hyprlock PAM
     greeter.enable = false;   # ReGreet + greetd
     plymouth.enable = false;  # boot splash
-    power.enable = false;     # tlp/upower/poweralertd — already the default; only needed if profiles/laptop.nix is imported
+    power.enable = false;     # tlp/upower — already the default; only needed if profiles/laptop.nix is imported
     audio.enable = false;     # pipewire + rtkit
     bluetooth.enable = false; # bluez + blueman
   };

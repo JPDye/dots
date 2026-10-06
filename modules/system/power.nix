@@ -1,17 +1,11 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, lib, ... }:
 let
   cfg = config.dotfiles.system.power;
 in
 {
   # Default OFF: this is laptop-only (battery charge thresholds, on-battery perf
   # caps), so a bare desktop must not inherit it. profiles/laptop.nix opts in.
-  options.dotfiles.system.power.enable =
-    lib.mkEnableOption "laptop power management (tlp + upower + poweralertd)";
+  options.dotfiles.system.power.enable = lib.mkEnableOption "laptop power management (tlp + upower)";
 
   config = lib.mkIf cfg.enable {
     services.tlp = {
@@ -46,16 +40,8 @@ in
       percentageAction = 5;
       criticalPowerAction = "Hibernate";
     };
-
-    systemd.user.services.poweralertd = {
-      description = "Power alert daemon (UPower → desktop notifications)";
-      wantedBy = [ "graphical-session.target" ];
-      partOf = [ "graphical-session.target" ];
-      after = [ "graphical-session.target" ];
-      serviceConfig = {
-        ExecStart = "${pkgs.poweralertd}/bin/poweralertd";
-        Restart = "on-failure";
-      };
-    };
+    # The notifier that reacts to these levels (poweralertd) is a
+    # home-manager unit, modules/desktop/poweralertd.nix, so that the
+    # Arch laptop gets it too.
   };
 }

@@ -30,14 +30,15 @@
           };
           cachePriming.enable = true;
 
-          # Wrap comments at 80 columns when helix formats on save.
+          # Wrap comments at 100 columns, the same as code (max_width), when
+          # helix formats on save.
           # wrap_comments is a nightly-only rustfmt option. The rust
           # template's nightly toolchain and nixpkgs' rustfmt both accept
           # it. A rustup stable rustfmt ignores it with a warning. These
           # flags override a project's rustfmt.toml.
           rustfmt.extraArgs = [
             "--config"
-            "wrap_comments=true,comment_width=80"
+            "wrap_comments=true,comment_width=100"
           ];
 
           inlayHints = {
