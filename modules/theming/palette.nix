@@ -6,19 +6,21 @@
 # instead of hardcoding a copy behind a "keep in sync" comment.
 #
 # One switch lives below. `scheme` picks which palette under `palettes/`
-# supplies the hues. There is no light/dark axis: each scheme is a single
-# dark palette.
+# supplies the hues. Each scheme also sets its own `polarity`, "dark" unless
+# the scheme says otherwise. Consumers that need a light/dark switch (stylix,
+# the greeter, Claude Code) read `polarity` from here.
 { lib }:
 
 let
   plib = import ./palette-lib.nix { inherit lib; };
 
-  # Every scheme takes `plib` and returns `{ colors, syntax }`, plus an
-  # optional `base16` override. `colors` is a flat map of hex strings, which
-  # consumers such as `modules/desktop/eww.nix` rely on. Add a file here to
-  # add a scheme.
+  # Every scheme takes `plib` and returns `{ colors, syntax, ansi }`, plus an
+  # optional `base16` override and an optional `polarity`. `colors` is a flat
+  # map of hex strings, which consumers such as `modules/desktop/eww.nix`
+  # rely on. Add a file here to add a scheme.
   schemes = {
     gruvbox = import ./palettes/gruvbox.nix { inherit plib; };
+    gruvbox-light = import ./palettes/gruvbox-light.nix { inherit plib; };
     kintsugi = import ./palettes/kintsugi.nix { inherit plib; };
   };
 
@@ -35,6 +37,9 @@ rec {
   schemeNames = builtins.attrNames schemes;
 
   inherit (active) colors syntax ansi;
+
+  # "dark" or "light". The value stylix takes as `polarity`.
+  polarity = active.polarity or "dark";
 
   # The base16 attrset stylix consumes, built straight from the palette.
   # stylix takes an attrset here, so no upstream yaml sits underneath this
@@ -53,7 +58,7 @@ rec {
       scheme = "dotfiles";
       author = "jd";
       slug = "dotfiles-${scheme}";
-      variant = "dark";
+      variant = polarity;
 
       base00 = c.bg0;
       base01 = c.bg1;

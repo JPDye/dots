@@ -50,6 +50,7 @@
           unzip
           tree
           socat
+          htmlq # CSS selectors over HTML on stdin, like jq for HTML
         ])
         ++ map config.dotfiles.wrapGL (
           with pkgs;

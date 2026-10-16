@@ -3,6 +3,7 @@
   inputs,
   lib,
   pkgs,
+  polarity,
   system,
   ...
 }:
@@ -195,9 +196,10 @@ in
         commit = "";
         pr = "";
       };
-      # The palette is dark-only, so the TUI matches the terminal it
-      # runs in. "dark"/"light" are both valid Claude Code theme names.
-      theme = "dark";
+      # Follows the active scheme's polarity, so the TUI matches the
+      # terminal it runs in. "dark"/"light" are both valid Claude Code
+      # theme names.
+      theme = polarity;
       effortLevel = "xhigh";
       switchModelsOnFlag = false;
       # Default output style for every project. A project's own

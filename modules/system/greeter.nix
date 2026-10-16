@@ -40,6 +40,9 @@ let
   # fails the eval for a scheme that has none.
   greeterStyles = {
     gruvbox = ./greeter-styles/gruvbox.nix;
+    # The gruvbox stylesheet reads only role tokens, so it paints the light
+    # scheme correctly too.
+    gruvbox-light = ./greeter-styles/gruvbox.nix;
     kintsugi = ./greeter-styles/kintsugi.nix;
   };
 
@@ -130,9 +133,9 @@ in
           fit = "Cover";
         };
 
-        # Adwaita follows the palette polarity, so the box's own widget
+        # Adwaita follows the scheme polarity, so the box's own widget
         # colours (entry fields, the session dropdown) match the fill above.
-        GTK.application_prefer_dark_theme = true;
+        GTK.application_prefer_dark_theme = palette.polarity == "dark";
       };
 
       # The active scheme's stylesheet (see greeterCss above). The module

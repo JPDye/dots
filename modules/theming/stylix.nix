@@ -6,6 +6,7 @@
   monoFont,
   serifFont,
   base16Scheme,
+  polarity,
   ...
 }:
 
@@ -40,7 +41,7 @@ in
 
     stylix = {
       enable = true;
-      polarity = "dark";
+      inherit polarity;
 
       image = config.dotfiles.theme.wallpaper;
 

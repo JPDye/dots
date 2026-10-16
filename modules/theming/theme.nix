@@ -16,6 +16,7 @@ in
       syntax
       base16Scheme
       ansi
+      polarity
       ;
 
     monoFont = palette.fonts.mono;
