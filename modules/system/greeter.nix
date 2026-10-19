@@ -40,10 +40,10 @@ let
   # fails the eval for a scheme that has none.
   greeterStyles = {
     gruvbox = ./greeter-styles/gruvbox.nix;
-    # The gruvbox stylesheet reads only role tokens, so it paints the light
-    # scheme correctly too.
-    gruvbox-light = ./greeter-styles/gruvbox.nix;
     kintsugi = ./greeter-styles/kintsugi.nix;
+    # The kintsugi stylesheet reads only role tokens, so it paints the v2
+    # scheme correctly too.
+    kintsugiv2 = ./greeter-styles/kintsugi.nix;
   };
 
   greeterCss =

@@ -20,15 +20,15 @@ let
   # rely on. Add a file here to add a scheme.
   schemes = {
     gruvbox = import ./palettes/gruvbox.nix { inherit plib; };
-    gruvbox-light = import ./palettes/gruvbox-light.nix { inherit plib; };
     kintsugi = import ./palettes/kintsugi.nix { inherit plib; };
+    kintsugiv2 = import ./palettes/kintsugiv2.nix { inherit plib; };
   };
 
   active = schemes.${scheme};
 
   # The active scheme. This is the only theme switch: every surface follows
   # it, on both the home-manager and the NixOS side.
-  scheme = "kintsugi";
+  scheme = "kintsugiv2";
 in
 rec {
   inherit scheme;
