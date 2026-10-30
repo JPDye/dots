@@ -88,6 +88,11 @@
     # rebuilds go through nixos-rebuild.
     programs.home-manager.enable = true;
 
+    # No `man home-configuration.nix`. Evaluating the manpage costs about 2 s
+    # of CPU on every switch, and nixd in Helix already completes these
+    # options.
+    manual.manpages.enable = false;
+
     xdg.userDirs = {
       enable = true;
       createDirectories = true;
