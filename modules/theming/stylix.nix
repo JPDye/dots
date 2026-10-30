@@ -137,6 +137,11 @@ in
         (lib.mkIf (config.dotfiles.terminals.primary == "alacritty") {
           alacritty.enable = true;
         })
+        {
+          # No host runs Plasma, and Qt uses the gtk3 platform theme, so the
+          # KDE target only adds local builds after each palette edit.
+          kde.enable = false;
+        }
       ];
     };
   };
