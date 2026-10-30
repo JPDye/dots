@@ -164,6 +164,13 @@ in
       discord.enable = false;
       vesktop.enable = true;
 
+      # Build Vesktop and Vencord from this flake's nixpkgs, not from
+      # nixcord's own pinned nixos-26.05. That second nixpkgs cost about 3 s
+      # of evaluation on every switch. Both packages are local builds either
+      # way, so no cache hit is lost. They now rebuild when this flake's
+      # nixpkgs moves, not when nixcord's does.
+      useGlobalPkgs = true;
+
       # nixcord installs this as themes/system24-dotfiles.css.
       config = {
         themes.system24-dotfiles = theme;
