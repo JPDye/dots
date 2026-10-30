@@ -120,6 +120,7 @@ home-manager owns the user profile only, so `modules/system/` never runs here. T
 - **`xdg-desktop-portal`** with the `wlr` and `gtk` backends, for screencast, screenshots, and the file picker that GTK and sandboxed apps open. On NixOS `modules/system/desktop.nix` declares these. Here the distro must.
 - **`tailscale`**, **`udisks2`** and **`upower`** — see [the pacman block in the laptop-nix section](#hostslaptop-nixconfigurationnix). `tailscaled` needs root and a TUN device, udiskie is only the per-user client of the system `udisks2`, and poweralertd (`modules/desktop/poweralertd.nix`) only listens to the system `upower` daemon. Battery thresholds live in `/etc/UPower/UPower.conf`, which this flake does not manage.
 - **PAM files** for hyprlock and the keyring: `nix run .#arch-pam-setup`, described just below.
+- **Parallel builds** for the nix-daemon. Arch's `/etc/nix/nix.conf` sets no `max-jobs`, so the daemon builds one derivation at a time. Append `max-jobs = 4` and `cores = 4` to `/etc/nix/nix.conf`, then `sudo systemctl restart nix-daemon`. The pair caps a build at 16 threads. Do not use `max-jobs = auto` with `cores = 0`: that lets each of 16 jobs use every core, and two large Rust builds can then exhaust the RAM.
 
 Start the session with `niri-session` from a TTY. Nothing in this flake installs a display manager or enables a session unit on a non-NixOS host.
 
