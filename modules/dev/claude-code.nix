@@ -167,6 +167,12 @@ in
         # with claude2 through the skills symlink above.
         ".claude/skills/asd-ste100".source = ste100SkillPatched;
 
+        # Local skill (`/branch-review`): a review of the current branch
+        # against its goal, on four pillars (architecture, correctness,
+        # performance, simplicity). Shared with claude2 through the skills
+        # symlink above. opencode discovers it in ~/.claude/skills too.
+        ".claude/skills/branch-review".source = ./skills/branch-review;
+
         # STE100 as an output style. Installing the file only makes it appear
         # in the picker. The managed `outputStyle` key below selects it, and
         # that key is flake-owned, so a /config choice reverts on the next

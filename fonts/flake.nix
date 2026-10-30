@@ -14,6 +14,65 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+
+        # nerd-font-patcher renames the family (e.g. "Drafting*Mono Nerd
+        # Font Mono"), but apps reference the plain name ("Drafting Mono").
+        # So after patching we copy the *original* name table onto the
+        # patched face, de-asterisking the foundry's "Drafting* Mono" name in
+        # the process (fixes family, full and PostScript names). The font
+        # keeps its own identity but now carries the Nerd Font icons at its
+        # own metrics — so prompt/UI glyphs (starship separators, the
+        # directory ellipsis, etc.) stop falling back to Symbols Nerd Font
+        # Mono and rendering with a mismatched size/baseline.
+        fixNames = pkgs.writeText "drafting-fixnames.py" ''
+          import sys
+          from fontTools.ttLib import TTFont
+          orig_path, patched_path, dst = sys.argv[1], sys.argv[2], sys.argv[3]
+          orig = TTFont(orig_path)
+          for rec in orig["name"].names:
+              s = rec.toUnicode()
+              if "Drafting*" in s:
+                  rec.string = s.replace("Drafting*", "Drafting")
+          patched = TTFont(patched_path)
+          patched["name"] = orig["name"]
+          patched.save(dst)
+        '';
+
+        # Each face is patched with the full Nerd Font glyph set as
+        # single-width (--mono), so every icon occupies exactly one terminal
+        # cell. FontForge runs once per face, so the first build is slow
+        # (then cached) — trim the glob to the core four faces to speed it up.
+        nerdPatchMono =
+          {
+            name,
+            src,
+            license,
+            description,
+          }:
+          pkgs.stdenvNoCC.mkDerivation {
+            inherit name;
+            dontConfigure = true;
+            dontUnpack = true;
+            nativeBuildInputs = [
+              pkgs.nerd-font-patcher
+              (pkgs.python3.withPackages (ps: [ ps.fonttools ]))
+            ];
+            installPhase = ''
+              export HOME=$(mktemp -d)   # FontForge needs a writable HOME
+              dest=$out/share/fonts/truetype/${name}
+              mkdir -p "$dest"
+              for f in ${src}/*.ttf; do
+                work=$(mktemp -d)
+                nerd-font-patcher --mono --complete --careful --quiet --no-progressbars "$f" -out "$work"
+                patched=$(find "$work" -name '*.ttf' -print -quit)
+                python3 ${fixNames} "$f" "$patched" "$dest/$(basename "$f")"
+                rm -rf "$work"
+              done
+              install -Dm644 ${src}/${license} -t $out/share/doc/${name}
+            '';
+
+            meta = { inherit description; };
+          };
       in
       {
         defaultPackage = pkgs.symlinkJoin {
@@ -46,62 +105,23 @@
             };
           };
 
-          drafting-mono =
-            let
-              # nerd-font-patcher renames the family (e.g. "Drafting*Mono Nerd
-              # Font Mono"), but apps reference plain "Drafting Mono". So after
-              # patching we copy the *original* name table onto the patched face,
-              # de-asterisking the foundry's "Drafting* Mono" name in the process
-              # (fixes family, full and PostScript names). The font keeps its
-              # "Drafting Mono" identity but now carries the Nerd Font icons at
-              # its own metrics — so prompt/UI glyphs (starship separators, the
-              # directory ellipsis, etc.) stop falling back to Symbols Nerd Font
-              # Mono and rendering with a mismatched size/baseline.
-              fixNames = pkgs.writeText "drafting-fixnames.py" ''
-                import sys
-                from fontTools.ttLib import TTFont
-                orig_path, patched_path, dst = sys.argv[1], sys.argv[2], sys.argv[3]
-                orig = TTFont(orig_path)
-                for rec in orig["name"].names:
-                    s = rec.toUnicode()
-                    if "Drafting*" in s:
-                        rec.string = s.replace("Drafting*", "Drafting")
-                patched = TTFont(patched_path)
-                patched["name"] = orig["name"]
-                patched.save(dst)
-              '';
-            in
-            pkgs.stdenvNoCC.mkDerivation {
-              name = "drafting-mono";
-              dontConfigure = true;
-              dontUnpack = true;
-              # Upstream ships 14 weights (Thin..Bold + italics). Each face is
-              # patched with the full Nerd Font glyph set as single-width
-              # (--mono), so every icon occupies exactly one terminal cell.
-              # FontForge runs once per face, so the first build is slow (then
-              # cached) — trim the glob to the core four faces to speed it up.
-              nativeBuildInputs = [
-                pkgs.nerd-font-patcher
-                (pkgs.python3.withPackages (ps: [ ps.fonttools ]))
-              ];
-              installPhase = ''
-                export HOME=$(mktemp -d)   # FontForge needs a writable HOME
-                dest=$out/share/fonts/truetype/drafting-mono
-                mkdir -p "$dest"
-                for f in ${./drafting-mono}/*.ttf; do
-                  work=$(mktemp -d)
-                  nerd-font-patcher --mono --complete --careful --quiet --no-progressbars "$f" -out "$work"
-                  patched=$(find "$work" -name '*.ttf' -print -quit)
-                  python3 ${fixNames} "$f" "$patched" "$dest/$(basename "$f")"
-                  rm -rf "$work"
-                done
-                install -Dm644 ${./drafting-mono}/LICENSE.md -t $out/share/doc/drafting-mono
-              '';
+          drafting-mono = nerdPatchMono {
+            name = "drafting-mono";
+            src = ./drafting-mono;
+            license = "LICENSE.md";
+            description = ''Drafting Mono patched with Nerd Font glyphs (name table normalised to "Drafting Mono"). Local TTF font derivation.'';
+          };
 
-              meta = {
-                description = ''Drafting Mono patched with Nerd Font glyphs (name table normalised to "Drafting Mono"). Local TTF font derivation.'';
-              };
-            };
+          # Nordwand Mono v1.3.1 (github.com/tywr/Nordwand-Mono, OFL-1.1),
+          # the release TTFs. Upstream ships no Nerd Font icons, so it goes
+          # through the same patch as drafting-mono. The OFL declares no
+          # Reserved Font Name, so the patched faces keep "Nordwand Mono".
+          nordwand-mono = nerdPatchMono {
+            name = "nordwand-mono";
+            src = ./nordwand-mono;
+            license = "LICENSE.txt";
+            description = ''Nordwand Mono patched with Nerd Font glyphs (name table kept as "Nordwand Mono"). Local TTF font derivation.'';
+          };
 
           # Luxi Mono ships unpatched, and must stay that way. The Bigelow &
           # Holmes licence grants free redistribution, but it voids itself on

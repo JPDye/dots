@@ -122,7 +122,14 @@
     # opposite reason: it is modules, with no binary cache behind it.)
     # `helix-nixpkgs-in-sync` below asserts the pinned rev matches helix's
     # own lock, and prints the re-pin command when it does not.
-    helix.url = "github:helix-editor/helix";
+    #
+    # Trial: gj1118/helix, a fork of helix-editor/helix that adds code
+    # folding, a file explorer, Lua plugins and more. helix.cachix.org does
+    # not hold the fork's builds, so each bump is a full local Rust build.
+    # The no-follows setup stays. A revert to upstream needs this URL, the
+    # removal of the fork-only block in modules/dev/helix/editor.nix, and the
+    # old string form of `bufferline` there.
+    helix.url = "github:gj1118/helix";
 
     git-hooks = {
       url = "github:cachix/git-hooks.nix";

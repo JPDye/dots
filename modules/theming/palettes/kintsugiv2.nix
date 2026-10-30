@@ -71,7 +71,7 @@ let
     # green excepted, see there), so nothing here has to compromise between the two: `red` is upstream's `keyword`
     # colour, `pink` its `string` colour, and `orange` its keyword.operator
     # colour, a true orange at hue 25.
-    red = "af5f5f";
+    red = "D66848";
     green = "a3be8c";
     yellow = goldDeep;
     orange = "E08542";

@@ -27,12 +27,15 @@ let
   # When that file is missing libpam falls back to /etc/pam.d/other, which is
   # a pam_deny stack on Arch, so every password is rejected.
   #
-  # A screen locker only needs the auth stack. Arch's system-auth is the same
-  # stack that `login` ends up including, minus the console-login extras
-  # (securetty, nologin, motd) that mean nothing here.
+  # A screen locker only needs the auth stack. The stack does not include
+  # Arch's system-auth, because system-auth runs pam_faillock: 3 wrong
+  # passwords lock the account for 10 minutes, and the locker then rejects
+  # even the correct password. Here only pam_unix checks the password, so
+  # retries have no limit. pam_unix keeps its ~2 s delay after each failure.
+  # The NixOS hosts do not enable faillock, so they already behave this way.
   pamService = writeText "pam-hyprlock" ''
     #%PAM-1.0
-    auth include system-auth
+    auth required pam_unix.so
   '';
 
   # nixpkgs patches pam_unix.so to exec the setuid password helper from the

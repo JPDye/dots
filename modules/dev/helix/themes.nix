@@ -184,6 +184,13 @@ let
       bg = "base04";
     };
     "ui.popup".bg = "base01";
+    # The gj1118/helix fork draws this border around notifications, the popup
+    # command line and confirm boxes. The border cells take no colour from
+    # `ui.popup`, so bg repeats it here.
+    "ui.popup.border" = {
+      fg = "#${colors.tertiary}";
+      bg = "base01";
+    };
     "ui.selection".bg = "base02";
     "ui.selection.primary".bg = "base02";
     # The bar sits well under the editor surface rather than on a tint of

@@ -28,7 +28,7 @@ let
 
   # The active scheme. This is the only theme switch: every surface follows
   # it, on both the home-manager and the NixOS side.
-  scheme = "kintsugiv2";
+  scheme = "kintsugi";
 in
 rec {
   inherit scheme;
@@ -80,19 +80,17 @@ rec {
     }
     // (active.base16 or { });
 
-  # IoskeleyMono everywhere, the Term + Nerd Font Mono build vendored in the
-  # fonts flake (see its comment for why that variant). Its TTFs already
-  # carry the Nerd Font icon set at one cell per icon, so icons come straight
-  # from the primary face. `serif` deliberately holds the same family (a
-  # fully monospaced desktop). The fallback chains in theming/fonts.nix +
-  # system/fonts.nix add only an icon backup and the math glyph coverage
-  # IoskeleyMono lacks. No serif fallback.
+  # `mono` is Nordwand Mono, Nerd Font patched in the fonts flake (see its
+  # comment), so icons come straight from the primary face at one cell per
+  # icon. `serif` is Libertinus Serif, a proportional serif, and it fills the
+  # sans-serif role too. The fallback chains in theming/fonts.nix +
+  # system/fonts.nix add only an icon backup and math glyph coverage.
   #
   # Fonts, borders, shadows and the wallpaper sit outside the scheme on
   # purpose: they are the same design whichever palette paints it.
   fonts = {
-    mono = "IoskeleyMonoTerm Nerd Font Mono";
-    serif = "IoskeleyMonoTerm Nerd Font Mono";
+    mono = "Nordwand Mono";
+    serif = "Libertinus Serif";
   };
 
   border-style = {

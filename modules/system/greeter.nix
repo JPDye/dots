@@ -122,7 +122,7 @@ in
       # resolves to nothing and cage falls back to a default.
       font = {
         name = palette.fonts.mono;
-        package = inputs.myFonts.packages.${system}.ioskeley;
+        package = inputs.myFonts.packages.${system}.nordwand-mono;
         size = 14;
       };
 

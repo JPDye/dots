@@ -49,13 +49,16 @@
       // it in workspace space and applies the overview zoom, so the extra
       // 2px gives a line 2px thicker than a window border at zoom 1.
       //
-      // The workspace corners take the shared window radius, so a workspace
-      // in the overview rounds like a window. The fork draws the workspace
-      // shadow and border with this radius, so the two keep the same corners.
+      // The workspace corners take half the shared window radius. niri adds
+      // the border width to the outer edge of any radius above 0, so the
+      // wider workspace border already rounds more than a window border, and
+      // the smaller radius takes some of that back. The fork draws the
+      // workspace shadow and border with this radius, so the two keep the
+      // same corners.
       overview {
           backdrop-color "#${colors.bg0}"
           zoom 0.6
-          workspace-corner-radius ${toString border-style.radius-int}
+          workspace-corner-radius ${toString (border-style.radius-float / 2)}
           workspace-shadow {
               softness 0
               spread ${toString (shadow-style.offset + 2)}

@@ -191,7 +191,7 @@ Notes:
 ├── installer/                # bootable ISO (iso.nix) + install-host.sh + host-template/
 ├── pkgs/                     # local packages (bibata-cursors-themed, the palette-coloured cursor)
 ├── caches.nix                # source of truth for extra binary caches (see flake.nix nixConfig)
-├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono
+├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono, Nordwand Mono
 ├── eww/                      # eww widgets, symlinked out-of-store so they are hand-editable
 ├── wallpapers/               # background images (market.jpg is the default; its blur is derived at build time)
 └── shaders/                  # niri animation-preset shaders
@@ -251,7 +251,7 @@ The modules/system highlights:
 - **Services:** `tailscale`, `tlp` (AC perf / battery powersave 0–20%, charge thresholds 40–80%), `upower` (hibernate at 5%), `pipewire` (with PulseAudio compat + 32-bit ALSA), `blueman`, `niri`, `dbus` with portals (wlr/gtk/gnome), `wireshark` (CLI), `docker` (rootless) and `podman`.
 - **Hardware:** AMD CPU (`kvm-amd`, microcode), OpenGL + 32-bit, Bluetooth on at boot.
 - **Caches:** `cache.nixos.org`, `helix.cachix.org`, `niri.cachix.org` configured system-wide so non-trusted users can use them. Set in `modules/system/nix.nix` from `caches.nix`, not in the host file.
-- **System fonts:** IoskeleyMonoTerm Nerd Font Mono (default mono/serif/sans, v2.1.0 vendored in the local `fonts/` flake, single-cell icons baked into its own TTFs), Drafting Mono, 0xProto Nerd Font Mono, Martian Mono Nerd Font, Fira Code Nerd Font Mono, Luxi Mono, Lora, Font Awesome, Input Fonts.
+- **System fonts:** Nordwand Mono (default mono, v1.3.1 vendored in the local `fonts/` flake and Nerd Font patched for single-cell icons), Libertinus Serif (default serif/sans), IoskeleyMonoTerm Nerd Font Mono, Drafting Mono, 0xProto Nerd Font Mono, Martian Mono Nerd Font, Fira Code Nerd Font Mono, Luxi Mono, Lora, Font Awesome, Input Fonts.
 
 On Arch the equivalent is whatever `pacman` / `systemctl --user` arrangement you already have — this flake does not try to manage system-level services on non-NixOS hosts. The root daemons the shared config expects there come from `pacman`:
 
@@ -328,7 +328,7 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `theme.nix` | Publishes the active palette to home-manager via `_module.args`, so siblings can `inherit (specialArgs) colors monoFont border-style`. Also exposes `colorsDark`/`colorsLight` for modules that need both at once, and `base16Scheme` for stylix. |
 | `stylix.nix` | Base16 theming via [stylix]. Scheme: built from `palette.nix` by `mkScheme` and passed to stylix as an attrset, so no upstream base16 yaml sits under the theme and no `stylix.override` is needed. Wallpaper: `dotfiles.theme.wallpaper`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
 | `wallpaper.nix` | `dotfiles.theme.wallpaper` — single source of truth for the wallpaper image (default `wallpapers/market.jpg`, set in `palette.nix`), consumed by awww, stylix and hyprlock. `dotfiles.theme.wallpaperBlurred` defaults to a build-time ImageMagick gaussian blur (sigma 15) of it, shown by `swaybg` in the niri backdrop; set it to a file for a hand-made blur. |
-| `fonts.nix` | Installs Nerd Fonts (0xproto, martian-mono, fira-code, droid-sans-mono, symbols-only), Cascadia Code, Siji, plus IoskeleyMono — the default family — with Drafting Mono and Luxi Mono from the local `fonts/` flake. Sets fontconfig fallback chain. |
+| `fonts.nix` | Installs Nerd Fonts (0xproto, martian-mono, fira-code, droid-sans-mono, symbols-only), Cascadia Code, Siji, plus Nordwand Mono — the default mono family — with IoskeleyMono, Drafting Mono and Luxi Mono from the local `fonts/` flake. Libertinus Serif is the default serif/sans family. Sets fontconfig fallback chain. |
 
 ### Desktop / Wayland (`modules/desktop/`)
 

@@ -80,7 +80,9 @@
             "spacer"
             "diff"
           ];
-          bufferline = "always";
+          # The fork turns bufferline into a table. Upstream takes the bare
+          # string, `bufferline = "always"`, so a revert must change it back.
+          bufferline.render-mode = "always";
 
           completion-replace = true;
           completion-trigger-len = 2;
@@ -156,6 +158,42 @@
             focus-lost = true;
             after-delay.enable = true;
             after-delay.timeout = 3000;
+          };
+
+          # Fork-only keys (gj1118/helix, see the helix input in flake.nix).
+          # Upstream helix rejects unknown editor keys, so a revert to
+          # upstream must also remove this block.
+          breadcrumb.enable = true;
+          cmdline.style = "popup";
+
+          # Square, one-cell border, no drop shadow and no emoji or icon
+          # prefix. The border colour is `ui.popup.border` in themes.nix.
+          notifications = {
+            show-emojis = false;
+            show-icons = false;
+            border = {
+              width = 1;
+              radius = 0;
+            };
+            shadow.enable = false;
+          };
+
+          # File locations, command history and search history persist in
+          # ~/.local/state/helix. The internal clipboard stays off, so yanked
+          # text never goes to disk.
+          persistence = {
+            old-files = true;
+            commands = true;
+            search = true;
+          };
+
+          # Reload a buffer that changed on disk, for example after an agent
+          # edits it from another pane. The fork skips buffers with unsaved
+          # changes. The periodic check (every 3 s) catches a change that
+          # arrives with no focus event.
+          auto-reload = {
+            focus-gained = true;
+            periodic.enable = true;
           };
         };
       };
