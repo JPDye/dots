@@ -337,7 +337,7 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `wlsunset.nix` | Night-light (`services.wlsunset`); colour temperature shifts with sunrise/sunset from rough London coordinates. |
 | `polkit.nix` | `polkit-gnome-authentication-agent-1` as a systemd user service. |
 | `udiskie.nix` | Removable-media automounter (USB drives mount on plug-in, notifications via mako, no tray). Talks to the system `udisks2` daemon — enabled in `modules/system/desktop.nix` on NixOS, `pacman -S udisks2` on Arch. |
-| `poweralertd.nix` | Battery and power-supply notifications via mako (`services.poweralertd`). It reads UPower over D-Bus, so the kernel's battery name (BAT0 or BAT1) does not matter. The thresholds are UPower's: `modules/system/power.nix` on NixOS, `/etc/UPower/UPower.conf` on Arch. Started with `-s`, so a login does not replay the current state as notifications. Off on `nix-desktop`, which runs no upower. |
+| `poweralertd.nix` | Battery and power-supply notifications via mako (`services.poweralertd`). It reads UPower over D-Bus, so the kernel's battery name (BAT0 or BAT1) does not matter. The thresholds are UPower's: `modules/system/power.nix` on NixOS, `/etc/UPower/UPower.conf` on Arch. Started with `-s`, so a login does not replay the current state as notifications. On every host. The unit skips itself when no `/sys/class/power_supply/BAT*` exists, so a desktop with no battery starts nothing. |
 
 ### Terminals (`modules/terminals/`)
 
