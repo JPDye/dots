@@ -6,6 +6,54 @@
   ...
 }:
 
+let
+  # The fork builds every grammar in its languages.toml (301) unless told
+  # otherwise, and no cache holds the fork. Build only these. Names are
+  # grammar names, which are not always language names: `gitcommit` serves
+  # git-commit, `markdown_inline` serves markdown, `json` serves jsonc.
+  # A file type whose grammar is missing still opens, with no highlighting.
+  # `hx --health <lang>` shows which grammar a language needs.
+  grammars = [
+    # The languages in languages.nix.
+    "bash"
+    "c"
+    "dockerfile"
+    "gitcommit"
+    "markdown"
+    "markdown_inline"
+    "nix"
+    "python"
+    "rust"
+    "toml"
+    "typst"
+    "yaml"
+    # Injected into the languages above.
+    "comment"
+    "diff"
+    "regex"
+    # Other files edited in this repo and in ~/Code.
+    "cpp"
+    "css"
+    "git-config"
+    "git-rebase"
+    "gitattributes"
+    "gitignore"
+    "glsl"
+    "go"
+    "gomod"
+    "html"
+    "ini"
+    "javascript"
+    "json"
+    "just"
+    "kdl"
+    "make"
+    "nu"
+    "scss"
+    "sql"
+    "xml"
+  ];
+in
 {
   config = lib.mkIf config.dotfiles.dev.helix.enable {
     # Global ignore for helix file-picker / global search — applied even
@@ -26,7 +74,9 @@
     programs.helix = {
       enable = true;
       defaultEditor = true;
-      package = inputs.helix.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      package = inputs.helix.packages.${pkgs.stdenv.hostPlatform.system}.default.override {
+        includeGrammarIf = g: builtins.elem g.name grammars;
+      };
 
       extraPackages = with pkgs; [
         nixd
