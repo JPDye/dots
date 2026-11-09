@@ -260,8 +260,14 @@ let
   # both, and they differ: `gold` is dbad49, `yellow` is goldDeep at b8943a.
   # gruvbox aliases `gold` to its orange, which is exactly why this block is
   # here rather than in the shared mapping.
+  #
+  # `base04` must be set here too. This scheme moves `base03` up to `fg3`,
+  # which is the shared mapping's `base04` value. The two slots must stay
+  # distinct, because helix paints the focused statusline with `base04` and
+  # the unfocused one with `base03`.
   base16 = {
     base03 = colors.fg3; # comments, invisibles, indent guides
+    base04 = colors.fg2; # focused statusline, selected line number
     base05 = colors.fg0; # plain text
     base08 = colors.orange; # tags, diff.minus
     base09 = colors.gold; # constants, diff.delta
