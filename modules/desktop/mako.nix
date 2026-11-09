@@ -25,6 +25,14 @@ in
         background-color = "#${colors.bg0}";
         text-color = "#${colors.fg2}";
         default-timeout = 4000;
+
+        # A critical notification (a low battery, for example) stays for
+        # 10 s, not 4. ignore-timeout makes mako apply that even when the
+        # sender asks for a shorter expiry.
+        "urgency=critical" = {
+          default-timeout = 10000;
+          ignore-timeout = 1;
+        };
       };
     };
   };
