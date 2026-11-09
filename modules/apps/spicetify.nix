@@ -43,6 +43,11 @@ in
             # pointer while the pointer is on the bar. The theme leaves it at
             # Spotify's `--background-tinted-base`, which shows as red.
             #
+            # On hover the fill takes `accentHover`. Each palette makes every
+            # `*Hover` token a 25% mix toward white, so the fill gets brighter
+            # when the pointer enters the bar. `--mg-color` keeps
+            # `borderActive`, so the band ahead of the fill stays darker.
+            #
             # The theme draws the time text in `--spice-button-active` with
             # `mix-blend-mode: difference`, so its colour shifts with whatever
             # sits under it. A fixed colour with no blend keeps it steady.
@@ -63,7 +68,7 @@ in
 
               .main-nowPlayingBar-container .playback-bar:hover .progress-bar,
               .main-nowPlayingBar-container .playback-bar:hover [data-testid="progress-bar"] {
-                --fg-color: #${colors.borderActive} !important;
+                --fg-color: #${colors.accentHover} !important;
               }
 
               .main-nowPlayingBar-container .playback-bar .x-progressBar-fillColor {
