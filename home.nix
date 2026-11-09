@@ -63,13 +63,8 @@
             wireshark
             obsidian
             gpu-screen-recorder-gtk
-            steam
-            # orca-slicer lives in modules/apps/orca-slicer.nix (pinned 26.05
-            # build; per-host loginFix toggle)
-            lycheeslicer # resin (MSLA) slicer — Anycubic Photon
-            openscad # 3D CAD modeller (GL); 2021.01 stable, cached
-            freecad-wayland # qt6 + native Wayland build for niri
-            dune3d # parametric 3D CAD (GL)
+            # orca-slicer, the CAD set and Steam each have a module under
+            # modules/apps/, so a host can turn them off.
             proton-vpn
             qbittorrent
             roomeqwizard
