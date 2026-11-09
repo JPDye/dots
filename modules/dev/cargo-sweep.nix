@@ -1,5 +1,6 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
@@ -9,6 +10,13 @@ let
   cfg = config.dotfiles.dev.cargoSweep;
 
   sweep = "${pkgs.cargo-sweep}/bin/cargo-sweep";
+
+  # The cargo component alone, from rust-overlay: the upstream binary, about
+  # 71 MiB with its closure. nixpkgs' cargo holds a fixed path to rustc, so
+  # it pulls in the whole toolchain (about 1.6 GiB). cargo-sweep needs only
+  # `cargo metadata --no-deps`, and the --time and --maxsize passes below
+  # never call rustc.
+  cargo = (inputs.rust-overlay.lib.mkRustBin { } pkgs).stable.latest.cargo;
 
   # Home-relative subdirs → absolute paths for the unit.
   roots = lib.escapeShellArgs (map (r: "${config.home.homeDirectory}/${r}") cfg.roots);
@@ -70,16 +78,15 @@ in
       Unit.Description = "Prune stale Rust build artifacts (cargo-sweep)";
       Service = {
         Type = "oneshot";
-        # cargo-sweep shells out to `cargo metadata` to locate each target dir,
-        # so cargo MUST be on PATH — without it the recursive walk silently
-        # cleans nothing. A bare stable cargo suffices for almost all manifests.
-        # Caveat: a project whose Cargo.toml needs a NEWER cargo than this one —
-        # nightly-only manifest features (`cargo-features = [...]`) or an edition
-        # this cargo doesn't know — makes `cargo metadata` fail, and cargo-sweep
-        # then SILENTLY SKIPS that project (its target/ is never pruned). If a
-        # big project stops being swept, that is the cause. Point the PATH
-        # below at a newer cargo.
-        Environment = [ "PATH=${lib.makeBinPath [ pkgs.cargo ]}" ];
+        # cargo-sweep runs `cargo metadata` to find each target dir, so cargo
+        # must be on PATH. Without it the walk finds no project and cleans
+        # nothing, with no error. This is the newest stable cargo at the
+        # locked rust-overlay rev. A project whose Cargo.toml needs a newer
+        # cargo (nightly `cargo-features`, or an edition this cargo does not
+        # know) makes `cargo metadata` fail, and cargo-sweep then skips that
+        # project with no error. If a big project stops being swept, run
+        # `nix flake update rust-overlay`.
+        Environment = [ "PATH=${lib.makeBinPath [ cargo ]}" ];
         # Background chore: yield to interactive work.
         Nice = 19;
         IOSchedulingClass = "idle";

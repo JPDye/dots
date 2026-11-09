@@ -98,6 +98,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # The standalone cargo component for the cargo-sweep timer
+    # (modules/dev/cargo-sweep.nix), through `lib.mkRustBin`. nixpkgs' cargo
+    # pulls in the whole rustc, about 1.6 GiB, and the timer needs cargo only.
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Wayland-native launcher (replaces fuzzel). Brings its own backend,
     # elephant, as a transitive input; the home-manager module wires the two.
     walker = {
