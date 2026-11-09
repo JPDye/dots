@@ -3,10 +3,6 @@
 { lib, ... }:
 
 {
-  # No battery and no upower on this host (profiles/desktop.nix). poweralertd
-  # exits when it cannot reach UPower, and its unit would restart it in a loop.
-  dotfiles.desktop.poweralertd.enable = false;
-
   programs.niri.settings = {
     outputs = {
       "DP-3" = {
