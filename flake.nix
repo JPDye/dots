@@ -169,9 +169,12 @@
         # import nixGL's default.nix directly with the flags inlined to get the
         # byte-identical package set without tripping the deprecation.
         (final: _: {
+          # 32-bit GL serves only Steam, and the only nixGL host (laptop-arch)
+          # turns Steam off. Set this back to true if that host enables
+          # dotfiles.apps.steam again.
           nixgl = import "${inputs.nixgl}/default.nix" {
             pkgs = final;
-            enable32bits = true;
+            enable32bits = false;
             enableIntelX86Extensions = true;
           };
         })
