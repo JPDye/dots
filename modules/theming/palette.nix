@@ -83,13 +83,16 @@ rec {
   # `mono` is Nordwand Mono, Nerd Font patched in the fonts flake (see its
   # comment), so icons come straight from the primary face at one cell per
   # icon. `serif` is Libertinus Serif, a proportional serif, and it fills the
-  # sans-serif role too. The fallback chains in theming/fonts.nix +
-  # system/fonts.nix add only an icon backup and math glyph coverage.
+  # sans-serif role too. The fallback chain in theming/font-packages.nix adds
+  # only an icon backup and math glyph coverage.
   #
   # Fonts, borders, shadows and the wallpaper sit outside the scheme on
   # purpose: they are the same design whichever palette paints it.
   fonts = {
     mono = "Nordwand Mono";
+    # The attribute under inputs.myFonts.packages.<system> that ships `mono`.
+    # The greeter pins it, so the two must change together.
+    monoPackage = "nordwand-mono";
     serif = "Libertinus Serif";
   };
 

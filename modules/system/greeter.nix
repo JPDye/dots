@@ -117,12 +117,11 @@ in
 
       # The palette's mono family, including the login box. Installed
       # system-wide in modules/system/fonts.nix, but pin the package here too
-      # so cage's fontconfig is guaranteed to resolve it. The package has to
-      # be the one that actually ships `palette.fonts.mono`, or the name
-      # resolves to nothing and cage falls back to a default.
+      # so cage's fontconfig is guaranteed to resolve it. The package must
+      # ship `palette.fonts.mono`, which is why the palette names both.
       font = {
         name = palette.fonts.mono;
-        package = inputs.myFonts.packages.${system}.nordwand-mono;
+        package = inputs.myFonts.packages.${system}.${palette.fonts.monoPackage};
         size = 14;
       };
 

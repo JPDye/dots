@@ -23,9 +23,12 @@ in
   # action 2%).
   #
   # This is a home-manager module, not part of modules/system/power.nix, so
-  # that laptop-arch gets it too: that host imports no NixOS module. A host
-  # without upower (the desktop) must set the toggle false. poweralertd exits
-  # when it cannot reach UPower, and the unit would restart it in a loop.
+  # that laptop-arch gets it too: that host imports no NixOS module. On a
+  # host with no battery (the desktop) the unit skips itself, because
+  # poweralertd exits when UPower has no battery to report. The test reads
+  # the same directory that modules/desktop/lock.nix reads. Peripheral
+  # batteries (mice, headsets) have other names, so BAT* matches only a
+  # laptop battery.
   config = lib.mkIf cfg.enable {
     services.poweralertd = {
       enable = true;
@@ -34,5 +37,7 @@ in
       # state. Only the changes after start are useful.
       extraArgs = [ "-s" ];
     };
+
+    systemd.user.services.poweralertd.Unit.ConditionPathExistsGlob = "/sys/class/power_supply/BAT*";
   };
 }
