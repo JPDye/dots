@@ -276,10 +276,9 @@ So rebuilding this host on new hardware leaves the units failing until that scri
 | Category | Packages |
 |----------|----------|
 | CLI (unwrapped) | `ffmpeg`, `wireguard-tools`, `pavucontrol`, `brightnessctl`, `libnotify`, `bottom`, `hyperfine`, `unzip`, `tree`, `socat` |
-| GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `steam`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
-| CAD / slicers (also wrapped) | `lycheeslicer` (resin/MSLA), `openscad`, `freecad-wayland` (qt6 native Wayland), `dune3d` |
+| GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
 
-GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
+GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), the CAD set (`modules/apps/cad.nix`: `lycheeslicer`, `openscad`, `freecad-wayland`, `dune3d`), `steam` (`modules/apps/steam.nix`), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
 
 **Shared `home.sessionPath`:** just `~/.apps`.
 
@@ -389,6 +388,8 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | `spicetify.nix` | Spotify with the `text` theme and a custom colour scheme matching the rest of the system. |
 | `nixcord.nix` | Discord with the `system24` Vencord theme (gruvbox-material flavour). |
 | `termius.nix` | Termius SSH client (`pkgs.termius`). |
+| `cad.nix` | `lycheeslicer` (resin slicer), `openscad`, `freecad-wayland`, `dune3d`, wrapped via `dotfiles.wrapGL`. Off on `laptop-arch`. |
+| `steam.nix` | Steam, wrapped via `dotfiles.wrapGL`. Off on `laptop-arch`, which is why nixGL's `enable32bits` is off. |
 | `orca-slicer.nix` | FDM slicer, built from the pinned `nixpkgs-2605` input (26.11's orca 2.4.1 regressed the file dialog) and wrapped via `dotfiles.wrapGL`. `loginFix` (default **on**) re-links it without the static libstdc++ that corrupts the heap inside the Bambu network plugin during cloud login, then wraps it with a CA bundle and `WEBKIT_DISABLE_DMABUF_RENDERER=1`. The relink is uncached, so it costs a ~1 h local build: `hosts/laptop-nix` sets `loginFix = false` to take the stock cached binary, and Arch disables the module outright (no printer there). |
 
 ---
