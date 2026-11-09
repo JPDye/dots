@@ -116,6 +116,7 @@ home-manager owns the user profile only, so `modules/system/` never runs here. T
 - **`tailscale`**, **`udisks2`** and **`upower`** — see [the pacman block in the laptop-nix section](#hostslaptop-nixconfigurationnix). `tailscaled` needs root and a TUN device, udiskie is only the per-user client of the system `udisks2`, and poweralertd (`modules/desktop/poweralertd.nix`) only listens to the system `upower` daemon. Battery thresholds live in `/etc/UPower/UPower.conf`, which this flake does not manage.
 - **PAM files** for hyprlock and the keyring: `nix run .#arch-pam-setup`, described just below.
 - **Parallel builds** for the nix-daemon. Arch's `/etc/nix/nix.conf` sets no `max-jobs`, so the daemon builds one derivation at a time. Append `max-jobs = 4` and `cores = 4` to `/etc/nix/nix.conf`, then `sudo systemctl restart nix-daemon`. The pair caps a build at 16 threads. Do not use `max-jobs = auto` with `cores = 0`: that lets each of 16 jobs use every core, and two large Rust builds can then exhaust the RAM.
+- **User-space profiling** for `perf` and `samply` (`modules/dev/profiling.nix`). Arch keeps the kernel default `kernel.perf_event_paranoid = 2`, which samply refuses. Write `kernel.perf_event_paranoid = 1` to `/etc/sysctl.d/90-perf.conf`, then run `sudo sysctl --system`. The NixOS hosts get the same value from `modules/system/boot.nix`.
 
 Start the session with `niri-session` from a TTY. Nothing in this flake installs a display manager or enables a session unit on a non-NixOS host.
 
@@ -176,7 +177,7 @@ Notes:
 ├── profiles/                 # form-factor tier: laptop.nix / desktop.nix, one per NixOS host
 ├── modules/                  # modules, grouped by domain (home-manager + NixOS system)
 │   ├── theming/              # theme tokens, stylix, fonts
-│   ├── desktop/              # niri, walker, mako, eww, swww, swayosd, polkit, lock, wlsunset, udiskie
+│   ├── desktop/              # niri, walker, mako, eww, awww, swayosd, polkit, lock, wlsunset, udiskie
 │   ├── terminals/            # alacritty (default), ghostty, zellij
 │   ├── shell/                # aliases, cli-tools, integrations, nushell, starship, fastfetch, yazi, nix-index
 │   ├── dev/                  # git, helix, nh, bacon, cargo-sweep, claude-code, gh, docker
@@ -276,10 +277,9 @@ So rebuilding this host on new hardware leaves the units failing until that scri
 | Category | Packages |
 |----------|----------|
 | CLI (unwrapped) | `ffmpeg`, `wireguard-tools`, `pavucontrol`, `brightnessctl`, `libnotify`, `bottom`, `hyperfine`, `unzip`, `tree`, `socat` |
-| GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `steam`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
-| CAD / slicers (also wrapped) | `lycheeslicer` (resin/MSLA), `openscad`, `freecad-wayland` (qt6 native Wayland), `dune3d` |
+| GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
 
-GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
+GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), the CAD set (`modules/apps/cad.nix`: `lycheeslicer`, `openscad`, `freecad-wayland`, `dune3d`), `steam` (`modules/apps/steam.nix`), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
 
 **Shared `home.sessionPath`:** just `~/.apps`.
 
@@ -332,10 +332,10 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `lock.nix` | Screen lock + idle management: hand-themed **hyprlock** (palette colours, GPU/EGL, wrapped via `dotfiles.wrapGL`) + **swayidle**. `Mod+Escape` locks. Idle timers differ on AC vs battery (lock ~5 min on power, ~10 min on battery; monitors off shortly after). Locks before sleep. Needs `security.pam.services.hyprlock` (set in `modules/system/desktop.nix`) on NixOS. |
 | `mako.nix` | Notification daemon. 4s timeout (10s for critical urgency), red border, bg0 background. |
 | `eww.nix` | Live-edits `~/.config/nix/eww/` (symlinked, not copied — `mkOutOfStoreSymlink` keeps source-of-truth on disk). Two systemd user services: `eww` daemon and `eww-powermenu` running `~/.config/nix/eww/powermenu.nu`. |
-| `swww.nix` | `awww` wallpaper daemon as a systemd user service. Started by niri at session-start. |
+| `awww.nix` | `awww` wallpaper daemon through home-manager's `services.awww` (restart delay forced to 1 s). Started by niri at session-start. |
 | `swayosd.nix` | On-screen volume/brightness/caps-lock indicator. Triggered by niri `XF86Audio*`/`XF86MonBrightness*` binds. |
 | `wlsunset.nix` | Night-light (`services.wlsunset`); colour temperature shifts with sunrise/sunset from rough London coordinates. |
-| `polkit.nix` | `polkit-gnome-authentication-agent-1` as a systemd user service. |
+| `polkit.nix` | The polkit-gnome agent through home-manager's `services.polkit-gnome` (unit `polkit-gnome`, with a restart on failure added). |
 | `udiskie.nix` | Removable-media automounter (USB drives mount on plug-in, notifications via mako, no tray). Talks to the system `udisks2` daemon — enabled in `modules/system/desktop.nix` on NixOS, `pacman -S udisks2` on Arch. |
 | `poweralertd.nix` | Battery and power-supply notifications via mako (`services.poweralertd`). It reads UPower over D-Bus, so the kernel's battery name (BAT0 or BAT1) does not matter. The thresholds are UPower's: `modules/system/power.nix` on NixOS, `/etc/UPower/UPower.conf` on Arch. Started with `-s`, so a login does not replay the current state as notifications. On every host. The unit skips itself when no `/sys/class/power_supply/BAT*` exists, so a desktop with no battery starts nothing. |
 
@@ -380,6 +380,7 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | `git.nix` | User: Joe, `jpzh.dye@gmail.com`. Delta enabled (line numbers, navigate, hyperlinks). Aliases: `st`, `co`, `sw`, `br`, `lg` (decorated graph log), `last`, `unstage`, `amend`. Sensible defaults: `pull.rebase=true`, `push.autoSetupRemote=true`, `rebase.autoStash=true`, `merge.conflictStyle=zdiff3`, `diff.algorithm=histogram`, `init.defaultBranch=main`. |
 | `helix/` | Editor (default `EDITOR`), built from the `helix` flake input (latest master); split across `default.nix`, `editor.nix`, `languages.nix`, `themes.nix`. LSP servers: `nixd`, `taplo`, `marksman`, `tinymist`, `harper-ls`, `typos-lsp`, `bash-language-server`, `yaml-language-server`, `dockerfile-language-server-nodejs`, `basedpyright`, `ruff`, plus `rust-analyzer` (clippy pedantic, fill-arg snippets, hidden trivial inlay hints). Custom themes `stylix-dark` / `stylix-light`. Per-language config for Rust/Nix/TOML/Typst/Markdown/Bash/YAML/Dockerfile/Python with auto-format on save. `nixd` is wired to `inputs.self`'s `hmOptions.${hostname}` output for option completion (works regardless of where the flake is checked out). |
 | `nh.nix` | The `nh` nix-helper. `flake = ~/.config/nix`, a plain path rather than `inputs.self.outPath`, so each run re-reads working-tree edits instead of a frozen store path. Also sets `NH_FLAKE` in the nushell env, which nushell does not get otherwise. Auto-cleans generations: keep last 5, plus everything from past 7 days. Enables `nix-output-monitor`. |
+| `profiling.nix` | `perf` and `samply` on PATH, so `cargo flamegraph` works in every project shell. Both need `kernel.perf_event_paranoid` at 1 or lower (set on NixOS in `modules/system/boot.nix`, a root step on Arch). |
 
 ### Apps (`modules/apps/`)
 
@@ -389,6 +390,8 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | `spicetify.nix` | Spotify with the `text` theme and a custom colour scheme matching the rest of the system. |
 | `nixcord.nix` | Discord with the `system24` Vencord theme (gruvbox-material flavour). |
 | `termius.nix` | Termius SSH client (`pkgs.termius`). |
+| `cad.nix` | `lycheeslicer` (resin slicer), `openscad`, `freecad-wayland`, `dune3d`, wrapped via `dotfiles.wrapGL`. Off on `laptop-arch`. |
+| `steam.nix` | Steam, wrapped via `dotfiles.wrapGL`. Off on `laptop-arch`, which is why nixGL's `enable32bits` is off. |
 | `orca-slicer.nix` | FDM slicer, built from the pinned `nixpkgs-2605` input (26.11's orca 2.4.1 regressed the file dialog) and wrapped via `dotfiles.wrapGL`. `loginFix` (default **on**) re-links it without the static libstdc++ that corrupts the heap inside the Bambu network plugin during cloud login, then wraps it with a CA bundle and `WEBKIT_DISABLE_DMABUF_RENDERER=1`. The relink is uncached, so it costs a ~1 h local build: `hosts/laptop-nix` sets `loginFix = false` to take the stock cached binary, and Arch disables the module outright (no printer there). |
 
 ---

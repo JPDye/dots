@@ -10,7 +10,7 @@
     ./polkit.nix
     ./poweralertd.nix
     ./swayosd.nix
-    ./swww.nix
+    ./awww.nix
     ./udiskie.nix
     ./wlsunset.nix
   ];

@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, lib, ... }:
 
 let
   cfg = config.dotfiles.desktop.polkit;
@@ -14,20 +9,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    systemd.user.services.polkit-gnome-authentication-agent-1 = {
-      Unit = {
-        Description = "polkit-gnome-authentication-agent-1";
-        PartOf = [ "graphical-session.target" ];
-        After = [ "graphical-session.target" ];
-      };
-      Service = {
-        Type = "simple";
-        ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
-        Restart = "on-failure";
-        RestartSec = 1;
-        TimeoutStopSec = 10;
-      };
-      Install.WantedBy = [ "graphical-session.target" ];
+    services.polkit-gnome.enable = true;
+
+    # Upstream sets no Restart. Keep the agent coming back after a crash,
+    # or every later polkit prompt fails until the next login.
+    systemd.user.services.polkit-gnome.Service = {
+      Restart = "on-failure";
+      RestartSec = 1;
+      TimeoutStopSec = 10;
     };
   };
 }

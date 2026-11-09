@@ -16,9 +16,14 @@ in
   dotfiles = {
     inherit wrapGL;
 
-    # No slicer on this laptop: the printer lives with the desktop, which is the
-    # only host that needs orca (modules/apps/orca-slicer.nix).
-    apps.orca-slicer.enable = false;
+    # No slicer, CAD or Steam on this laptop: the printer lives with the
+    # desktop, and the two NixOS hosts keep the full set. FreeCAD alone is
+    # about 4.8 GiB of this host's closure.
+    apps = {
+      orca-slicer.enable = false;
+      cad.enable = false;
+      steam.enable = false;
+    };
 
     # Rootless docker as a user service (modules/dev/docker.nix). The NixOS
     # hosts get theirs from modules/system/containers.nix, so only this host
