@@ -28,6 +28,11 @@ _:
     # anything, and that is where the stalls come from. 125 raises the
     # headroom to 1.25% of the zone.
     "vm.watermark_scale_factor" = 125;
+
+    # Let a user profile their own processes (perf record, samply). The
+    # default of 2 allows user-space counting only, which samply refuses.
+    # 1 still hides kernel profiling from unprivileged users.
+    "kernel.perf_event_paranoid" = 1;
   };
 
   # systemd-oomd runs by default on NixOS, but every slice toggle defaults to
