@@ -500,13 +500,13 @@
       "locked": {
         "lastModified": 1785747812,
         "narHash": "sha256-WpPTsCmhlCsW8fDspVd3YFqkj2ct0VjXCUQBAkO8iHo=",
-        "owner": "kaylorben",
+        "owner": "4evy",
         "repo": "nixcord",
         "rev": "2e90dd6197cd69c8fb6e463dc8b3def594df2182",
         "type": "github"
       },
       "original": {
-        "owner": "kaylorben",
+        "owner": "4evy",
         "repo": "nixcord",
         "type": "github"
       }
@@ -765,13 +765,13 @@
       "locked": {
         "lastModified": 1785680312,
         "narHash": "sha256-e26BuraMqnara0VXVk9nsQLgGC+8nvEgYNc6odv5Yi8=",
-        "owner": "danth",
+        "owner": "nix-community",
         "repo": "stylix",
         "rev": "04b284060ffa638f080ab1b2d05cf1f236217995",
         "type": "github"
       },
       "original": {
-        "owner": "danth",
+        "owner": "nix-community",
         "repo": "stylix",
         "type": "github"
       }
