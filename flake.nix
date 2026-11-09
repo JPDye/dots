@@ -120,22 +120,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Intentionally NOT `follows nixpkgs`: helix.cachix.org holds the builds
-    # helix's own CI makes against helix's own flake.lock. Following the root
-    # nixpkgs changes every helix hash, so the cache never hits and every bump
-    # is a full local Rust build. The second nixpkgs node in flake.lock is the
-    # price of the cache hit. (nixos-hardware follows the root for the
-    # opposite reason: it is modules, with no binary cache behind it.)
-    # `helix-nixpkgs-in-sync` below asserts the pinned rev matches helix's
-    # own lock, and prints the re-pin command when it does not.
-    #
     # Trial: gj1118/helix, a fork of helix-editor/helix that adds code
-    # folding, a file explorer, Lua plugins and more. helix.cachix.org does
-    # not hold the fork's builds, so each bump is a full local Rust build.
-    # The no-follows setup stays. A revert to upstream needs this URL, the
-    # removal of the fork-only block in modules/dev/helix/editor.nix, and the
-    # old string form of `bufferline` there.
-    helix.url = "github:gj1118/helix";
+    # folding, a file explorer, Lua plugins and more. No binary cache holds
+    # the fork, so it builds locally and can follow the root nixpkgs like the
+    # other inputs. A revert to upstream needs this URL, the removal of the
+    # fork-only block in modules/dev/helix/editor.nix, and the old string
+    # form of `bufferline` there. Upstream builds are on helix.cachix.org,
+    # but only for helix's own nixpkgs pin, so a revert that wants that cache
+    # must also drop the `follows` below.
+    helix = {
+      url = "github:gj1118/helix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     git-hooks = {
       url = "github:cachix/git-hooks.nix";
@@ -361,26 +357,6 @@
         ) (nixosHosts ++ homeHosts)) "hmOptions no longer resolves for every host";
         pkgs.runCommand "hmOptions-check" { } "touch $out";
 
-      # helix does not follow the root nixpkgs (see its inputs comment), so
-      # its nixpkgs is a node of its own in flake.lock. helix.cachix.org only
-      # holds builds against the rev helix's own flake.lock pins. A helix
-      # bump moves both together, but a re-lock that does not move helix
-      # resolves the node from the nixos-unstable branch instead. Assert the
-      # two revs agree, so a drifted pin fails `nix flake check` instead of
-      # costing a silent local Rust build on every host.
-      helix-nixpkgs-in-sync =
-        let
-          locked = inputs.helix.inputs.nixpkgs.rev;
-          own = (builtins.fromJSON (builtins.readFile "${inputs.helix}/flake.lock")).nodes.nixpkgs.locked.rev;
-        in
-        assert nixpkgs.lib.assertMsg (locked == own) ''
-          flake.lock pins helix's nixpkgs at a rev that helix's own flake.lock does not, so helix.cachix.org will not serve this build.
-            locked in flake.lock:   ${locked}
-            pinned by helix's lock: ${own}
-          Re-pin with:
-            nix flake lock --override-input helix/nixpkgs github:nixos/nixpkgs/${own}'';
-        pkgs.runCommand "helix-nixpkgs-in-sync" { } "touch $out";
-
       # `nix flake init -t .#<lang>` targets. Two other files must name the
       # same set by hand and cannot import this attrset: the CI pin-bitrot
       # step in .github/workflows/check.yml and the Nushell scaffolders in
@@ -555,7 +531,6 @@
         inherit
           templates-in-sync
           templates-pin-in-sync
-          helix-nixpkgs-in-sync
           ;
         installer-template = installerTemplate.config.system.build.toplevel;
         hm-options = hmOptions-check;
