@@ -48,6 +48,14 @@ DEFAULT_WORK_DIR="/var/lib/bdst-nixos-install"
 # --work path after validation.
 WORK_DIR=""
 WORK_DIR_IS_DEFAULT=0
+# The fresh directory stage_and_patch fills. promote_stage renames it over
+# WORK_DIR once the patch verifies. The EXIT trap removes it if it is still
+# set, so a dry run or a failure leaves WORK_DIR as it was.
+STAGE_DIR=""
+# Written into every staging directory. An existing --work or default
+# directory must carry it (or the files of an older staging), or the script
+# refuses to replace it.
+STAGE_MARKER=".bdst-staging"
 MIRROR_SED_PID=""
 INSTALL_DIR="/opt/bitdefender-security-tools"
 LD_ENV_FILE="/etc/bitdefender/ld-env"
@@ -73,7 +81,7 @@ usage ()
 	                 (default: /var/lib/bdst-nixos-install, kept for later product runs)
 	  --action N     1=install (default) 2=reconfigure 3=repair 4=uninstall
 	  --trace        run the installer under 'sh -x'
-	  --dry-run      preflight and patch only; do not run the installer
+	  --dry-run      preflight, stage and patch a scratch copy; change nothing
 	  --resync       stage and patch, then point the installed installer
 	                 copies at the new helper; do not run the installer
 	  --reset        purge a failed install and exit, so the next run is a
@@ -225,7 +233,7 @@ reset_install ()
 patch_line ()
 {
     local pattern="$1" replacement="$2" want="$3" label="$4"
-    local target="$WORK_DIR/installer"
+    local target="$STAGE_DIR/installer"
     local before after got
 
     got=$(grep -cE -- "$pattern" "$target" || true)
@@ -239,13 +247,24 @@ patch_line ()
     log "patched $label ($want site(s))"
 }
 
+# A directory holds a staging when it is empty, carries the marker, or holds
+# the helper and the patched installer that an older run left there.
+is_staging_dir ()
+{
+    local d="$1"
+    [ -z "$(ls -A -- "$d")" ] && return 0
+    [ -e "$d/$STAGE_MARKER" ] && return 0
+    [ -f "$d/dpkg-install.sh" ] && [ -f "$d/installer" ] && return 0
+    return 1
+}
+
 # Resolves the staging directory. Root runs the patched installer and the
 # dpkg-install.sh helper from it, so it must be a directory that only root
 # can write. With no --work, the directory is the fixed DEFAULT_WORK_DIR
 # under /var/lib, which only root can write. It is refused if it is a
 # symlink or is not owned by root, else it is made 0700. With --work, the
 # path must be absent (then made 0700, no -p) or an existing root-owned
-# directory. stage_and_patch clears its contents.
+# directory. promote_stage replaces it as a whole.
 # patch_line splices the path into sed replacements, where '%' is the
 # delimiter and '&' and '\' are special, so those characters are refused.
 ensure_work_dir ()
@@ -258,6 +277,8 @@ ensure_work_dir ()
             [ -d "$WORK_DIR" ] || die "$WORK_DIR exists and is not a directory"
             [ "$(stat -c %u -- "$WORK_DIR")" -eq 0 ] \
                 || die "$WORK_DIR is not owned by root; refusing to stage there"
+            is_staging_dir "$WORK_DIR" \
+                || die "$WORK_DIR is not empty and holds no staging; refusing to replace it"
         else
             mkdir -m 0700 -- "$WORK_DIR" || die "cannot create $WORK_DIR"
         fi
@@ -271,6 +292,8 @@ ensure_work_dir ()
             [ -d "$WORK_DIR" ] || die "--work $WORK_DIR exists and is not a directory"
             [ "$(stat -c %u -- "$WORK_DIR")" -eq 0 ] \
                 || die "--work $WORK_DIR is not owned by root; refusing to stage there"
+            is_staging_dir "$WORK_DIR" \
+                || die "$WORK_DIR is not empty and holds no staging; refusing to replace it"
             chmod 0700 -- "$WORK_DIR"
         else
             mkdir -m 0700 -- "$WORK_DIR" || die "cannot create --work $WORK_DIR (is its parent missing?)"
@@ -285,25 +308,45 @@ ensure_work_dir ()
 # previous contents and no old directories pile up.
 cleanup_work_dir ()
 {
+    if [ -n "$STAGE_DIR" ] && [ -d "$STAGE_DIR" ]; then
+        rm -rf -- "$STAGE_DIR"
+    fi
     if [ "$WORK_DIR_IS_DEFAULT" -eq 1 ] && [ -d "$WORK_DIR" ]; then
         log "staging kept: $WORK_DIR (the synced installer calls its dpkg-install.sh)"
     fi
 }
 
+# Renames the verified stage over WORK_DIR. The old directory moves aside
+# first and is deleted last, so WORK_DIR never holds a half-written set.
+promote_stage ()
+{
+    local old=""
+    if [ -e "$WORK_DIR" ]; then
+        old=$(mktemp -d -- "$(dirname -- "$WORK_DIR")/.bdst-old.XXXXXX")
+        mv -T -- "$WORK_DIR" "$old/prev"
+    fi
+    mv -T -- "$STAGE_DIR" "$WORK_DIR"
+    STAGE_DIR=""
+    [ -z "$old" ] || rm -rf -- "$old"
+    log "staging promoted to $WORK_DIR"
+}
+
 stage_and_patch ()
 {
-    log "staging into $WORK_DIR"
-    # ensure_work_dir made or validated the directory. Clear its contents
-    # only, so its identity and ownership stay what was checked.
-    find "$WORK_DIR" -mindepth 1 -delete
+    # Stage beside the target, never in it. The source may be the target
+    # itself (after an install it holds the only full kit), and a dry run
+    # must not touch the helper the installed product calls.
+    STAGE_DIR=$(mktemp -d -- "$(dirname -- "$WORK_DIR")/.bdst-stage.XXXXXX")
+    log "staging into $STAGE_DIR (becomes $WORK_DIR)"
+    : >"$STAGE_DIR/$STAGE_MARKER"
 
     # bdconfigure mktemp's into its own directory, so the whole set must be
     # staged together and the directory must be writable.
     local f
     for f in "${REQUIRED_FILES[@]}"; do
-        cp -p -- "$SRC_DIR/$f" "$WORK_DIR/$f"
+        cp -p -- "$SRC_DIR/$f" "$STAGE_DIR/$f"
     done
-    chmod u+x "$WORK_DIR/installer" "$WORK_DIR/bdconfigure"
+    chmod u+x "$STAGE_DIR/installer" "$STAGE_DIR/bdconfigure"
 
     # copy_or_download() prefers a local file over a download, which is how the
     # vendor full kit works. Staging a linux-amd64 directory next to the
@@ -314,7 +357,7 @@ stage_and_patch ()
     # so a reused directory is trusted rather than checked. Populate it from a
     # run that did verify, or from the GravityZone console.
     if [ -d "$SRC_DIR/linux-amd64" ]; then
-        cp -a -- "$SRC_DIR/linux-amd64" "$WORK_DIR/linux-amd64"
+        cp -a -- "$SRC_DIR/linux-amd64" "$STAGE_DIR/linux-amd64"
         warn "reusing $SRC_DIR/linux-amd64; the installer will not verify its signature"
     fi
 
@@ -384,18 +427,18 @@ stage_and_patch ()
 # copy belong to the user who runs this script, which is root.
 write_dpkg_helper ()
 {
-    cp -- "$SELF_PATH" "$WORK_DIR/bootstrap.sh"
-    chmod 0700 "$WORK_DIR/bootstrap.sh"
-    cat >"$WORK_DIR/dpkg-install.sh" <<-EOF
+    cp -- "$SELF_PATH" "$STAGE_DIR/bootstrap.sh"
+    chmod 0700 "$STAGE_DIR/bootstrap.sh"
+    cat >"$STAGE_DIR/dpkg-install.sh" <<-EOF
 	#!/bin/sh
 	exec "$WORK_DIR/bootstrap.sh" --internal-dpkg-install "\$1"
 	EOF
-    chmod 0700 "$WORK_DIR/dpkg-install.sh"
+    chmod 0700 "$STAGE_DIR/dpkg-install.sh"
 }
 
 verify_patch ()
 {
-    local target="$WORK_DIR/installer" leftover
+    local target="$STAGE_DIR/installer" leftover
 
     leftover=$(grep -c -- '--distro-pkg' "$target" || true)
     [ "$leftover" -eq 0 ] || die "verify: $leftover unpatched --distro-pkg call(s) remain"
@@ -747,9 +790,11 @@ main ()
     stage_and_patch
 
     if [ "$DRY_RUN" -eq 1 ]; then
-        log "--dry-run: stopping before running the installer"
+        log "--dry-run: stopping before running the installer; $WORK_DIR is unchanged"
         exit 0
     fi
+
+    promote_stage
 
     if [ "$RESYNC" -eq 1 ]; then
         confirm "replace the installed installer copies under $INSTALL_DIR?" \
