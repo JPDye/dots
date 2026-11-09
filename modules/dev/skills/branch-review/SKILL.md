@@ -11,7 +11,7 @@ The review is read-only. Do not edit code until the user selects the findings to
 
 ## 1. Find the scope
 
-1. Find the base. If a PR exists, use its base branch: `gh pr view --json baseRefName,title,body`.
+1. Find the base. If a PR exists, use its base branch: `gh pr view --json baseRefName,title,body,isCrossRepository,author`.
 2. If no PR exists, use the merge base with the default branch: `git merge-base origin/<default> HEAD`.
 3. Collect the commits with `git log --oneline <base>..HEAD`.
 4. Collect the diff with `git diff <base>...HEAD`.
@@ -30,6 +30,7 @@ If you cannot find the goal with confidence, ask the user before you review. Ask
 - Read the callers and the callees of each changed function.
 - Read the project rules: `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING`, and any ADRs. A decision that these files record is not a finding.
 - Run the type checker, the linter, and the tests if they are fast and do not change the working tree. Record the results.
+- If `isCrossRepository` is true, or the user does not know the PR author, ask the user first. Ask before you run any command that executes the PR's code. This includes the tests, the build, hooks, and the dev shell. Reading files is always safe.
 
 ## 4. Review the four pillars
 
