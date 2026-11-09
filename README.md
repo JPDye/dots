@@ -176,7 +176,7 @@ Notes:
 ├── profiles/                 # form-factor tier: laptop.nix / desktop.nix, one per NixOS host
 ├── modules/                  # modules, grouped by domain (home-manager + NixOS system)
 │   ├── theming/              # theme tokens, stylix, fonts
-│   ├── desktop/              # niri, walker, mako, eww, swww, swayosd, polkit, lock, wlsunset, udiskie
+│   ├── desktop/              # niri, walker, mako, eww, awww, swayosd, polkit, lock, wlsunset, udiskie
 │   ├── terminals/            # alacritty (default), ghostty, zellij
 │   ├── shell/                # aliases, cli-tools, integrations, nushell, starship, fastfetch, yazi, nix-index
 │   ├── dev/                  # git, helix, nh, bacon, cargo-sweep, claude-code, gh, docker
@@ -332,10 +332,10 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `lock.nix` | Screen lock + idle management: hand-themed **hyprlock** (palette colours, GPU/EGL, wrapped via `dotfiles.wrapGL`) + **swayidle**. `Mod+Escape` locks. Idle timers differ on AC vs battery (lock ~5 min on power, ~10 min on battery; monitors off shortly after). Locks before sleep. Needs `security.pam.services.hyprlock` (set in `modules/system/desktop.nix`) on NixOS. |
 | `mako.nix` | Notification daemon. 4s timeout (10s for critical urgency), red border, bg0 background. |
 | `eww.nix` | Live-edits `~/.config/nix/eww/` (symlinked, not copied — `mkOutOfStoreSymlink` keeps source-of-truth on disk). Two systemd user services: `eww` daemon and `eww-powermenu` running `~/.config/nix/eww/powermenu.nu`. |
-| `swww.nix` | `awww` wallpaper daemon as a systemd user service. Started by niri at session-start. |
+| `awww.nix` | `awww` wallpaper daemon through home-manager's `services.awww` (restart delay forced to 1 s). Started by niri at session-start. |
 | `swayosd.nix` | On-screen volume/brightness/caps-lock indicator. Triggered by niri `XF86Audio*`/`XF86MonBrightness*` binds. |
 | `wlsunset.nix` | Night-light (`services.wlsunset`); colour temperature shifts with sunrise/sunset from rough London coordinates. |
-| `polkit.nix` | `polkit-gnome-authentication-agent-1` as a systemd user service. |
+| `polkit.nix` | The polkit-gnome agent through home-manager's `services.polkit-gnome` (unit `polkit-gnome`, with a restart on failure added). |
 | `udiskie.nix` | Removable-media automounter (USB drives mount on plug-in, notifications via mako, no tray). Talks to the system `udisks2` daemon — enabled in `modules/system/desktop.nix` on NixOS, `pacman -S udisks2` on Arch. |
 | `poweralertd.nix` | Battery and power-supply notifications via mako (`services.poweralertd`). It reads UPower over D-Bus, so the kernel's battery name (BAT0 or BAT1) does not matter. The thresholds are UPower's: `modules/system/power.nix` on NixOS, `/etc/UPower/UPower.conf` on Arch. Started with `-s`, so a login does not replay the current state as notifications. On every host. The unit skips itself when no `/sys/class/power_supply/BAT*` exists, so a desktop with no battery starts nothing. |
 

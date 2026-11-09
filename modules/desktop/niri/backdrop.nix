@@ -15,7 +15,7 @@ in
     # Modelled as a user service (rather than a niri spawn-at-startup) so that
     # `switch` can restart it with the new image — see applyWallpaper below.
     # It still starts on login via graphical-session.target, exactly like the
-    # awww-daemon service in swww.nix.
+    # awww-daemon service in awww.nix.
     systemd.user.services.swaybg = {
       Unit = {
         Description = "swaybg backdrop (blurred wallpaper)";
