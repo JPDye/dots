@@ -239,7 +239,7 @@ The modules/system highlights:
 
 - **User:** `jd`, shell `nushell`, in `wheel`, `networkmanager`, `wireshark`.
 - **Boot:** systemd-boot + EFI.
-- **Networking:** NetworkManager (DNS forced to `none` so static `nameservers` win), hostname `laptop-nix`, DNS `1.1.1.1`/`1.0.0.1` (Cloudflare), firewall opens UDP 41641/51820 (Tailscale, WireGuard).
+- **Networking:** NetworkManager (DNS forced to `none` so static `nameservers` win), hostname `laptop-nix`, DNS `1.1.1.1`/`1.0.0.1` (Cloudflare), firewall opens only Tailscale's UDP port (41641, through `services.tailscale.openFirewall`).
 - **Locale:** `en_GB.UTF-8`, `Europe/London`, UK keymap.
 - **Services:** `tailscale`, `tlp` (AC perf / battery powersave 0–20%, charge thresholds 40–80%), `upower` (hibernate at 5%), `pipewire` (with PulseAudio compat + 32-bit ALSA), `blueman`, `niri`, `dbus` with portals (wlr/gtk/gnome), `wireshark` (CLI), `docker` (rootless) and `podman`.
 - **Hardware:** AMD CPU (`kvm-amd`, microcode), OpenGL + 32-bit, Bluetooth on at boot.

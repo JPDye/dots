@@ -11,15 +11,17 @@
       dns = "none";
       wifi.powersave = true;
     };
-    firewall.allowedUDPPorts = [
-      51820 # wireguard
-      41641 # tailscale
-    ];
+    # No inbound WireGuard opening: nothing here declares a WireGuard
+    # interface, and a client tunnel needs none, because connection
+    # tracking admits the replies. Tailscale's port is opened by
+    # services.tailscale.openFirewall below, so it follows
+    # services.tailscale.port.
     nftables.enable = true;
   };
 
   services.tailscale = {
     enable = true;
+    openFirewall = true;
     useRoutingFeatures = "client";
   };
 
