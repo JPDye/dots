@@ -80,17 +80,29 @@ fi
 # libsecret reaches the keyring through the "default" alias, which resolves
 # via this plain file. Point it at the login keyring, because no prompter
 # runs on this session to pick one interactively.
+#
+# This block runs as the user, not as root. The path is inside the user's
+# home directory, which the user can rearrange at will. A root process that
+# wrote there would follow any symlink the user placed first, and the
+# ownership change that followed would hand the user a root-created file of
+# their choosing. As the user, the write can only touch what the user already
+# owns. `runuser` keeps root's environment, so the directory travels as $1 and
+# nothing inside reads HOME.
 if [[ -n ${SUDO_USER:-} ]]; then
   user_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-  user_group=$(id -gn "$SUDO_USER")
   keyrings_dir="$user_home/.local/share/keyrings"
-  if [[ ! -e "$keyrings_dir/default" ]]; then
-    echo "==> set the default keyring alias to 'login'"
-    install -d -m 700 -o "$SUDO_USER" -g "$user_group" "$keyrings_dir"
-    printf 'login\n' >"$keyrings_dir/default"
-    chown "$SUDO_USER:$user_group" "$keyrings_dir/default"
-    chmod 644 "$keyrings_dir/default"
-  fi
+  echo "==> set the default keyring alias to 'login' (as $SUDO_USER)"
+  # The inner script must expand $1 itself, so it stays single-quoted.
+  # shellcheck disable=SC2016
+  runuser -u "$SUDO_USER" -- sh -c '
+    set -eu
+    d=$1
+    mkdir -p -m 700 "$d"
+    if [ ! -e "$d/default" ] && [ ! -L "$d/default" ]; then
+      printf "login\n" >"$d/default"
+      chmod 644 "$d/default"
+    fi
+  ' sh "$keyrings_dir"
 fi
 
 if [[ ! -e /usr/lib/security/pam_gnome_keyring.so ]] ||
