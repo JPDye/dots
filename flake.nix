@@ -46,9 +46,7 @@
     # Byteful's Claude Code plugin marketplace (trybyteful/skills). Used here
     # for its `ste100` plugin only: the ASD-STE100 skill, a verbatim copy of
     # danyuchn/asd-ste100-skill with its LICENSE. A plain source tree (not a
-    # flake). modules/dev/claude-code.nix links the skill into ~/.claude/skills,
-    # where opencode also finds it, and modules/dev/opencode.nix inlines it
-    # into AGENTS.md.
+    # flake). modules/dev/claude-code.nix links the skill into ~/.claude/skills.
     #
     # The repo is PRIVATE, so any evaluation that has to fetch it needs GitHub
     # credentials with read access. `git+https` rather than `github:` on

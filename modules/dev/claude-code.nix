@@ -55,10 +55,8 @@ let
   '';
 
   # ASD-STE100 skill (`/asd-ste100`) with the house-rule addendum, built by
-  # ./ste100-skill.nix and shared with opencode.nix so both agents read one
-  # store path. SKILL.md points at references/ and examples/, so the whole
-  # skill dir is linked as-is below. opencode scans ~/.claude/skills too, so
-  # this one link serves both tools.
+  # ./ste100-skill.nix. SKILL.md points at references/ and examples/, so the
+  # whole skill dir is linked as-is below.
   ste100SkillPatched = import ./ste100-skill.nix { inherit pkgs inputs; };
 
   # The user memory below turns the STE100 ruleset on for every reply, but
@@ -170,7 +168,7 @@ in
         # Local skill (`/branch-review`): a review of the current branch
         # against its goal, on four pillars (architecture, correctness,
         # performance, simplicity). Shared with claude2 through the skills
-        # symlink above. opencode discovers it in ~/.claude/skills too.
+        # symlink above.
         ".claude/skills/branch-review".source = ./skills/branch-review;
 
         # STE100 as an output style. Installing the file only makes it appear

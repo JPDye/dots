@@ -184,7 +184,7 @@ Notes:
 │   ├── desktop/              # niri, walker, mako, eww, swww, swayosd, polkit, lock, wlsunset, udiskie
 │   ├── terminals/            # alacritty (default), ghostty, zellij
 │   ├── shell/                # aliases, cli-tools, integrations, nushell, starship, fastfetch, yazi, nix-index
-│   ├── dev/                  # git, helix, nh, bacon, cargo-sweep, claude-code, opencode, gh, docker
+│   ├── dev/                  # git, helix, nh, bacon, cargo-sweep, claude-code, gh, docker
 │   ├── apps/                 # firefox, spicetify, nixcord, termius, orca-slicer
 │   ├── system/               # NixOS system config (boot, networking, nix, greeter, power, ...)
 │   └── scripts/              # blur-wallpaper helper
@@ -217,7 +217,7 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 
 ## flake.nix at a glance
 
-**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `byteful-skills` (Byteful's Claude Code plugin marketplace, a **private** repo fetched over `git+https`, so evaluation needs a GitHub credential: prerequisite step 4 locally, the `BYTEFUL_SKILLS_TOKEN` secret in CI. Used for its `ste100` plugin: the ASD-STE100 skill, linked into `~/.claude/skills` for Claude Code and opencode, and inlined into opencode's `AGENTS.md`), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
+**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `byteful-skills` (Byteful's Claude Code plugin marketplace, a **private** repo fetched over `git+https`, so evaluation needs a GitHub credential: prerequisite step 4 locally, the `BYTEFUL_SKILLS_TOKEN` secret in CI. Used for its `ste100` plugin: the ASD-STE100 skill, linked into `~/.claude/skills` for Claude Code), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
 
 **Overlays:** niri, nixGL, firefox-addons.
 
@@ -388,7 +388,6 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | `git.nix` | User: Joe, `jpzh.dye@gmail.com`. Delta enabled (line numbers, navigate, hyperlinks). Aliases: `st`, `co`, `sw`, `br`, `lg` (decorated graph log), `last`, `unstage`, `amend`. Sensible defaults: `pull.rebase=true`, `push.autoSetupRemote=true`, `rebase.autoStash=true`, `merge.conflictStyle=zdiff3`, `diff.algorithm=histogram`, `init.defaultBranch=main`. |
 | `helix/` | Editor (default `EDITOR`), built from the `helix` flake input (latest master); split across `default.nix`, `editor.nix`, `languages.nix`, `themes.nix`. LSP servers: `nixd`, `taplo`, `marksman`, `tinymist`, `harper-ls`, `typos-lsp`, `bash-language-server`, `yaml-language-server`, `dockerfile-language-server-nodejs`, `basedpyright`, `ruff`, plus `rust-analyzer` (clippy pedantic, fill-arg snippets, hidden trivial inlay hints). Custom themes `stylix-dark` / `stylix-light`. Per-language config for Rust/Nix/TOML/Typst/Markdown/Bash/YAML/Dockerfile/Python with auto-format on save. `nixd` is wired to `inputs.self`'s `hmOptions.${hostname}` output for option completion (works regardless of where the flake is checked out). |
 | `nh.nix` | The `nh` nix-helper. `flake = ~/.config/nix`, a plain path rather than `inputs.self.outPath`, so each run re-reads working-tree edits instead of a frozen store path. Also sets `NH_FLAKE` in the nushell env, which nushell does not get otherwise. Auto-cleans generations: keep last 5, plus everything from past 7 days. Enables `nix-output-monitor`. |
-| `opencode.nix` | Installs `opencode` and ships `improve-oc` — the same read-only `/improve` skill, rebuilt from the `improve-skill` input with an opencode-native executor (`improve-executor` subagent, gpt-oss-120b via Groq) and renamed because opencode needs unique skill names across scanned dirs. A managed slice of `~/.config/opencode/opencode.json` is deep-merged on activation (managed leaves win, user edits survive); the Claude Code `improve` is denied inside opencode so only `improve-oc` loads. |
 
 ### Apps (`modules/apps/`)
 

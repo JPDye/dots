@@ -9,6 +9,5 @@
     ./git.nix
     ./helix
     ./nh.nix
-    ./opencode.nix
   ];
 }

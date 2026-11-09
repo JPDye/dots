@@ -3,10 +3,9 @@
 # appended to SKILL.md. The addendum adds the em-dash ban and the
 # no-cataphoric-teaser rule, both stricter than official STE.
 #
-# A plain function, not a module, so both agent modules import it and get
-# one store path: claude-code.nix links it into ~/.claude/skills (where
-# opencode also discovers it), and opencode.nix inlines its SKILL.md into
-# ~/.config/opencode/AGENTS.md. Same pattern as modules/theming/palette.nix.
+# A plain function, not a module, so the skill is one store path that
+# claude-code.nix links into ~/.claude/skills. Same pattern as
+# modules/theming/palette.nix.
 { pkgs, inputs }:
 let
   upstream = "${inputs.byteful-skills}/plugins/ste100/skills/asd-ste100";
