@@ -253,8 +253,9 @@ let
   };
 
   # Merged over the shared mapping in palette.nix, which stays as
-  # `palettes/gruvbox.nix` wants it. Only the accent slots are overridden:
-  # base00-07 keep coming from this scheme's own bg and fg ramps.
+  # `palettes/gruvbox.nix` wants it. It overrides the accent slots and three
+  # text slots (base03, base04, base05). The other base00-07 slots keep
+  # coming from this scheme's own bg and fg ramps.
   #
   # `gold` is spelled out rather than `yellow` on purpose. This scheme has
   # both, and they differ: `gold` is dbad49, `yellow` is goldDeep at b8943a.
