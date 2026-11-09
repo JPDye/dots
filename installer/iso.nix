@@ -23,8 +23,6 @@
 }:
 
 let
-  caches = import ../caches.nix;
-
   # Shown above the prompt on every console at boot (getty helpLine → the
   # /etc/issue banner) and re-printable any time via `install-help`.
   installSteps = ''
@@ -133,11 +131,6 @@ in
       "nix-command"
       "flakes"
     ];
-    # Same extra caches the installed system trusts (modules/system/nix.nix),
-    # so whatever delta the baked-in closure doesn't cover substitutes instead
-    # of compiling.
-    inherit (caches) substituters;
-    trusted-public-keys = caches.trustedPublicKeys;
     # Don't let unreachable substituters stall a fully offline install: give
     # up on them quickly and build locally.
     connect-timeout = 5;

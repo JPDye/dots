@@ -24,12 +24,7 @@ Personal NixOS + home-manager flake. Single source of truth for system config, d
    # /etc/nix/nix.conf or ~/.config/nix/nix.conf
    experimental-features = nix-command flakes
    ```
-3. **Register the binary caches system-wide** so helix and niri come from their caches instead of compiling locally. Append the two `extra` entries from `caches.nix` to `/etc/nix/nix.conf` (the same two lines the CI workflow uses):
-   ```
-   extra-substituters = https://helix.cachix.org https://niri.cachix.org
-   extra-trusted-public-keys = helix.cachix.org-1:ejp9KQpR1FBI2onstMQ34yogDm4OgU2ru6lIwPvuCVs= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=
-   ```
-   then `sudo systemctl restart nix-daemon`. Do **not** add your user to `trusted-users`: a trusted user is root-equivalent to the daemon, and with the caches system-wide nothing needs it. If an earlier setup added `trusted-users = root @wheel`, remove that line. The `caches-in-sync` flake check keeps the two lines above in step with `caches.nix`.
+3. **Keep your user out of `trusted-users`.** A trusted user is root-equivalent to the daemon, and nothing in this repo needs the trust. If an earlier setup added `trusted-users = root @wheel` to `/etc/nix/nix.conf`, remove that line. If it added `extra-substituters` and `extra-trusted-public-keys` lines for helix.cachix.org and niri.cachix.org, remove those too (both caches hold upstream builds, and this repo builds forks of helix and niri). Then run `sudo systemctl restart nix-daemon`.
 4. **Give git read access to the private `byteful-skills` input.** That flake input is a private GitHub repo. Nix fetches it with git over https, so git needs a credential that can read it before the first evaluation. Log in with the GitHub CLI and register it as git's credential helper:
    ```bash
    nix run nixpkgs#gh -- auth login       # https protocol, `repo` scope
@@ -191,7 +186,6 @@ Notes:
 ├── templates/                # `nix flake init -t` targets: rust, python, go, typst
 ├── installer/                # bootable ISO (iso.nix) + install-host.sh + host-template/
 ├── pkgs/                     # local packages (bibata-cursors-themed, the palette-coloured cursor)
-├── caches.nix                # source of truth for extra binary caches (see flake.nix nixConfig)
 ├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono, Nordwand Mono
 ├── eww/                      # eww widgets, symlinked out-of-store so they are hand-editable
 ├── wallpapers/               # background images (market.jpg is the default; its blur is derived at build time)
@@ -226,10 +220,8 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 - `homeConfigurations.laptop-arch` — built via `mkHome`; the standalone-HM target on Arch Linux. It imports the same domain folders + `hosts/laptop-arch/home.nix`. (the NixOS hosts have no `homeConfigurations` entries — their home-manager configs run as NixOS modules, nested at `nixosConfigurations.<host>.config.home-manager.users.jd`.)
 - `templates.{rust,python,go,typst}` — for `nix flake init -t .#<lang>`.
 - `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix, shellcheck, typos, nu-check).
-- `checks.x86_64-linux.{pre-commit,caches-in-sync,installer-template,hm-options,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `caches-in-sync` fails if the `nixConfig` cache literals or the CI workflow's (`.github/workflows/check.yml`) cachix literals drift from `caches.nix`; `installer-template` evaluates `installer/host-template/` so template drift fails eval here instead of mid-install on a wiped disk; `hm-options` asserts that the `hmOptions` output (nixd's option-completion source, `modules/dev/helix/languages.nix`) still resolves for every host; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
+- `checks.x86_64-linux.{pre-commit,installer-template,hm-options,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `installer-template` evaluates `installer/host-template/` so template drift fails eval here instead of mid-install on a wiped disk; `hm-options` asserts that the `hmOptions` output (nixd's option-completion source, `modules/dev/helix/languages.nix`) still resolves for every host; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
 - `hmOptions.<host>` — per-host home-manager option trees, consumed by `nixd` for option completion.
-
-**Substituters declared in `nixConfig`:** helix.cachix.org and niri.cachix.org, URLs only. The daemon accepts them for any user because the same caches are trusted system-wide: `modules/system/nix.nix` on NixOS (both lists read from `caches.nix`), `/etc/nix/nix.conf` on Arch (prerequisite step 3). The public keys are deliberately not in `nixConfig`. That setting only works for trusted users, and no user is trusted.
 
 ---
 
@@ -251,7 +243,7 @@ The modules/system highlights:
 - **Locale:** `en_GB.UTF-8`, `Europe/London`, UK keymap.
 - **Services:** `tailscale`, `tlp` (AC perf / battery powersave 0–20%, charge thresholds 40–80%), `upower` (hibernate at 5%), `pipewire` (with PulseAudio compat + 32-bit ALSA), `blueman`, `niri`, `dbus` with portals (wlr/gtk/gnome), `wireshark` (CLI), `docker` (rootless) and `podman`.
 - **Hardware:** AMD CPU (`kvm-amd`, microcode), OpenGL + 32-bit, Bluetooth on at boot.
-- **Caches:** `cache.nixos.org`, `helix.cachix.org`, `niri.cachix.org` configured system-wide so non-trusted users can use them. Set in `modules/system/nix.nix` from `caches.nix`, not in the host file.
+- **Caches:** `cache.nixos.org` only (the NixOS default). No extra cache is configured.
 - **System fonts:** Nordwand Mono (default mono, v1.3.1 vendored in the local `fonts/` flake and Nerd Font patched for single-cell icons), Libertinus Serif (default serif/sans), IoskeleyMonoTerm Nerd Font Mono, Drafting Mono, 0xProto Nerd Font Mono, Martian Mono Nerd Font, Fira Code Nerd Font Mono, Luxi Mono, Lora, Font Awesome, Input Fonts.
 
 On Arch the equivalent is whatever `pacman` / `systemctl --user` arrangement you already have — this flake does not try to manage system-level services on non-NixOS hosts. The root daemons the shared config expects there come from `pacman`:
@@ -700,8 +692,6 @@ nh clean all                                                    # gc, respecting
 ## Troubleshooting
 
 **`Command 'welcome' not found` in nushell startup.** The home-manager-symlinked `welcome.nu` resolves to a hashed nix-store name, so `use ~/.config/nushell/welcome.nu` registers a module under that hash. Fixed by `source`ing the file instead of `use`ing it (see `modules/shell/nushell.nix`).
-
-**`ignoring untrusted substituter 'https://niri.cachix.org'`.** The system does not list that cache. On NixOS run `sudo nixos-rebuild switch` so `modules/system/nix.nix` installs the caches from `caches.nix`. On Arch add the two lines from prerequisite step 3 to `/etc/nix/nix.conf` and restart the daemon. Do not add your user to `trusted-users` to silence it: that makes the user root-equivalent to the daemon.
 
 **`Existing file '...' would be clobbered`.** Pass `-b backup` to home-manager. The conflicting file becomes `<file>.backup`.
 

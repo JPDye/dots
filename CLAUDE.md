@@ -89,15 +89,6 @@ boot, or would have no user, or no network.
 
 ## Invariants that bite
 
-- **caches**: the extra caches live in **four** places — `caches.nix` (source
-  of truth), `flake.nix`'s `nixConfig.extra-substituters` (URLs only: Nix
-  requires literal `nixConfig` values, and the public keys are deliberately
-  absent because that setting is ignored for untrusted users and no user is
-  trusted), `.github/workflows/check.yml`'s `extra-conf` block (URLs and keys,
-  YAML can't read Nix), and README.md's Arch prerequisite step 3 (URLs and
-  keys, pasted into `/etc/nix/nix.conf`). Editing a cache means editing **all
-  four**; `checks.<system>.caches-in-sync` reads the flake, the CI workflow
-  and the README and fails `nix flake check` on drift from `caches.nix`.
 - **niri schema lag**: `programs.niri.settings.*` uses niri-flake's typed schema,
   which can lag the niri binary. KDL the schema doesn't know yet goes through
   `dotfiles.desktop.niri.extraConfig` (raw KDL — see
@@ -123,10 +114,10 @@ changed.
    `deadnix`, `statix`, `shellcheck`, `typos`, `nu-check`. Catches formatting,
    dead code, spelling, and shell / Nushell syntax. It evaluates no Nix.
 2. `nix flake check --no-build` (minutes). What CI runs. Catches option and
-   eval breakage across every host, plus `caches-in-sync`, `hm-options` and
-   the installer host template (all three assert at eval time). It does
-   **not** catch build-time failures, such as `niri validate` on the
-   generated KDL or the shellcheck inside `writeShellApplication`.
+   eval breakage across every host, plus `hm-options` and the installer host
+   template (both assert at eval time). It does **not** catch build-time
+   failures, such as `niri validate` on the generated KDL or the shellcheck
+   inside `writeShellApplication`.
 3. `nix flake check` (full). Everything above, and it builds each host's NixOS
    toplevel + HM activation. This is the gate before a `switch`.
 
