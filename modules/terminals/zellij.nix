@@ -55,7 +55,7 @@ in
           # apart.
           frame_selected = emphasis // {
             base = "#${colors.borderActive}";
-            emphasis_2 = "#${colors.grey}";
+            emphasis_2 = "#${colors.fgMuted}";
           };
 
           # `borderInactive` is the at-rest outline niri's inactive window
@@ -132,7 +132,7 @@ in
           };
 
           table_title = emphasis // {
-            base = "#${colors.grey}";
+            base = "#${colors.fgMuted}";
             background = "#${colors.bg0}";
           };
 

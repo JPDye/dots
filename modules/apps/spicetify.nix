@@ -32,6 +32,8 @@ in
             # `--fg-color`, and the theme points that at `--spice-button-active`
             # (its user.css, the `.progress-bar` rule). Overriding the
             # variable on the bar is therefore enough to recolour the fill.
+            # The rest fill takes `accent`, so the hover fill below is the
+            # same role, lifted.
             #
             # The fade lives on `.x-progressBar-fillColor` rather than on the
             # variable: a custom property cannot be transitioned unless it is
@@ -56,7 +58,7 @@ in
             additionalCss = ''
               .main-nowPlayingBar-container .playback-bar .progress-bar,
               .main-nowPlayingBar-container .playback-bar [data-testid="progress-bar"] {
-                --fg-color: #${colors.yellow} !important;
+                --fg-color: #${colors.accent} !important;
                 --mg-color: #${colors.borderActive} !important;
               }
 
@@ -88,17 +90,18 @@ in
           # grey.
           "border-active" = "${colors.borderActive}";
           "border-inactive" = "${colors.bg2}";
-          # Panel labels at rest take the cool blue, the same as Firefox's
-          # panel titles (modules/apps/firefox.nix).
-          "header" = "${colors.blue}";
+          # Panel labels at rest take the `info` role, a cool blue in both
+          # schemes, the same as Firefox's panel titles
+          # (modules/apps/firefox.nix).
+          "header" = "${colors.info}";
           "highlight" = "${colors.urgent}";
           "main" = "${colors.bg0}";
           "notification" = "${colors.info}";
           "notification-error" = "${colors.urgent}";
           # Secondary lines (artist, "Playlist • owner", the track-list
-          # header) take the cool blue, so they read apart from the gold
-          # accents.
-          "subtext" = "${colors.blue}";
+          # header) take the `info` role, a cool blue in both schemes, so they
+          # read apart from the gold accents.
+          "subtext" = "${colors.info}";
           "text" = "${colors.fg0}";
         };
       };

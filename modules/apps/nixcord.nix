@@ -92,30 +92,33 @@ let
       --border-hover: #${c.borderActive};
       --button-border: #${c.bg2};
 
-      --red-1: #${c.red};
-      --red-2: #${c.red};
-      --red-3: #${c.red};
-      --red-4: color-mix(in oklch, #${c.red}, #${c.bg0} 25%);
-      --red-5: color-mix(in oklch, #${c.red}, #${c.bg0} 60%);
+      --red-1: #${c.urgent};
+      --red-2: #${c.urgent};
+      --red-3: #${c.urgent};
+      --red-4: color-mix(in oklch, #${c.urgent}, #${c.bg0} 25%);
+      --red-5: color-mix(in oklch, #${c.urgent}, #${c.bg0} 60%);
 
-      --green-1: #${c.green};
-      --green-2: #${c.green};
-      --green-3: #${c.green};
-      --green-4: color-mix(in oklch, #${c.green}, #${c.bg0} 25%);
-      --green-5: color-mix(in oklch, #${c.green}, #${c.bg0} 60%);
+      --green-1: #${c.success};
+      --green-2: #${c.success};
+      --green-3: #${c.success};
+      --green-4: color-mix(in oklch, #${c.success}, #${c.bg0} 25%);
+      --green-5: color-mix(in oklch, #${c.success}, #${c.bg0} 60%);
 
-      --blue-1: #${c.blue};
-      --blue-2: #${c.blue};
-      --blue-3: #${c.blue};
-      --blue-4: color-mix(in oklch, #${c.blue}, #${c.bg0} 25%);
-      --blue-5: color-mix(in oklch, #${c.blue}, #${c.bg0} 60%);
+      --blue-1: #${c.info};
+      --blue-2: #${c.info};
+      --blue-3: #${c.info};
+      --blue-4: color-mix(in oklch, #${c.info}, #${c.bg0} 25%);
+      --blue-5: color-mix(in oklch, #${c.info}, #${c.bg0} 60%);
 
-      --yellow-1: #${c.yellow};
-      --yellow-2: #${c.yellow};
-      --yellow-3: #${c.yellow};
-      --yellow-4: color-mix(in oklch, #${c.yellow}, #${c.bg0} 25%);
-      --yellow-5: color-mix(in oklch, #${c.yellow}, #${c.bg0} 60%);
+      --yellow-1: #${c.warning};
+      --yellow-2: #${c.warning};
+      --yellow-3: #${c.warning};
+      --yellow-4: color-mix(in oklch, #${c.warning}, #${c.bg0} 25%);
+      --yellow-5: color-mix(in oklch, #${c.warning}, #${c.bg0} 60%);
 
+      /* No role matches purple in either scheme, so this family and
+         --streaming above keep the pink hue. They are the only hue reads
+         outside modules/theming. */
       --purple-1: #${c.pink};
       --purple-2: #${c.pink};
       --purple-3: #${c.pink};

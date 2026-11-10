@@ -114,6 +114,7 @@ let
     success = green; # ok states, passing checks
     warning = orange; # caution, modified-but-not-broken
     info = blue; # informational accents
+    fgMuted = grey; # muted text: zellij's frame and table titles
 
     # Hover steps. Every interactive role gets one, derived the same way in
     # both schemes so the relationship between a role and its hover is
