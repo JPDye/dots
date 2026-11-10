@@ -41,9 +41,6 @@ let
   greeterStyles = {
     gruvbox = ./greeter-styles/gruvbox.nix;
     kintsugi = ./greeter-styles/kintsugi.nix;
-    # The kintsugi stylesheet reads only role tokens, so it paints the v2
-    # scheme correctly too.
-    kintsugiv2 = ./greeter-styles/kintsugi.nix;
   };
 
   greeterCss =

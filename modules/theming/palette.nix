@@ -21,7 +21,6 @@ let
   schemes = {
     gruvbox = import ./palettes/gruvbox.nix { inherit plib; };
     kintsugi = import ./palettes/kintsugi.nix { inherit plib; };
-    kintsugiv2 = import ./palettes/kintsugiv2.nix { inherit plib; };
   };
 
   active = schemes.${scheme};
