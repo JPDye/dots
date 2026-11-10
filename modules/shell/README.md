@@ -145,34 +145,39 @@ logo otherwise.
 Wired in `nushell.nix` via:
 
 ```nu
-use ~/.config/nushell/welcome.nu
+source ~/.config/nushell/welcome.nu
 welcome
 ```
 
 ### `scaffolds.nu`
 
-Project scaffolders. Each one drops a flake template (`flake.nix`,
-`flake.lock`, `.envrc`) into the cwd, `git init`s if needed, stages the new
-files, and `direnv allow`s. The dev shell auto-activates on the next prompt.
+Project scaffolders. Each one drops a template into the cwd and runs
+`direnv allow`. For the flake templates (python, go, typst) it also
+`git init`s if needed and stages `flake.nix` and `flake.lock`. The rust and
+c templates are plain `shell.nix` files and need no git. The dev shell
+auto-activates on the next prompt.
 
 | Command       | Template            | Toolchain                                                    |
 | ------------- | ------------------- | ------------------------------------------------------------ |
-| `init-rust`   | `templates/rust/`   | rust 1.90 stable, `mold`, sccache, bacon, cargo-nextest, etc.  |
+| `init-rust`   | `templates/rust/`   | rust nightly (rust-overlay), `mold`, sccache, bacon, cargo-nextest, etc. |
 | `init-python` | `templates/python/` | python 3.13, uv, ruff, basedpyright                          |
 | `init-go`     | `templates/go/`     | go, gopls, delve, golangci-lint, gotools                     |
 | `init-typst`  | `templates/typst/`  | typst, tinymist, typstyle                                    |
+| `init-c`      | `templates/c/`      | C23 clang, clang-tools, bear, gdb, valgrind, sanitisers           |
 
 Usage:
 
 ```
-mkdir my-project && cd my-project
-init-rust                 # or init-python, init-go
+mkdir my-project; cd my-project
+init-rust                 # or init-python, init-go, init-typst, init-c
 ```
 
-To add another scaffolder, append a `def` to `scaffolds.nu` — it's already
-imported with `use ... *` so any new function is in scope. Add a matching
-template under `templates/<name>/` and register it in the top-level
-`flake.nix` `templates` block.
+To add another scaffolder, add a line `export def init-<name> [] { scaffold "<name>" }`
+to `scaffolds.nu`. The file is imported with `use ... *`, so every
+exported command is in scope. Add the template under `templates/<name>/`,
+register it in the `templates` block of the top-level `flake.nix`, and add
+an eval line for it to the template step in `.github/workflows/check.yml`.
+The `templates-in-sync` flake check fails until all three agree.
 
 ---
 
@@ -185,4 +190,4 @@ Pick the right file:
   `integrations.nix`.
 - **An alias mapping**: add to `aliases.nix`.
 
-Then `git add` the change (flakes ignore untracked files) and `nh switch`.
+Then `git add` the change (flakes ignore untracked files) and rebuild: `nh home switch -c laptop-arch` on Arch, `nh os switch` on a NixOS host.

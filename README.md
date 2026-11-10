@@ -169,7 +169,7 @@ Notes:
 │   ├── nix-desktop/
 │   │   ├── configuration.nix      # NixOS system config
 │   │   ├── hardware-configuration.nix
-│   │   └── home.nix               # per-host HM overlay (desktop monitors, mkForce overrides)
+│   │   └── home.nix               # per-host HM overlay (monitor outputs, per-host overrides)
 │   └── laptop-arch/
 │       ├── home.nix               # per-host HM overlay (Arch monitors, wrapGL definition)
 │       ├── pam-setup.nix          # root PAM files for hyprlock (`nix run .#arch-pam-setup`)
@@ -178,13 +178,13 @@ Notes:
 ├── modules/                  # modules, grouped by domain (home-manager + NixOS system)
 │   ├── theming/              # theme tokens, stylix, fonts
 │   ├── desktop/              # niri, walker, mako, eww, awww, swayosd, polkit, lock, wlsunset, udiskie
-│   ├── terminals/            # alacritty (default), ghostty, zellij
+│   ├── terminals/            # ghostty (default), alacritty, zellij
 │   ├── shell/                # aliases, cli-tools, integrations, nushell, starship, fastfetch, yazi, nix-index
 │   ├── dev/                  # git, helix, nh, bacon, cargo-sweep, claude-code, gh, docker
 │   ├── apps/                 # firefox, spicetify, nixcord, termius, orca-slicer
 │   ├── system/               # NixOS system config (boot, networking, nix, greeter, power, ...)
 │   └── scripts/              # blur-wallpaper helper
-├── templates/                # `nix flake init -t` targets: rust, python, go, typst
+├── templates/                # `nix flake init -t` targets: rust, python, go, typst, c
 ├── installer/                # bootable ISO (iso.nix) + install-host.sh + host-template/
 ├── pkgs/                     # local packages (bibata-cursors-themed, the palette-coloured cursor)
 ├── fonts/                    # local flake: IoskeleyMono, Drafting Mono, Luxi Mono, Nordwand Mono
@@ -204,7 +204,7 @@ Three pieces:
 3. **Per-host overlays at `hosts/<host>/home.nix`**: the only place per-host divergence lives. Includes things like:
    - `dotfiles.wrapGL` (set on Arch to the nixGL wrapper; GUI apps are declared in shared `home.nix` and wrapped automatically per host via this setting).
    - `programs.niri.settings.outputs` (different monitors on each box).
-   - any `lib.mkForce` override of a shared setting (two today: Arch forces `layout.gaps` to 8, tighter than the shared 16, for its 14" panel, and nix-desktop forces `border.width` to 1).
+   - any `lib.mkForce` override of a shared setting (one today: nix-desktop replaces the shared `preset-column-widths` list, because home-manager would otherwise append the two lists).
 
 Hardcoded paths are written against `inputs.self.outPath` so the flake works regardless of where it's checked out — except `eww` which uses `mkOutOfStoreSymlink` and points at `~/.config/nix/eww` so the user can hand-edit eww files without rebuilding.
 
@@ -212,14 +212,14 @@ Hardcoded paths are written against `inputs.self.outPath` so the flake works reg
 
 ## flake.nix at a glance
 
-**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `byteful-skills` (Byteful's Claude Code plugin marketplace, a **private** repo fetched over `git+https`, so evaluation needs a GitHub credential: prerequisite step 4 locally, the `BYTEFUL_SKILLS_TOKEN` secret in CI. Used for its `ste100` plugin: the ASD-STE100 skill, linked into `~/.claude/skills` for Claude Code), `spicetify-nix`, `textfox`, `firefox-addons`, `niri`, `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `rust-overlay` (the standalone cargo for the cargo-sweep timer), `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
+**Inputs:** `nixpkgs` (unstable), `nixpkgs-2605` (pinned stable, for the slicers only; deliberately **not** `follows`-ed, because a separate pinned closure is the point. `bambu-studio` is unfree since May 2026 and Hydra caches it on no branch, so expect one local ~1 h compile per lock bump), `home-manager`, `stylix`, `nixcord`, `claude-code`, `improve-skill` (the read-only `/improve` skill for Claude Code), `byteful-skills` (Byteful's Claude Code plugin marketplace, a **private** repo fetched over `git+https`, so evaluation needs a GitHub credential: prerequisite step 4 locally, the `BYTEFUL_SKILLS_TOKEN` secret in CI. Used for its `ste100` plugin: the ASD-STE100 skill, linked into `~/.claude/skills` for Claude Code), `spicetify-nix`, `textfox`, `firefox-addons`, `niri` (niri-flake: the home-manager module and the typed settings schema), `niri-fork` (the niri binary, `github:JPDye/niri/overview-border`. `modules/desktop/niri/layout.nix` emits `overview { workspace-border }`, which only this fork parses, so a return to upstream niri must drop that block), `nixgl`, `walker` (the Wayland launcher; brings `elephant` as its backend), `nix-index-database`, `helix`, `rust-overlay` (the standalone cargo for the cargo-sweep timer), `git-hooks`, `nixos-hardware`, plus a local `myFonts` flake under `./fonts`.
 
 **Overlays:** niri, nixGL, firefox-addons.
 
 **Outputs:**
 - `nixosConfigurations.{nix-desktop,laptop-nix}` — the NixOS hosts.
 - `homeConfigurations.laptop-arch` — built via `mkHome`; the standalone-HM target on Arch Linux. It imports the same domain folders + `hosts/laptop-arch/home.nix`. (the NixOS hosts have no `homeConfigurations` entries — their home-manager configs run as NixOS modules, nested at `nixosConfigurations.<host>.config.home-manager.users.jd`.)
-- `templates.{rust,python,go,typst}` — for `nix flake init -t .#<lang>`.
+- `templates.{rust,python,go,typst,c}` — for `nix flake init -t .#<lang>`.
 - `devShells.x86_64-linux.default` — pre-commit env (nixfmt, deadnix, statix, shellcheck, typos, nu-check).
 - `checks.x86_64-linux.{pre-commit,installer-template,hm-options,nixos-<host>,home-<host>}` — `pre-commit` runs the hooks via `git-hooks.nix`; `installer-template` evaluates `installer/host-template/` so template drift fails eval here instead of mid-install on a wiped disk; `hm-options` asserts that the `hmOptions` output (nixd's option-completion source, `modules/dev/helix/languages.nix`) still resolves for every host; the per-host entries build each host's NixOS toplevel / HM activation so `nix flake check` catches eval/build breakage before a `switch`.
 - `hmOptions.<host>` — per-host home-manager option trees, consumed by `nixd` for option completion.
@@ -276,8 +276,8 @@ So rebuilding this host on new hardware leaves the units failing until that scri
 
 | Category | Packages |
 |----------|----------|
-| CLI (unwrapped) | `ffmpeg`, `wireguard-tools`, `pavucontrol`, `brightnessctl`, `libnotify`, `bottom`, `hyperfine`, `unzip`, `tree`, `socat` |
-| GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `xwayland-satellite-stable`, `swaybg`, `hyprpicker` |
+| CLI (unwrapped) | `man-pages`, `man-pages-posix`, `ffmpeg`, `wireguard-tools`, `pavucontrol`, `brightnessctl`, `libnotify`, `bottom`, `hyperfine`, `unzip`, `tree`, `socat` |
+| GUI/GL (wrapped via `dotfiles.wrapGL`) | `bitwarden-desktop`, `chromium`, `dbeaver-bin`, `foliate`, `wireshark`, `obsidian`, `gpu-screen-recorder-gtk`, `proton-vpn`, `qbittorrent`, `roomeqwizard`, `slack`, `vlc`, `hyprpicker` |
 
 GUI apps whose module owns the package are **not** in the shared `home.packages` list: `claude-code` (`modules/dev/claude-code.nix`), `orca-slicer` (`modules/apps/orca-slicer.nix`, a pinned 26.05 build with a per-host `loginFix` toggle), the CAD set (`modules/apps/cad.nix`: `lycheeslicer`, `openscad`, `freecad-wayland`, `dune3d`), `steam` (`modules/apps/steam.nix`), `termius` (`modules/apps/termius.nix`), and the `programs.*`-managed apps firefox, discord (`modules/apps/nixcord.nix`) and spotify (`modules/apps/spicetify.nix`).
 
@@ -285,7 +285,7 @@ GUI apps whose module owns the package are **not** in the shared `home.packages`
 
 **`hosts/laptop-nix/home.nix`** contains `programs.niri.settings.outputs` for `eDP-1`, `HDMI-A-1`, `DP-7`, and `DP-1`, plus `dotfiles.apps.orca-slicer.loginFix = false` (the login-fixed relink is a ~1 h uncached recompile, paid only where Bambu cloud login is actually used). No packages, no extra `sessionPath`.
 
-**`hosts/laptop-arch/home.nix`** sets `dotfiles.wrapGL` (to the nixGL wrapper), installs `nixgl.nixGLIntel` and the `arch-pam-setup` command, enables `programs.niri` with a wrapped `pkgs.niri`, tightens `layout.gaps` for the 14" panel, disables `orca-slicer`, and defines outputs `eDP-1` and `DP-3`. It does not list GUI packages. They come from shared `home.nix`, wrapped via the `wrapGL` it sets. `Mod+Return` needs no override: `modules/desktop/niri/binds.nix` spawns the terminal by its absolute `wrapGL`'d path.
+**`hosts/laptop-arch/home.nix`** sets `dotfiles.wrapGL` (to the nixGL wrapper), installs `nixgl.nixGLIntel` and the `arch-pam-setup` command, enables `programs.niri` with a wrapped `pkgs.niri`, disables `orca-slicer`, and defines outputs `eDP-1` and `DP-3`. It does not list GUI packages. They come from shared `home.nix`, wrapped via the `wrapGL` it sets. `Mod+Return` needs no override: `modules/desktop/niri/binds.nix` spawns the terminal by its absolute `wrapGL`'d path.
 
 ---
 
@@ -322,13 +322,14 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `stylix.nix` | Base16 theming via [stylix]. Scheme: built from `palette.nix` by `mkScheme` and passed to stylix as an attrset, so no upstream base16 yaml sits under the theme and no `stylix.override` is needed. Wallpaper: `dotfiles.theme.wallpaper`. Cursor: Bibata-Original-Amber 16px. Font sizes 14px. Disables stylix targets that have hand-rolled styling (firefox, spicetify, zellij, mako) — but only when those toggles are on, so disabling firefox via toggle no longer leaves stylix referencing a missing program. |
 | `wallpaper.nix` | `dotfiles.theme.wallpaper` — single source of truth for the wallpaper image (default `wallpapers/market.jpg`, set in `palette.nix`), consumed by awww, stylix and hyprlock. `dotfiles.theme.wallpaperBlurred` defaults to a build-time ImageMagick gaussian blur (sigma 15) of it, shown by `swaybg` in the niri backdrop; set it to a file for a hand-made blur. |
 | `fonts.nix` | Installs Nerd Fonts (0xproto, martian-mono, fira-code, droid-sans-mono, symbols-only), Cascadia Code, Siji, plus Nordwand Mono — the default mono family — with IoskeleyMono, Drafting Mono and Luxi Mono from the local `fonts/` flake. Libertinus Serif is the default serif/sans family. Sets fontconfig fallback chain. |
+| `gtk.nix` | TUI-style GTK3 and GTK4 widget CSS in palette colours, with the shared border width and radius. stylix appends it to both GTK stylesheets. Scoped to `window:not(.window):not(.powermenu)`, so walker and the eww power menu keep their own themes. |
 
 ### Desktop / Wayland (`modules/desktop/`)
 
 | Module | Notes |
 |--------|-------|
-| `niri/` | Niri compositor config, split across `default.nix`, `binds.nix`, `layout.nix`, `window-rules.nix`, `animations.nix`, `spawn.nix`, `backdrop.nix` (the `swaybg` backdrop service and the live wallpaper re-apply hook). Holds everything that's the same on every host: input (UK keymap, focus-follows-mouse), 16px gaps (the Arch overlay forces 8px for its 14" panel), 2px red active border, no CSD, layer rules placing wallpaper + eww in the backdrop, every binding, the animation presets (`dotfiles.desktop.niri.animations.preset`: `grid` default (pixel-grid open/close plus the bounce springs at 1.1x slowdown), or `bounce`, `butter`, `spontaneous`, `jello`, `liquid`, `portal`, with their shaders in `shaders/niri-<preset>-*.glsl`), startup spawns for `mako` and `awww` (niri starts `xwayland-satellite` itself, from `pkgs.xwayland-satellite`) (`swaybg` is a user service in `backdrop.nix`). **Outputs are not here** — each host's overlay defines them. |
-| `walker.nix` | Wayland launcher, run as a user service so it opens instantly. One window with prefix-activated providers via its `elephant` backend: apps, `=` calc, `:` clipboard (text + image history), `/` files. Themed `niri` to match a window (dark fill, 2px red border, square corners). Bound at `Mod+R` (apps), `Mod+V` (clipboard), `Mod+=` (calc). |
+| `niri/` | Niri compositor config, split across `default.nix`, `binds.nix`, `layout.nix`, `window-rules.nix`, `animations.nix`, `spawn.nix`, `backdrop.nix` (the `swaybg` backdrop service and the live wallpaper re-apply hook). Holds everything that's the same on every host: input (UK keymap, focus-follows-mouse), 16px gaps on every host, 2px red active border, no CSD, layer rules placing wallpaper + eww in the backdrop, every binding, the animation presets (`dotfiles.desktop.niri.animations.preset`: `grid` default (pixel-grid open/close plus the bounce springs, 1.1x slower and with 0.15 more damping, capped at 0.9), or `bounce`, `butter`, `spontaneous`, `jello`, `liquid`, `portal`, with their shaders in `shaders/niri-<preset>-*.glsl`), startup spawns for `mako` and `awww` (niri starts `xwayland-satellite` itself, from `pkgs.xwayland-satellite`) (`swaybg` is a user service in `backdrop.nix`). **Outputs are not here** — each host's overlay defines them. |
+| `walker.nix` | Wayland launcher, run as a user service so it opens instantly. One window with prefix-activated providers via its `elephant` backend: apps, `=` calc, `:` clipboard (text + image history), `/` files. Themed to match a niri window (dark fill, a `borderActive` border at the shared width, corners at the shared radius). Bound at `Mod+R` (apps), `Mod+V` (clipboard), `Mod+=` (calc). |
 | `lock.nix` | Screen lock + idle management: hand-themed **hyprlock** (palette colours, GPU/EGL, wrapped via `dotfiles.wrapGL`) + **swayidle**. `Mod+Escape` locks. Idle timers differ on AC vs battery (lock ~5 min on power, ~10 min on battery; monitors off shortly after). Locks before sleep. Needs `security.pam.services.hyprlock` (set in `modules/system/desktop.nix`) on NixOS. |
 | `mako.nix` | Notification daemon. 4s timeout (10s for critical urgency), red border, bg0 background. |
 | `eww.nix` | Live-edits `~/.config/nix/eww/` (symlinked, not copied — `mkOutOfStoreSymlink` keeps source-of-truth on disk). Two systemd user services: `eww` daemon and `eww-powermenu` running `~/.config/nix/eww/powermenu.nu`. |
@@ -337,18 +338,19 @@ Not every file follows it. A module that only publishes `_module.args` or option
 | `wlsunset.nix` | Night-light (`services.wlsunset`); colour temperature shifts with sunrise/sunset from rough London coordinates. |
 | `polkit.nix` | The polkit-gnome agent through home-manager's `services.polkit-gnome` (unit `polkit-gnome`, with a restart on failure added). |
 | `udiskie.nix` | Removable-media automounter (USB drives mount on plug-in, notifications via mako, no tray). Talks to the system `udisks2` daemon — enabled in `modules/system/desktop.nix` on NixOS, `pacman -S udisks2` on Arch. |
+| `oomd.nix` | systemd-oomd for the graphical session: a user drop-in on `app.slice` (`ManagedOOMMemoryPressure=kill`, 60% limit), so a stalled app is killed before the whole machine thrashes. niri puts every app in its own scope under `app.slice`, so one limit reaches them all. It needs the system `systemd-oomd` daemon: `modules/system/boot.nix` enables it on NixOS. On Arch it is a root prerequisite. |
 | `poweralertd.nix` | Battery and power-supply notifications via mako (`services.poweralertd`). It reads UPower over D-Bus, so the kernel's battery name (BAT0 or BAT1) does not matter. The thresholds are UPower's: `modules/system/power.nix` on NixOS, `/etc/UPower/UPower.conf` on Arch. Started with `-s`, so a login does not replay the current state as notifications. On every host. The unit skips itself when no `/sys/class/power_supply/BAT*` exists, so a desktop with no battery starts nothing. |
 
 ### Terminals (`modules/terminals/`)
 
 The active terminal is selected by `dotfiles.terminals.primary` (default
-`alacritty`); the derived `terminal` arg threads that choice to the niri
+`ghostty`). The derived `terminal` arg threads that choice to the niri
 `Mod+Return` bind, the work-layout, and the stylix terminal target.
 
 | Module | Notes |
 |--------|-------|
 | `alacritty.nix` | Alternative terminal — select with `dotfiles.terminals.primary = "alacritty"`. Shell `zellij`. Beam cursor, blinking. Custom 16-colour ANSI palette mapped to `theme.nix` (overrides the palette stylix sets via its alacritty target). |
-| `ghostty.nix` | **Active terminal** (`primary` default, chosen because alacritty renders no ligatures). Command `zellij`, bar cursor, custom shader `shaders/cursor_warp.glsl`, 16-colour palette mapped to `theme.nix`. On Arch niri spawns it via `nixGL ghostty`. |
+| `ghostty.nix` | **Active terminal** (`primary` default, chosen because alacritty renders no ligatures). Command `zellij`, bar cursor, 16-colour palette mapped to `theme.nix`. On Arch niri spawns it via `nixGL ghostty`. |
 | `zellij.nix` | Default shell `nushell`, compact layout, no frames, no startup tips. Unbinds `Ctrl+h` (so it falls through to nushell's BackspaceWord). Custom theme using palette colours. |
 
 ### Shell (`modules/shell/`)
@@ -362,11 +364,11 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | `integrations.nix` | Configures `zoxide` (`cd`/`cdi`), `carapace` completions, `atuin` history (`Ctrl+r`), `direnv` + `nix-direnv` (silent), `bat` (with `less -FR` pager), `eza` (icons + git status). |
 | `nushell.nix` | Enables `programs.nushell`. `EDITOR=hx`, no banner, fuzzy completions, `Ctrl+h`=BackspaceWord. Sources `~/.config/nushell/welcome.nu` and `scaffolds.nu`. |
 | `starship.nix` | Two-line prompt with box-drawing connectors. Sections: user (red), dir truncated to last 3 (orange), git branch + status (yellow, custom symbols for modified/untracked/ahead/behind/diverged/stashed), 24h time (green). |
-| `fastfetch.nix` | Coloured NixOS logo + date/time, WM, terminal, editor, media player, CPU/mem/disk with percent bars. |
+| `fastfetch.nix` | Coloured NixOS logo + date/time, WM, terminal, editor, media player. The CPU, memory and disk readouts are off: the CPU sample alone cost 213 ms of every new terminal (see the comment in the module). |
 | `nix-index.nix` | Enables `nix-index` + `comma` so an uninstalled binary can be run with `, <cmd>`. The file database is prebuilt from the `nix-index-database` flake input — no local crawl. |
 | `yazi.nix` | Terminal file manager (`programs.yazi`) with nushell integration; `y` opens it and cd's the shell to wherever you quit. |
 | `nushell/welcome.nu` | Width-aware fastfetch banner shown at shell start. |
-| `nushell/scaffolds.nu` | `init-rust` / `init-python` / `init-go` / `init-typst` — copy a template into cwd, `git init`, stage files, `direnv allow`. |
+| `nushell/scaffolds.nu` | `init-rust` / `init-python` / `init-go` / `init-typst` / `init-c` — copy a template into cwd, `git init` and stage files (flake templates only), `direnv allow`. |
 
 ### Dev (`modules/dev/`)
 
@@ -378,7 +380,7 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | `docker.nix` | Rootless docker as a systemd user service, mirrored from NixOS's `virtualisation.docker.rootless` unit. Installs `docker` and `docker-compose`, and sets `DOCKER_HOST` to the rootless socket (POSIX and nushell env both). Default off, and only `laptop-arch` enables it. The NixOS hosts get docker from `modules/system/containers.nix` instead. |
 | `gh.nix` | GitHub CLI (`programs.gh`) configured with `git_protocol = "https"`. It must match whatever `gh auth login --git-protocol` chose: home-manager owns the config as a store symlink, so a mismatch makes gh try to rewrite a read-only file and fail. |
 | `git.nix` | User: Joe, `jpzh.dye@gmail.com`. Delta enabled (line numbers, navigate, hyperlinks). Aliases: `st`, `co`, `sw`, `br`, `lg` (decorated graph log), `last`, `unstage`, `amend`. Sensible defaults: `pull.rebase=true`, `push.autoSetupRemote=true`, `rebase.autoStash=true`, `merge.conflictStyle=zdiff3`, `diff.algorithm=histogram`, `init.defaultBranch=main`. |
-| `helix/` | Editor (default `EDITOR`), built from the `helix` flake input (latest master); split across `default.nix`, `editor.nix`, `languages.nix`, `themes.nix`. LSP servers: `nixd`, `taplo`, `marksman`, `tinymist`, `harper-ls`, `typos-lsp`, `bash-language-server`, `yaml-language-server`, `dockerfile-language-server-nodejs`, `basedpyright`, `ruff`, plus `rust-analyzer` (clippy pedantic, fill-arg snippets, hidden trivial inlay hints). Custom themes `stylix-dark` / `stylix-light`. Per-language config for Rust/Nix/TOML/Typst/Markdown/Bash/YAML/Dockerfile/Python with auto-format on save. `nixd` is wired to `inputs.self`'s `hmOptions.${hostname}` output for option completion (works regardless of where the flake is checked out). |
+| `helix/` | Editor (default `EDITOR`), built from the `helix` flake input, the `gj1118/helix` fork (`editor.nix` builds only an allowlist of 35 tree-sitter grammars, not all 301), split across `default.nix`, `editor.nix`, `languages.nix`, `themes.nix`. LSP servers: `nixd`, `taplo`, `marksman`, `tinymist`, `harper-ls`, `typos-lsp`, `bash-language-server`, `yaml-language-server`, `dockerfile-language-server`, `basedpyright`, `ruff`, plus `rust-analyzer` (clippy pedantic, fill-arg snippets, hidden trivial inlay hints) and `clangd` for C, which comes from the project's dev shell (`templates/c`), not from the global profile. Custom theme `dotfiles`, built in `themes.nix` from the active palette. Per-language config for Rust/C/Nix/TOML/Typst/Markdown/Bash/YAML/Dockerfile/Python with auto-format on save. `nixd` is wired to `inputs.self`'s `hmOptions.${hostname}` output for option completion (works regardless of where the flake is checked out). |
 | `nh.nix` | The `nh` nix-helper. `flake = ~/.config/nix`, a plain path rather than `inputs.self.outPath`, so each run re-reads working-tree edits instead of a frozen store path. Also sets `NH_FLAKE` in the nushell env, which nushell does not get otherwise. Auto-cleans generations: keep last 5, plus everything from past 7 days. Enables `nix-output-monitor`. |
 | `profiling.nix` | `perf` and `samply` on PATH, so `cargo flamegraph` works in every project shell. Both need `kernel.perf_event_paranoid` at 1 or lower (set on NixOS in `modules/system/boot.nix`, a root step on Arch). |
 
@@ -388,7 +390,8 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 |--------|-------|
 | `firefox.nix` | Profile `jd`. Theme: TextFox (minimal text-style chrome) using palette colours and `monoFont` from `theme.nix`. Adds bang-style search shortcuts: `@rs` (Rust stdlib), `@crs` (lib.rs), `@np` (nix packages), `@hm` (home-manager options). Installs ~30 extensions: Bitwarden, uBlock Origin, Privacy Badger, ClearURLs, I-Still-Don't-Care-About-Cookies, SponsorBlock, Return YouTube Dislike, YouTube Shorts Block, LanguageTool, Dark Reader, Tabliss, FoxyProxy, Sidebery, etc. |
 | `spicetify.nix` | Spotify with the `text` theme and a custom colour scheme matching the rest of the system. |
-| `nixcord.nix` | Discord with the `system24` Vencord theme (gruvbox-material flavour). |
+| `nixcord.nix` | Discord (Vesktop) with the `system24` Vencord theme on top of `midnight-discord`, both pinned by rev and built into one local file. Every colour comes from the palette, so Discord follows `scheme` like every other surface. |
+| `nautilus.nix` | TUI-style CSS for Nautilus (a framed path bar and more), added to the GTK stylesheet through stylix. CSS only, no package: on laptop-arch pacman installs Nautilus. The toggle is on for every host, so a host without Nautilus gets CSS that nothing uses. |
 | `termius.nix` | Termius SSH client (`pkgs.termius`). |
 | `cad.nix` | `lycheeslicer` (resin slicer), `openscad`, `freecad-wayland`, `dune3d`, wrapped via `dotfiles.wrapGL`. Off on `laptop-arch`. |
 | `steam.nix` | Steam, wrapped via `dotfiles.wrapGL`. Off on `laptop-arch`, which is why nixGL's `enable32bits` is off. |
@@ -405,7 +408,7 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | Group | Bind | Action |
 |------:|------|--------|
 | Apps | `Mod+Space` | Firefox |
-| | `Mod+Return` | terminal — alacritty by default (under nixGL on Arch) |
+| | `Mod+Return` | terminal — ghostty by default (under nixGL on Arch) |
 | | `Mod+Shift+Return` | work-layout — pick a project (walker + zoxide), open bacon-in-zellij + terminal side by side |
 | | `Mod+R` | walker app launcher (`walker -p "search apps"`) |
 | | `Mod+V` | clipboard history (text + images) — walker's clipboard provider (`walker -m clipboard`) |
@@ -440,7 +443,7 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 | | `Mod+Ctrl+Shift+P` | power off monitors |
 | | `Mod+Shift+Q` | restart `eww.service` + `eww-powermenu.service` — escape hatch for a leaked powermenu window (invisible, full-screen, top layer, eats every click) |
 
-Definitions live in `modules/desktop/niri/` (shared, mostly `binds.nix`). A host may override a shared setting from `hosts/<host>/home.nix` with `lib.mkForce`, though no host currently overrides a *bind*: Arch's only override is `layout.gaps`. `Mod+Return` needs none, because `binds.nix` spawns the terminal by its absolute `wrapGL`'d path.
+Definitions live in `modules/desktop/niri/` (shared, mostly `binds.nix`). A host may override a shared setting from `hosts/<host>/home.nix` with `lib.mkForce`, though no host currently overrides a *bind*. `Mod+Return` needs none, because `binds.nix` spawns the terminal by its absolute `wrapGL`'d path.
 
 ### Zellij (terminal multiplexer)
 
@@ -552,6 +555,7 @@ Inside any directory:
 - `init-python` — same, python template.
 - `init-go` — same, go template.
 - `init-typst` — same, typst template.
+- `init-c` — same, C template (a `shell.nix`, so no `git init`).
 
 ### Custom scripts
 
@@ -563,20 +567,21 @@ Inside any directory:
 
 `nix flake init -t ~/.config/nix#<lang>` drops the template's files into the
 current directory (`python`/`go`/`typst`: `flake.nix` + `flake.lock` +
-`.envrc`; `rust`: a non-flake `shell.nix` + `.envrc`). After `direnv allow`,
+`.envrc`; `rust` and `c`: a non-flake `shell.nix` + `.envrc`). After `direnv allow`,
 the dev shell auto-activates on `cd`.
 
 | Template | Provides |
 |----------|----------|
-| `rust` | Rust 1.90.0 (`rust-src`, `rust-analyzer`, `clippy`, `rustfmt`) + `mold` + `clang`. Dev tools: `bacon`, `cargo-nextest`, `cargo-llvm-cov`, `cargo-udeps`, `cargo-machete`, `cargo-flamegraph`. |
+| `rust` | Rust nightly, the latest at shell entry through `rust-overlay` (`rust-src`, `rust-analyzer`, `clippy`, `rustfmt`) + `mold` + `clang`. Dev tools: `bacon`, `cargo-nextest`, `cargo-llvm-cov`, `cargo-udeps`, `cargo-machete`, `cargo-flamegraph`. |
 | `python` | Python 3.13, `uv`, `ruff`, `basedpyright`. |
 | `go` | `go`, `gopls`, `delve`, `golangci-lint`, `gotools`. |
 | `typst` | `typst`, `tinymist`, `typstyle`. |
+| `c` | C23 with clang as `cc` (`clangStdenv`), `clang-tools` (clangd, clang-format, clang-tidy), `bear`, `gdb`, `valgrind`, `llvm`. `CFLAGS` turn on `-Wall -Wextra -Wpedantic` and the address and undefined-behaviour sanitisers. Writes `compile_flags.txt` for clangd on first entry. |
 
-The nushell scaffolds (`init-rust`, `init-python`, `init-go`, `init-typst`) wrap `nix flake
+The nushell scaffolds (`init-rust`, `init-python`, `init-go`, `init-typst`, `init-c`) wrap `nix flake
 init -t` then `direnv allow`. For flake-based templates they also `git init`
-(if needed) and stage `flake.nix`/`flake.lock` so nix can see them; the
-`rust` template is a non-flake `shell.nix`, so it needs no git at all.
+(if needed) and stage `flake.nix`/`flake.lock` so nix can see them. The
+`rust` and `c` templates are non-flake `shell.nix` files, so they need no git.
 
 ---
 

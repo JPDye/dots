@@ -135,7 +135,7 @@ must be valid Nushell (command substitution is `(cmd)`, not `$(cmd)`; env is
 ## New dependencies
 
 Tools/runtimes go through the flake (a `modules/` entry, a devshell, or a
-`templates/<lang>/flake.nix`) and a rebuild — never an imperative installer
+`templates/<lang>/{flake,shell}.nix`) and a rebuild — never an imperative installer
 (`npm i -g`, `pip install`, `cargo install`, `apt`, …).
 
 One exception exists, and it is not a precedent: the Bitdefender product on

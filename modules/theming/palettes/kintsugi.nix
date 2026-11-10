@@ -45,7 +45,7 @@ let
 
     # Muted at-rest tint (niri inactive borders, walker, the lock ring at
     # rest). Built the same way the light variants build theirs: the
-    # neutral step tinted toward the accent, rather than a hardcoded shade.
+    # neutral step tinted toward red, rather than a hardcoded shade.
     mid = mix 0.25 bg2 red;
 
     # breadcrumb.foreground, badge.foreground, activityBar.foreground (also

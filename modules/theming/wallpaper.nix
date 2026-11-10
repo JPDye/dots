@@ -17,8 +17,9 @@ in
       description = ''
         The wallpaper image, read from `modules/theming/palette.nix` —
         change it there so the greeter backdrop follows too. Consumed by
-        awww (niri/spawn.nix), stylix colour extraction (stylix.nix) and the
-        hyprlock background (lock.nix).
+        awww (niri/spawn.nix and niri/backdrop.nix), stylix's `image`
+        (stylix.nix, which takes its colours from the palette, not from the
+        image) and the hyprlock background (lock.nix).
       '';
     };
 

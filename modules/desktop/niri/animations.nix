@@ -162,8 +162,9 @@ in
     default = "grid";
     description = ''
       The niri animation preset. "grid" is the pixel-grid open/close
-      shader pair with the bounce springs, slowed 1.1x, for all other
-      animations. The other presets set every animation.
+      shader pair with the bounce springs, slowed 1.1x and with 0.15 more
+      damping (capped at 0.9), for all other animations. The other presets
+      set every animation.
     '';
   };
 
