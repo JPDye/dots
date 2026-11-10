@@ -35,30 +35,25 @@ let
     blue = "5f8787";
     pink = "b78f8f";
 
-    # The kintsugi scheme names five warm hues this palette had no word for.
-    # They are mapped here onto its nearest existing equivalents so styling
-    # may reference them under either scheme. `goldDeep` in particular is
-    # consumed by eww/eww.scss.
+    # The kintsugi scheme names warm hues this palette has no word for.
+    # They map here onto its nearest existing equivalents, so a role or a
+    # syntax entry may read them under either scheme.
     gold = orange;
     paleGold = yellow;
-    amber = orange;
     coral = red;
-    salmon = pink;
     goldDeep = mix 0.25 orange bg0;
-    goldDeepHover = mix 0.40 orange bg0;
 
     # Warm surface ramp, the counterpart of the kintsugi scheme's. This
-    # palette has no such ramp upstream, so the eight steps are mixes of its
+    # palette has no such ramp upstream, so the six steps are mixes of its
     # own bg0 toward orange, spaced to match the other scheme's luminance
-    # progression. Consumers (eww) can rely on warm1..warm8 either way.
-    warm1 = mix 0.03 bg0 orange;
+    # progression. Consumers (eww, the greeter) can rely on warm2..warm7
+    # either way.
     warm2 = mix 0.08 bg0 orange;
     warm3 = mix 0.10 bg0 orange;
     warm4 = mix 0.14 bg0 orange;
     warm5 = mix 0.20 bg0 orange;
     warm6 = mix 0.30 bg0 orange;
     warm7 = mix 0.45 bg0 orange;
-    warm8 = mix 0.58 bg0 orange;
 
     # The hard seam colour every surface draws its shadow in: a quarter-step
     # up the bg0->bg1 ramp, opaque. niri's float rule, walker's CSS ring and
@@ -71,8 +66,9 @@ let
     shadowInactive = mix 0.30 bg0 bg1;
 
     # Outline roles. A muted rule and its hover state, sitting well below
-    # `border` in prominence. Same two steps of the warm ramp the kintsugi
-    # scheme uses, so a consumer gets the same relationship either way.
+    # `borderActive` in prominence. Same two steps of the warm ramp the
+    # kintsugi scheme uses, so a consumer gets the same relationship either
+    # way.
     borderMid = warm6;
     borderMidHover = warm7;
 
@@ -95,8 +91,8 @@ let
     # `modules/terminals/default.nix` genuinely needs 16 named hues.
     #
     # Accent ramp. These only name roles this palette already had, so no
-    # colour changes: `accent` and `border` keep the values they had before
-    # the semantic roles were introduced.
+    # colour changes: `accent` and `borderActive` keep the values they had
+    # before the semantic roles were introduced.
     primary = orange;
     secondary = red;
     tertiary = yellow;
@@ -107,7 +103,6 @@ let
     # this palette already used, so nothing changes visually here.
     borderInactive = mid;
     borderActive = red;
-    border = borderActive;
     neutral = mid; # at-rest borders and dividers
     urgent = red; # errors, urgent notifications
     failure = red; # failed states, error symbols

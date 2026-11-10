@@ -80,35 +80,29 @@ let
     paleGold = "ebcb8b";
     # The signature kintsugi gold, hue 41.
     gold = "dbad49";
-    amber = orange; # alias, for styling that spells it that way
 
-    # Descriptive aliases for the two hues above, kept so styling can spell
-    # them either way. The warm ramp runs
-    # yellow -> gold -> goldDeep -> orange -> salmon -> coral.
+    # A descriptive alias for `red`, kept because the roles below spell it
+    # that way. The warm ramp runs
+    # yellow -> gold -> goldDeep -> orange -> pink -> coral.
     coral = red;
-    salmon = pink;
 
     # Warm surface ramp, `--w-1` to `--w-8` on the IoskeleyMono site. These
     # are site values, not Kintsugi theme values: the theme file has no such
     # ramp. They are the gold-tinted darks the site's `.os-pill` badge is
     # built from (background `warm2`, border `warm6`, text `goldDeep`).
-    warm1 = "0e0c08";
+    # Nothing reads the site's `--w-1` or `--w-8`, so only warm2 to warm7
+    # are kept.
     warm2 = "18150d";
     warm3 = "1a160d";
     warm4 = "201b12";
     warm5 = "2e2518";
     warm6 = "3d2e10";
     warm7 = "5a4418";
-    warm8 = "6b5128";
 
     # A deeper gold than `gold`. This theme's activityBar.activeBorder and
     # focusBorder, and the colour the IoskeleyMono site sets as its
     # `--accent`.
     goldDeep = "b8943a";
-    # The site's `--accent-hover`. This is the one value in this file that is
-    # not lifted from a Kintsugi theme: it appears in neither upstream file,
-    # so it comes from the site's own stylesheet.
-    goldDeepHover = "a07d2a";
 
     # The hard seam colour every surface draws its shadow in: darker than
     # bg0, so a shadow reads as depth below the background rather than a
@@ -122,8 +116,8 @@ let
     shadowInactive = "1a1a1a";
 
     # Outline roles. A muted gold rule and its hover state, sitting well
-    # below `border` in prominence. These are the site's
-    # `--w-6` and `--w-7`, the shades its own bordered boxes use.
+    # below `borderActive` in prominence. These are the site's `--w-6` and
+    # `--w-7`, the shades its own bordered boxes use.
     borderMid = warm6;
     borderMidHover = warm7;
 
@@ -167,11 +161,9 @@ let
     #
     # eww's boxes deliberately do not follow `borderActive`. They sit a
     # register quieter, further down the same warm ramp, so a widget never
-    # competes with the focused window. `border` stays as an alias for the
-    # active one because several consumers still spell it that way.
+    # competes with the focused window.
     borderInactive = warm7; # 5a4418
     borderActive = mix 0.4 warm7 orange; # 905e29
-    border = borderActive;
     neutral = mid; # at-rest borders and dividers
     urgent = coral; # errors, urgent notifications
     failure = coral; # failed states, error symbols

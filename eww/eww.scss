@@ -19,14 +19,14 @@ eventbox {
 @import "theme";
 
 // The palette already publishes semantic roles ($primary, $secondary,
-// $tertiary, $accent, $border, $neutral, $success, $urgent, ...). This file
+// $tertiary, $accent, $neutral, $success, $urgent, ...). This file
 // used to redefine them from raw hues, which shadowed the theme's own
 // meaning and is why eww drifted from the rest of the desktop. Use the
 // theme's roles directly instead.
 
-// Surfaces. The warm ramp ($warm1..$warm8) is the gold-tinted dark set the
+// Surfaces. The warm ramp ($warm2..$warm7) is the gold-tinted dark set the
 // IoskeleyMono site builds its `.os-pill` badge from: background $warm2,
-// border $warm6, text $goldDeep.
+// border $warm6. The pill text takes the $accent role.
 $surface-darkgrey: $bg0;
 $surface-lightgrey: $bg3;
 $surface-grey: $bg2;
