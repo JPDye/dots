@@ -180,23 +180,18 @@ let
     info = blue; # informational accents
     fgMuted = grey; # muted text: zellij's frame and table titles
 
-    # Hover steps. Every interactive role gets one, derived the same way in
-    # both schemes so the relationship between a role and its hover is
-    # identical whichever palette is active. Same pattern as
-    # borderInactive -> borderActive above.
+    # Hover steps, one for each role that a consumer reads on hover:
+    # `accent` (Spotify's seek bar), `primary` and `urgent` (the greeter
+    # buttons). Each is derived the same way in both schemes, so a role and
+    # its hover keep the same relationship whichever palette is active. Add
+    # a step here when a new consumer needs one.
     #
     # The blend target is white, not fg0: this scheme's fg0 is a tan darker
     # than its pale gold accent, so mixing toward fg0 would *darken* a hover
     # rather than lift it.
-    borderActiveHover = mix 0.25 borderActive "ffffff";
     accentHover = mix 0.25 accent "ffffff";
     primaryHover = mix 0.25 primary "ffffff";
-    secondaryHover = mix 0.25 secondary "ffffff";
-    tertiaryHover = mix 0.25 tertiary "ffffff";
-    successHover = mix 0.25 success "ffffff";
-    warningHover = mix 0.25 warning "ffffff";
     urgentHover = mix 0.25 urgent "ffffff";
-    infoHover = mix 0.25 info "ffffff";
 
   };
 
