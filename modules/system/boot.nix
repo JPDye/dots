@@ -29,9 +29,10 @@ _:
     # headroom to 1.25% of the zone.
     "vm.watermark_scale_factor" = 125;
 
-    # Let a user profile their own processes (perf record, samply). The
-    # default of 2 allows user-space counting only, which samply refuses.
-    # 1 still hides kernel profiling from unprivileged users.
+    # Let a user profile their own processes (perf record, samply,
+    # cargo flamegraph). The default of 2 blocks kernel profiling, which
+    # samply needs. 1 allows a user to sample the kernel side of their own
+    # processes. System-wide CPU events still need CAP_PERFMON.
     "kernel.perf_event_paranoid" = 1;
   };
 

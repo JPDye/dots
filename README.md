@@ -116,7 +116,7 @@ home-manager owns the user profile only, so `modules/system/` never runs here. T
 - **`tailscale`**, **`udisks2`** and **`upower`** — see [the pacman block in the laptop-nix section](#hostslaptop-nixconfigurationnix). `tailscaled` needs root and a TUN device, udiskie is only the per-user client of the system `udisks2`, and poweralertd (`modules/desktop/poweralertd.nix`) only listens to the system `upower` daemon. Battery thresholds live in `/etc/UPower/UPower.conf`, which this flake does not manage.
 - **PAM files** for hyprlock and the keyring: `nix run .#arch-pam-setup`, described just below.
 - **Parallel builds** for the nix-daemon. Arch's `/etc/nix/nix.conf` sets no `max-jobs`, so the daemon builds one derivation at a time. Append `max-jobs = 4` and `cores = 4` to `/etc/nix/nix.conf`, then `sudo systemctl restart nix-daemon`. The pair caps a build at 16 threads. Do not use `max-jobs = auto` with `cores = 0`: that lets each of 16 jobs use every core, and two large Rust builds can then exhaust the RAM.
-- **User-space profiling** for `perf` and `samply` (`modules/dev/profiling.nix`). Arch keeps the kernel default `kernel.perf_event_paranoid = 2`, which samply refuses. Write `kernel.perf_event_paranoid = 1` to `/etc/sysctl.d/90-perf.conf`, then run `sudo sysctl --system`. The NixOS hosts get the same value from `modules/system/boot.nix`.
+- **Profiling of your own processes** for `perf` and `samply` (`modules/dev/profiling.nix`). Arch keeps the kernel default `kernel.perf_event_paranoid = 2`, which samply refuses. Write `kernel.perf_event_paranoid = 1` to `/etc/sysctl.d/90-perf.conf`, then run `sudo sysctl --system`. The NixOS hosts get the same value from `modules/system/boot.nix`.
 
 Start the session with `niri-session` from a TTY. Nothing in this flake installs a display manager or enables a session unit on a non-NixOS host.
 
@@ -240,7 +240,7 @@ The modules/system highlights:
 
 - **User:** `jd`, shell `nushell`, in `wheel`, `networkmanager`, `wireshark`.
 - **Boot:** systemd-boot + EFI.
-- **Networking:** NetworkManager (DNS forced to `none` so static `nameservers` win), hostname `laptop-nix`, DNS `1.1.1.1`/`1.0.0.1` (Cloudflare), firewall opens only Tailscale's UDP port (41641, through `services.tailscale.openFirewall`).
+- **Networking:** systemd-resolved with the static `nameservers` as global DNS (NetworkManager `dns = "none"`, so DHCP never overrides them) and Tailscale's split DNS for MagicDNS, hostname `laptop-nix`, DNS `1.1.1.1`/`1.0.0.1` (Cloudflare), firewall opens only Tailscale's UDP port (41641, through `services.tailscale.openFirewall`).
 - **Locale:** `en_GB.UTF-8`, `Europe/London`, UK keymap.
 - **Services:** `tailscale`, `tlp` (AC perf / battery powersave 0–20%, charge thresholds 40–80%), `upower` (hibernate at 5%), `pipewire` (with PulseAudio compat + 32-bit ALSA), `blueman`, `niri`, `dbus` with portals (wlr/gtk/gnome), `wireshark` (CLI), `docker` (rootless) and `podman`.
 - **Hardware:** AMD CPU (`kvm-amd`, microcode), OpenGL + 32-bit, Bluetooth on at boot.
