@@ -60,7 +60,7 @@ in
         # into the repo's eww dir (gitignored) rather than a store-only path
         # so the whole-dir symlink above — and eww's hot reload on it — keeps
         # working. Every `colors` entry becomes an scss `$name: #hex;`, plus
-        # `$mono-font`, `$shadow-offset` and `$radius` so the stylesheet tracks the
+        # `$mono-font`, `$shadow-size` and `$radius` so the stylesheet tracks the
         # theme's font, shadow and corner radius too. The widgets keep a 1px border of their
         # own rather than `border-style.width`.
         home.file.".config/nix/eww/_theme.scss".text =
@@ -68,7 +68,7 @@ in
             lib.mapAttrsToList (name: value: "\$${name}: #${value};") colors
             ++ [
               ''$mono-font: "${monoFont}";''
-              "\$shadow-offset: ${toString (shadow-style.offset - 2)}px;"
+              "\$shadow-size: ${toString (shadow-style.size - 2)}px;"
               "\$radius: ${toString border-style.radius-int}px;"
             ]
           )

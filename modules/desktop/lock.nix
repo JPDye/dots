@@ -188,7 +188,7 @@ in
             # top edge. A translucent panel fakes a pane of smoked glass
             # without real blur (hyprlock can't blur behind a shape). Styled
             # like a niri window: the shared corner radius, the active
-            # border, and the same hard offset shadow a niri window,
+            # border, and the same hard ring shadow a niri window,
             # a float and the overview draw.
             # hyprlock's own shadow_passes always feathers, so the shadow is
             # a solid shape one layer down instead. zindex (not file order)
@@ -199,24 +199,25 @@ in
             shape = [
               # The hard shadow: the card's own bordered footprint (380x420
               # plus the border on each side, because a shape's border draws
-              # outside `size`), moved `shadow-style.offset` down and right.
-              # It is an offset seam, not the even ring this used to be, so it
-              # matches niri's window shadow exactly. `shadow` is the token that shadow
-              # draws in, so the lock screen and the desktop cast one shadow.
-              #
-              # hyprlock's y axis points up, which is why the labels below
-              # descend from 190 to -90. The card sits at y -20, so down by the
-              # offset is -20 minus the offset, not -20 plus it.
+              # outside `size`), grown by `shadow-style.size` on every side
+              # and centred on the card. That is the even ring a niri window
+              # casts. `shadow` is the token that shadow draws in, so the lock
+              # screen and the desktop cast one shadow.
               {
                 monitor = "";
-                size = "${toString (380 + 2 * border-style.width)}, ${toString (420 + 2 * border-style.width)}";
+                size = "${toString (380 + 2 * (border-style.width + shadow-style.size))}, ${
+                  toString (420 + 2 * (border-style.width + shadow-style.size))
+                }";
                 color = "rgba(${themeLib.alpha shadow-style.opacity colors.shadow})"; # niri's shadow colour, at shadow-style.opacity
-                # The shadow covers the card's outer edge, border included,
-                # so its radius is the card's plus the border. A square card
-                # needs no such compensation, so the zero case stays zero.
-                rounding = if border-style.radius-int == 0 then 0 else border-style.radius-int + border-style.width;
+                # The ring's outer edge follows the card's corner, grown by
+                # the border and the ring. A square card stays square.
+                rounding =
+                  if border-style.radius-int == 0 then
+                    0
+                  else
+                    border-style.radius-int + border-style.width + shadow-style.size;
                 border_size = 0;
-                position = "${toString shadow-style.offset}, ${toString (-20 - shadow-style.offset)}";
+                position = "0, -20";
                 halign = "center";
                 valign = "center";
                 zindex = -2;

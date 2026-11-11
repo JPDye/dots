@@ -61,7 +61,7 @@
           workspace-corner-radius ${toString (border-style.radius-float / 2)}
           workspace-shadow {
               softness 0
-              spread ${toString (shadow-style.offset + 2)}
+              spread ${toString (shadow-style.size + 2)}
               offset x=0 y=0
               color "#${colors.shadow}"
           }
@@ -112,15 +112,15 @@
 
         # A hard even ring, the same shape eww's boxes draw 2px thinner:
         # softness 0 keeps the edge hard, offset 0 centres the shadow on the
-        # window, and a spread of `shadow-style.offset` is the only thing
+        # window, and a spread of `shadow-style.size` is the only thing
         # that shows it, on all four sides. A float casts the same. A
         # window throws the deepest shadow on the desktop, and everything
         # smaller sits a step under it. The colour is the
-        # palette's shared `shadow` token rather than bg0, because an offset
+        # palette's shared `shadow` token rather than bg0, because the
         # shadow has to read against the wallpaper rather than mask a gap.
         shadow = {
           enable = true;
-          spread = shadow-style.offset;
+          spread = shadow-style.size;
           softness = 0;
           offset = {
             x = 0;

@@ -35,7 +35,7 @@ in
           }
           shadow {
               on
-              spread ${toString shadow-style.offset}
+              spread ${toString shadow-style.size}
               softness 0
               offset x=0 y=0
               color "#${float-shadow}"

@@ -12,7 +12,7 @@ let
 
   width = toString border-style.width;
   radius = toString border-style.radius-int;
-  offset = toString shadow-style.offset;
+  size = toString shadow-style.size;
 
   # Every rule below sits under this scope. Walker loads its theme at the
   # same USER priority as ~/.config/gtk-4.0/gtk.css, so an unscoped rule
@@ -106,11 +106,11 @@ in
       }
 
       /* Popovers (GTK4) and menus (GTK3): the active border and the hard
-         offset shadow a niri window casts. The arrow takes the same border
+         ring shadow a niri window casts. The arrow takes the same border
          width, because GTK aligns it to the contents border. */
       ${scope} popover > contents {
         border: ${width}px solid #${colors.borderActive};
-        box-shadow: ${offset}px ${offset}px 0 #${colors.shadow};
+        box-shadow: 0 0 0 ${size}px #${colors.shadow};
       }
 
       ${scope} popover > arrow {
