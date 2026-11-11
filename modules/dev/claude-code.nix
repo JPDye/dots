@@ -59,10 +59,10 @@ let
   # whole skill dir is linked as-is below.
   ste100SkillPatched = import ./ste100-skill.nix { inherit pkgs inputs; };
 
-  # The user memory below turns the STE100 ruleset on for every reply, but
-  # that memory loads once at session start and fades as a long session fills
-  # the context. This text lands next to the newest prompt instead, for a few
-  # tokens a turn. Keep it short.
+  # The user memory below turns the STE100 ruleset and the tautology rule on
+  # for every reply, but that memory loads once at session start and fades as
+  # a long session fills the context. This text lands next to the newest
+  # prompt instead, for a few tokens a turn. Keep it short.
   ste100Reminder = pkgs.writeText "ste100-reminder.txt" ''
     STE100 reminder, from ~/.claude/CLAUDE.md. Apply the ASD-STE100 ruleset
     (~/.claude/skills/asd-ste100/SKILL.md) to the prose in this reply.
@@ -71,6 +71,9 @@ let
     descriptions, prompts. Short sentences, active voice, one instruction
     per sentence, no phrasal verbs, no semicolons. Keep every hedge and
     every claim.
+
+    Reject tautology: no label, test, comment, component or code that only
+    restates its subject (~/.claude/CLAUDE.md, "Tautology").
   '';
 
   # A UserPromptSubmit hook that exits 0 hands its plain stdout to the model as
