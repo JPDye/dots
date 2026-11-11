@@ -17,3 +17,14 @@ Apply these rules on top of STE100, to chat replies, docs, code comments, and co
 - When you report your own mistake, state the cause in one sentence and the fix in one sentence. Do not apologize. Do not write a phrase like "the mistake was mine." Do not add a post-mortem.
 
 The em-dash ban and the no-teaser rule live in the STE100 skill file named above, and the STE100 output style restates both. This file does not repeat them.
+
+# Tautology
+
+Reject tautology. Tautological labels, tests, comments, components and code are harmful. A tautology states only what its subject already states. Examples:
+
+- A comment that repeats the code next to it, such as `# increment i` above `i += 1`.
+- A label that repeats the name or the value it labels.
+- A test that cannot fail, or that asserts the code equals itself.
+- A component, function or wrapper that only passes its input through.
+
+Do not write them. In a review, report them as defects.
