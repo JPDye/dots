@@ -199,7 +199,7 @@ in
             shape = [
               # The hard shadow: the card's own bordered footprint (380x420
               # plus the border on each side, because a shape's border draws
-              # outside `size`), moved `shadow-style.offset` down and right.
+              # outside `size`), moved `shadow-style.size` down and right.
               # It is an offset seam, not the even ring this used to be, so it
               # matches niri's window shadow exactly. `shadow` is the token that shadow
               # draws in, so the lock screen and the desktop cast one shadow.
@@ -216,7 +216,7 @@ in
                 # needs no such compensation, so the zero case stays zero.
                 rounding = if border-style.radius-int == 0 then 0 else border-style.radius-int + border-style.width;
                 border_size = 0;
-                position = "${toString shadow-style.offset}, ${toString (-20 - shadow-style.offset)}";
+                position = "${toString shadow-style.size}, ${toString (-20 - shadow-style.size)}";
                 halign = "center";
                 valign = "center";
                 zindex = -2;

@@ -2,7 +2,7 @@
 #
 # The login box reads like a focused niri window under gruvbox: a bg0 fill,
 # the red `borderActive` outline, the shared 1px corner radius, and a hard bg0 ring with
-# no blur, `shadow-style.offset` plus 4px wide. Inside it, the fields sit on
+# no blur, `shadow-style.size` plus 4px wide. Inside it, the fields sit on
 # the bg1 / bg2 neutrals, and the Login button is solid orange.
 #
 # ReGreet's UI is a GtkOverlay (see `src/gui/templates.rs` upstream): the
@@ -22,7 +22,7 @@ let
   bw = "${toString border-style.width}px";
   radius = "${toString border-style.radius-int}px";
   ring = "0 0 0 ${
-    toString (shadow-style.offset + 4)
+    toString (shadow-style.size + 4)
   }px rgba(${themeLib.rgbCss c.bg0}, ${toString shadow-style.opacity})";
 in
 ''

@@ -44,12 +44,12 @@ $pill-fg: $accent;
 $box-border: $borderMid;
 $box-border-hover: $borderMidHover;
 
-// A hard even ring: no blur, no offset, a `$shadow-offset` spread on all four
+// A hard even ring: no blur, no offset, a `$shadow-size` spread on all four
 // sides, so a widget sits off the wallpaper the way a niri window does. Same
 // shape and the same `$shadow` token as niri's window and float shadows, two
-// pixels thinner than theirs (eww.nix derives it from `shadow-style.offset`):
+// pixels thinner than theirs (eww.nix derives it from `shadow-style.size`):
 // a widget sits a step under a window.
-$box-shadow: 0 0 0 $shadow-offset $shadow;
+$box-shadow: 0 0 0 $shadow-size $shadow;
 
 // GTK3 clips a widget's box-shadow to its parent's allocation, and a GtkEventBox
 // is sized exactly to its child. So a shadow on a widget inside one lands
@@ -60,7 +60,7 @@ $box-shadow: 0 0 0 $shadow-offset $shadow;
 // it takes the same margin anyway. Without it, the plain pills stretch to
 // the taller row that a clickable pill's margin makes, so they come out
 // taller and their text sits off-centre.
-$box-shadow-room: $shadow-offset;
+$box-shadow-room: $shadow-size;
 
 // Icons take the primary, except the cpu/ram ones, which the severity rules
 // below recolour. That is the signature gold under kintsugi and the orange

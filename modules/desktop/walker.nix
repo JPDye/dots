@@ -122,13 +122,13 @@ in
 
         /* The window chrome: matches a niri window. Dark fill, the active
            border, the shared corner radius, and the desktop's hard offset
-           shadow: no blur, no spread, `shadow-style.offset` down and right,
+           shadow: no blur, no spread, `shadow-style.size` down and right,
            in the shared `shadow` token. Walker is a launcher panel, so it
            casts a window's offset.
            The shadow is CSS, not a niri layer-rule, because niri won't
            render a shadow that hugs walker's layer-shell surface. */
         .box-wrapper {
-          box-shadow: ${toString shadow-style.offset}px ${toString shadow-style.offset}px 0 #${shadowColor};
+          box-shadow: ${toString shadow-style.size}px ${toString shadow-style.size}px 0 #${shadowColor};
           background: @window_bg_color;
           padding: 20px;
           border-radius: ${toString border-style.radius-int}px;
