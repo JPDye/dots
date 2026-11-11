@@ -106,11 +106,11 @@ in
       }
 
       /* Popovers (GTK4) and menus (GTK3): the active border and the hard
-         offset shadow a niri window casts. The arrow takes the same border
+         ring shadow a niri window casts. The arrow takes the same border
          width, because GTK aligns it to the contents border. */
       ${scope} popover > contents {
         border: ${width}px solid #${colors.borderActive};
-        box-shadow: ${size}px ${size}px 0 #${colors.shadow};
+        box-shadow: 0 0 0 ${size}px #${colors.shadow};
       }
 
       ${scope} popover > arrow {

@@ -1,10 +1,10 @@
 # ReGreet stylesheet for the kintsugi scheme.
 #
 # The login box copies the hyprlock card and a focused niri window: a bg0
-# fill, the warm `borderActive` outline, the shared 1px corner radius, and the hard seam
-# shadow in `shadow`, moved `shadow-style.size` down and right. Inside it,
-# the fields sit on the warm surface ramp, the Login button is solid gold,
-# and every at-rest outline is a rung of the same warm ramp.
+# fill, the warm `borderActive` outline, the shared 1px corner radius, and the
+# hard ring shadow in `shadow`, a `shadow-style.size` spread on every side.
+# Inside it, the fields sit on the warm surface ramp, the Login button is solid
+# gold, and every at-rest outline is a rung of the same warm ramp.
 #
 # ReGreet's UI is a GtkOverlay (see `src/gui/templates.rs` upstream): the
 # background Picture is child 1, the login Frame is child 2, and the clock
@@ -23,7 +23,7 @@ let
   bw = "${toString border-style.width}px";
   radius = "${toString border-style.radius-int}px";
   shadowRgba = "rgba(${themeLib.rgbCss c.shadow}, ${toString shadow-style.opacity})";
-  size = "${toString shadow-style.size}px";
+  ring = "0 0 0 ${toString shadow-style.size}px";
 in
 ''
   /* Login box and clock: niri-window frames. */
@@ -36,14 +36,14 @@ in
 
   overlay > frame.background:nth-child(2) {
     border: ${bw} solid #${c.borderActive};
-    box-shadow: ${size} ${size} 0 0 ${shadowRgba};
+    box-shadow: ${ring} ${shadowRgba};
   }
 
   /* The clock hangs from the top edge, so it keeps no top border. */
   overlay > frame.background:nth-child(3) {
     border: ${bw} solid #${c.borderInactive};
     border-top-width: 0;
-    box-shadow: ${size} ${size} 0 0 ${shadowRgba};
+    box-shadow: ${ring} ${shadowRgba};
     color: #${c.primary};
   }
 
@@ -146,7 +146,7 @@ in
     background-color: #${c.bg0};
     border-color: #${c.urgent};
     color: #${c.urgent};
-    box-shadow: ${size} ${size} 0 0 ${shadowRgba};
+    box-shadow: ${ring} ${shadowRgba};
   }
 
   button.destructive-action:hover {

@@ -116,7 +116,7 @@
         # that shows it, on all four sides. A float casts the same. A
         # window throws the deepest shadow on the desktop, and everything
         # smaller sits a step under it. The colour is the
-        # palette's shared `shadow` token rather than bg0, because an offset
+        # palette's shared `shadow` token rather than bg0, because the
         # shadow has to read against the wallpaper rather than mask a gap.
         shadow = {
           enable = true;
