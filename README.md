@@ -388,7 +388,7 @@ The active terminal is selected by `dotfiles.terminals.primary` (default
 
 | Module | Notes |
 |--------|-------|
-| `firefox.nix` | Profile `jd`. Theme: TextFox (minimal text-style chrome) using palette colours and `monoFont` from `theme.nix`. Adds bang-style search shortcuts: `@rs` (Rust stdlib), `@crs` (lib.rs), `@np` (nix packages), `@hm` (home-manager options). Installs ~30 extensions: Bitwarden, uBlock Origin, Privacy Badger, ClearURLs, I-Still-Don't-Care-About-Cookies, SponsorBlock, Return YouTube Dislike, YouTube Shorts Block, LanguageTool, Dark Reader, Tabliss, FoxyProxy, Sidebery, etc. |
+| `firefox.nix` | Profile `jd`. Theme: TextFox (minimal text-style chrome) using palette colours and `monoFont` from `theme.nix`. Adds bang-style search shortcuts: `@rs` (Rust stdlib), `@crs` (lib.rs), `@np` (nix packages), `@hm` (home-manager options). Installs ~30 extensions: Bitwarden, uBlock Origin, Privacy Badger, I-Still-Don't-Care-About-Cookies, SponsorBlock, Return YouTube Dislike, YouTube Shorts Block, LanguageTool, Dark Reader, Tabliss, FoxyProxy, Sidebery, etc. |
 | `spicetify.nix` | Spotify with the `text` theme and a custom colour scheme matching the rest of the system. |
 | `nixcord.nix` | Discord (Vesktop) with the `system24` Vencord theme on top of `midnight-discord`, both pinned by rev and built into one local file. Every colour comes from the palette, so Discord follows `scheme` like every other surface. |
 | `nautilus.nix` | TUI-style CSS for Nautilus (a framed path bar and more), added to the GTK stylesheet through stylix. CSS only, no package: on laptop-arch pacman installs Nautilus. The toggle is on for every host, so a host without Nautilus gets CSS that nothing uses. |

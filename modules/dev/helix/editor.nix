@@ -214,7 +214,12 @@ in
           # Upstream helix rejects unknown editor keys, so a revert to
           # upstream must also remove this block.
           breadcrumb.enable = true;
-          cmdline.style = "popup";
+          cmdline = {
+            style = "popup";
+            # The default command icon is an emoji with a variation
+            # selector. It leaves a stray character in the next cell.
+            show-icons = false;
+          };
 
           # Square, one-cell border, no drop shadow and no emoji or icon
           # prefix. The border colour is `ui.popup.border` in themes.nix.

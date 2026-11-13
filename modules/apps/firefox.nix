@@ -141,7 +141,6 @@ in
 
           ublock-origin
           privacy-badger
-          clearurls
           istilldontcareaboutcookies
 
           sponsorblock
